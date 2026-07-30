@@ -1,0 +1,155 @@
+Use https://epicarmoury.com as an inspiration for the browsing experience, scrolling behavior, page hierarchy, interactions, and premium ecommerce feel. Do NOT copy any copyrighted images, text, videos, code, or exact layouts. Generate completely original assets and implementation while preserving my existing website's UI/UX, branding, typography, colors, and overall design language.
+
+Desktop Layout
+
+The product/category sections should display exactly 4 product cards per row on desktop.
+
+Requirements:
+
+Maximum content width: 1680px
+Width: 100%
+Margin: 0 auto
+Horizontal padding: 20px
+Four equal-width columns
+Grid gap: 18-24px
+Images must never overflow
+Cards must always align perfectly
+No horizontal scrolling
+Every image should have the same aspect ratio
+Use object-fit: cover
+Equal card heights
+Equal spacing everywhere
+No stretched or cropped layout
+
+Responsive breakpoints:
+
+Desktop (≥1440px)
+→ 4 columns
+
+Laptop (1024–1439px)
+→ 4 columns
+
+Tablet (768–1023px)
+→ 2 columns
+
+Mobile (<768px)
+→ 1 column
+
+Product Cards
+
+Create premium product cards inspired by luxury ecommerce.
+
+Include:
+
+Large product image
+Hover zoom (1.05x)
+Soft shadow animation
+Fade-up on scroll
+Lazy loading
+Smooth image transitions
+Product title
+Price
+Wishlist icon
+Quick View button
+Add to Cart button
+Smooth hover interactions
+Rounded corners matching my UI
+Premium spacing
+Scroll Experience
+
+Create an extremely smooth scrolling experience.
+
+Implement:
+
+Lenis smooth scrolling
+GSAP ScrollTrigger
+Fade-in sections
+Staggered product reveals
+Image reveal masks
+Subtle parallax backgrounds
+Sticky category navigation
+Smooth page transitions
+Scroll progress indicator
+Lazy-loaded sections
+Hardware-accelerated animations
+No lag
+60 FPS animations
+Collections Section
+
+Create collection sections similar in behavior to premium ecommerce websites.
+
+Requirements:
+
+Four products visible simultaneously
+Uniform image sizes
+Equal spacing
+Smooth horizontal alignment
+Hover animations
+Fade-in when entering viewport
+Pagination or navigation arrows if more products exist
+Infinite loading support
+Category Pages
+
+Improve category pages while keeping my branding.
+
+Include:
+
+Sticky filter sidebar
+Category banner
+Product count
+Sort dropdown
+Availability filter
+Price filter
+Material filter
+Collection filter
+Search
+Active filter chips
+Smooth filter animation
+Instant filtering
+Infinite pagination or load more
+Product Page
+
+Create a premium product page.
+
+Include:
+
+Large gallery
+Thumbnail slider
+Zoom on hover
+Smooth image transitions
+Sticky purchase panel
+Variant selector
+Quantity selector
+Shipping information
+Related products
+Recently viewed
+Customer reviews
+FAQ accordion
+Animated Add to Cart
+Smooth section transitions
+Performance
+
+Optimize everything.
+
+Lazy-load all images
+Code splitting
+Image optimization
+Intersection Observer
+Responsive images
+GPU-accelerated animations
+Avoid layout shifts
+Lighthouse score above 90
+Fast initial loading
+Accessibility
+Keyboard navigation
+Proper aria labels
+Visible focus states
+Semantic HTML
+Responsive typography
+WCAG-friendly interactions
+Important
+Do NOT change my current UI/UX, branding, fonts, colors, spacing philosophy, or navigation style.
+Keep my existing design identity intact.
+Only upgrade the browsing experience, responsiveness, scrolling, product grids, animations, and ecommerce functionality.
+Do NOT copy Epic Armoury's copyrighted assets or exact page designs. Use it only as inspiration for the overall premium shopping experience.
+Ensure that on desktop screens, exactly 4 product cards are visible in one row without overflow or horizontal scrolling, with consistent sizing and spacing across the site.
