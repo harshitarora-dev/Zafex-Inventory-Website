@@ -51,9 +51,17 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const sessionSecret = process.env["SESSION_SECRET"];
+if (!sessionSecret) {
+  throw new Error(
+    "SESSION_SECRET environment variable must be set. " +
+    "Add it as a Replit Secret before starting the server.",
+  );
+}
+
 app.use(
   session({
-    secret: process.env["SESSION_SECRET"] ?? "dev-fallback-secret-change-me",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {

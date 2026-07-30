@@ -81,8 +81,21 @@ async function seedIfEmpty() {
   }
 }
 
-app.listen(port, async () => {
-  logger.info({ port }, "Server listening");
-  await ensureSchema();
+/** Initialise DB then start listening — fatal on schema failure */
+async function start() {
+  try {
+    await ensureSchema();
+  } catch (err) {
+    logger.error({ err }, "Schema initialisation failed — refusing to start");
+    process.exit(1);
+  }
+
+  // Seed is best-effort; a failure doesn't prevent the server from starting
   await seedIfEmpty();
-});
+
+  app.listen(port, () => {
+    logger.info({ port }, "Server listening");
+  });
+}
+
+start();
