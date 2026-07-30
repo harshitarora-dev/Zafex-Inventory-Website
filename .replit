@@ -54,6 +54,3 @@ externalPort = 3001
 deploymentTarget = "cloudrun"
 
 [userenv]
-
-[userenv.shared]
-ADMIN_PASSWORD = "admin"

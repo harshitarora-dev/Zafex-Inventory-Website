@@ -218,7 +218,7 @@ export default function AdminHomepageImages() {
                       <ImageSlotCard
                         key={key}
                         slot={slot}
-                        label={(section.labels as Record<string, string>)[key] ?? key}
+                        label={(section.labels as Record<string, string | undefined>)[key] ?? key}
                       />
                     );
                   })}

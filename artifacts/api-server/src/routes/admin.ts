@@ -3,7 +3,13 @@ import { requireAdmin } from "../middlewares/adminAuth";
 
 const router = Router();
 
-const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"] ?? "admin";
+const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"];
+if (!ADMIN_PASSWORD) {
+  throw new Error(
+    "ADMIN_PASSWORD environment variable must be set. " +
+    "Add it as a Replit Secret before starting the server.",
+  );
+}
 
 /** POST /api/admin/login */
 router.post("/admin/login", (req, res) => {

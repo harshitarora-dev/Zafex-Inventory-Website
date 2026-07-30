@@ -66,7 +66,7 @@ router.get("/admin/products/:id", requireAdmin, async (req, res) => {
     const [product] = await db
       .select()
       .from(productsTable)
-      .where(eq(productsTable.id, req.params.id));
+      .where(eq(productsTable.id, req.params['id'] as string));
     if (!product) {
       res.status(404).json({ error: "Product not found" });
       return;
@@ -142,7 +142,7 @@ router.put(
       const existing = await db
         .select()
         .from(productsTable)
-        .where(eq(productsTable.id, req.params.id));
+        .where(eq(productsTable.id, req.params['id'] as string));
       if (!existing.length) {
         res.status(404).json({ error: "Product not found" });
         return;
@@ -186,7 +186,7 @@ router.put(
       const [updated] = await db
         .update(productsTable)
         .set(updates)
-        .where(eq(productsTable.id, req.params.id))
+        .where(eq(productsTable.id, req.params['id'] as string))
         .returning();
 
       res.json(updated);
@@ -201,7 +201,7 @@ router.delete("/admin/products/:id", requireAdmin, async (req, res) => {
   try {
     const [deleted] = await db
       .delete(productsTable)
-      .where(eq(productsTable.id, req.params.id))
+      .where(eq(productsTable.id, req.params['id'] as string))
       .returning();
     if (!deleted) {
       res.status(404).json({ error: "Product not found" });

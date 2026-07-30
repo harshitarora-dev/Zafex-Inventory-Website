@@ -31,8 +31,8 @@ Two workflows handle everything:
 - **Start application** — `cd artifacts/zafex-collectibles && PORT=5000 BASE_PATH=/ pnpm dev`  
   Starts the Vite dev server at port 5000 (shown in the preview pane).
 
-- **API Server** — `cd artifacts/api-server && PORT=3000 pnpm dev`  
-  Builds and starts the Express server at port 3000.
+- **API Server** — managed by the `artifacts/api-server: API Server` workflow  
+  Builds and starts the Express server at port 8080. Proxied to the frontend at `/api`.
 
 The database (`DATABASE_URL`) is managed automatically by Replit.
 

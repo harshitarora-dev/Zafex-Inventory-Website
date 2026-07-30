@@ -63,7 +63,7 @@ router.put(
   requireAdmin,
   upload.single("image"),
   (req, res) => {
-    const { key } = req.params;
+    const key = req.params['key'] as string;
     const filename = HOMEPAGE_IMAGE_MAP[key];
     if (!filename) {
       res.status(400).json({ error: "Unknown homepage image key" });

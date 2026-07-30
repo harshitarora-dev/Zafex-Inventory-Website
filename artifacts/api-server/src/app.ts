@@ -29,7 +29,20 @@ app.use(
 
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (server-to-server, curl)
+      // Allow localhost (Vite dev proxy) and Replit preview domains
+      if (
+        !origin ||
+        /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+        /\.replit\.dev$/.test(origin) ||
+        /\.repl\.co$/.test(origin)
+      ) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
   }),
 );
