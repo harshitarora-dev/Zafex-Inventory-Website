@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { checkAdminAuth, adminLogout } from '@/lib/adminApi';
-import { Package, LogOut, LayoutDashboard, Image } from 'lucide-react';
+import { Package, LogOut, LayoutDashboard, Image, ShoppingCart, Users, MessageSquare } from 'lucide-react';
 
 interface Props {
   children: React.ReactNode;
@@ -32,8 +32,12 @@ export default function AdminLayout({ children }: Props) {
   }
 
   const nav = [
-    { href: '/admin/products',       label: 'Products',         icon: Package },
-    { href: '/admin/homepage-images', label: 'Homepage Images', icon: Image   },
+    { href: '/admin/dashboard',      label: 'Dashboard',       icon: LayoutDashboard },
+    { href: '/admin/orders',          label: 'Orders',          icon: ShoppingCart    },
+    { href: '/admin/products',        label: 'Products',        icon: Package         },
+    { href: '/admin/homepage-images', label: 'Homepage Images', icon: Image           },
+    { href: '/admin/customers',       label: 'Customers',       icon: Users           },
+    { href: '/admin/contacts',        label: 'Contacts',        icon: MessageSquare   },
   ];
 
   return (
@@ -42,7 +46,7 @@ export default function AdminLayout({ children }: Props) {
       <aside className="w-72 bg-[#1a1a18] flex flex-col shrink-0">
         {/* Brand */}
         <div className="px-7 py-7 border-b border-[#2a2a26]">
-          <Link href="/admin/products" className="block">
+          <Link href="/admin/dashboard" className="block">
             <div className="flex items-center gap-3">
               <span className="text-[#d4af37] text-xl font-serif">✦</span>
               <div>
@@ -58,9 +62,9 @@ export default function AdminLayout({ children }: Props) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-4 py-5 space-y-1">
+        <nav className="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
           {nav.map(({ href, label, icon: Icon }) => {
-            const active = location.startsWith(href);
+            const active = location === href || (href !== '/admin/dashboard' && location.startsWith(href));
             return (
               <Link key={href} href={href}>
                 <div

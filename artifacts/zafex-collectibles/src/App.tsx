@@ -6,13 +6,19 @@ import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+import { AuthProvider } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ScrollProgress } from '@/components/ScrollProgress';
+
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminProducts from '@/pages/admin/AdminProducts';
 import AdminProductForm from '@/pages/admin/AdminProductForm';
 import AdminHomepageImages from '@/pages/admin/AdminHomepageImages';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminOrders from '@/pages/admin/AdminOrders';
+import AdminCustomers from '@/pages/admin/AdminCustomers';
+import AdminContacts from '@/pages/admin/AdminContacts';
 
 import Home from '@/pages/Home';
 import Shop from '@/pages/Shop';
@@ -23,6 +29,13 @@ import CategoryPage from '@/pages/CategoryPage';
 import CustomForging from '@/pages/CustomForging';
 import Blog from '@/pages/Blog';
 import Resources from '@/pages/Resources';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import Account from '@/pages/Account';
+import OrderDetail from '@/pages/OrderDetail';
+import CartPage from '@/pages/Cart';
+import WishlistPage from '@/pages/Wishlist';
+import Checkout from '@/pages/Checkout';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -79,33 +92,11 @@ const Privacy  = () => (
   <ContentPage title="Privacy Policy">
     <p>At Zafex Collectibles, we respect your privacy and are committed to protecting your personal information.</p>
     <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Information We Collect</h3>
-    <p>We may collect:</p>
-    <ul>
-      <li>Name</li>
-      <li>Email address</li>
-      <li>Phone number</li>
-      <li>Billing and shipping address</li>
-      <li>Order details</li>
-      <li>Payment information (processed securely by third-party payment providers)</li>
-      <li>Website usage information through cookies</li>
-    </ul>
+    <p>We may collect name, email address, phone number, billing and shipping address, order details, and payment information (processed securely by third-party payment providers).</p>
     <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">How We Use Your Information</h3>
-    <p>We use your information to:</p>
-    <ul>
-      <li>Process and fulfill orders</li>
-      <li>Provide customer support</li>
-      <li>Send shipping updates</li>
-      <li>Improve our website and services</li>
-      <li>Prevent fraud and unauthorized transactions</li>
-    </ul>
+    <p>We use your information to process and fulfill orders, provide customer support, send shipping updates, improve our website and services, and prevent fraud.</p>
     <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Data Protection</h3>
     <p>We implement appropriate security measures to protect your personal information from unauthorized access, misuse, or disclosure.</p>
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Third-Party Services</h3>
-    <p>We may use trusted third-party providers such as payment gateways, shipping companies, and analytics services to operate our business efficiently.</p>
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Cookies</h3>
-    <p>Our website uses cookies to improve user experience, remember preferences, and analyze website traffic.</p>
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Your Rights</h3>
-    <p>You may request access to, correction of, or deletion of your personal information by contacting us.</p>
     <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Contact</h3>
     <p>If you have any questions regarding this Privacy Policy, please contact us using the information provided on our Contact page.</p>
   </ContentPage>
@@ -116,107 +107,26 @@ const Shipping = () => (
     <ul>
       <li><strong>Ready-to-Ship Products:</strong> 2–5 business days</li>
       <li><strong>Handmade Products:</strong> 3–7 business days</li>
-      <li><strong>Custom Orders:</strong> 7–21 business days (depending on complexity)</li>
+      <li><strong>Custom Orders:</strong> 7–21 business days</li>
     </ul>
-
     <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Shipping Partners</h3>
-    <ul>
-      <li>FedEx</li>
-      <li>DHL Express</li>
-      <li>UPS</li>
-      <li>USPS</li>
-      <li>India Post (where available)</li>
-    </ul>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Estimated Delivery Time</h3>
-    <h4 className="mt-6 mb-3 font-serif text-lg text-[#1a1a18]">Express Shipping</h4>
-    <ul>
-      <li><strong>USA &amp; Canada:</strong> 4–8 business days</li>
-      <li><strong>Europe:</strong> 4–10 business days</li>
-      <li><strong>Australia &amp; New Zealand:</strong> 5–12 business days</li>
-      <li><strong>Rest of the World:</strong> 5–15 business days</li>
-    </ul>
-    <h4 className="mt-6 mb-3 font-serif text-lg text-[#1a1a18]">Standard Shipping</h4>
-    <ul>
-      <li><strong>USA &amp; Canada:</strong> 10–15 business days</li>
-      <li><strong>Europe:</strong> 8–14 business days</li>
-      <li><strong>Australia &amp; New Zealand:</strong> 10–18 business days</li>
-      <li><strong>Rest of the World:</strong> 10–20 business days</li>
-    </ul>
-
+    <ul><li>FedEx</li><li>DHL Express</li><li>UPS</li><li>USPS</li><li>India Post (where available)</li></ul>
     <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Customs &amp; Import Taxes</h3>
     <p>International buyers are responsible for any customs duties, VAT, GST, import taxes, brokerage fees, or other charges imposed by their country's customs authorities.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Order Tracking</h3>
-    <p>A tracking number will be provided via email once your order has been dispatched.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Shipping Support</h3>
-    <p>For any shipping-related questions, please contact us.</p>
-    <p className="mt-4">
-      Email: <a className="text-[#8b6914] hover:underline" href="mailto:zafexcollectibles@gmail.com">zafexcollectibles@gmail.com</a><br />
-      Phone / WhatsApp: <a className="text-[#8b6914] hover:underline" href="tel:+918273506540">+91-8273506540</a>
-    </p>
+    <p className="mt-4">Email: <a className="text-[#8b6914] hover:underline" href="mailto:zafexcollectibles@gmail.com">zafexcollectibles@gmail.com</a></p>
   </ContentPage>
 );
 const Refund = () => (
   <ContentPage title="Return & Refund Policy">
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Returns</h3>
-    <p>At Zafex Collectibles, customer satisfaction is our priority. If you are not completely satisfied with your purchase, you may request a return under the following conditions.</p>
-    <p className="mt-4">Eligible returns must be requested within 30 days of receiving your order.</p>
-    <p className="mt-4">Items must be:</p>
-    <ul>
-      <li>Unused and in their original condition.</li>
-      <li>Returned with original packaging whenever possible.</li>
-      <li>Free from damage caused by misuse, alteration, or improper handling.</li>
-    </ul>
+    <p>At Zafex Collectibles, customer satisfaction is our priority. Eligible returns must be requested within 30 days of receiving your order.</p>
     <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Non-Returnable Items</h3>
-    <p>The following items cannot be returned unless they arrive damaged or defective:</p>
-    <ul>
-      <li>Custom-made products</li>
-      <li>Personalized items</li>
-      <li>Made-to-order products</li>
-      <li>Clearance or final sale items</li>
-    </ul>
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Damaged or Incorrect Orders</h3>
-    <p>If your order arrives damaged, defective, or you receive the wrong item, please contact us within 7 days of delivery. Include your order number and clear photographs of the item and packaging so we can resolve the issue promptly.</p>
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Refunds</h3>
-    <p>Once your returned item has been received and inspected, we will notify you regarding the approval of your refund.</p>
-    <p className="mt-4">Approved refunds will be issued to the original payment method within 5–10 business days, depending on your payment provider.</p>
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Return Shipping</h3>
-    <p>If the return is due to our error, we will cover the return shipping costs.</p>
-    <p className="mt-4">For all other returns, customers are responsible for return shipping charges.</p>
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Contact</h3>
-    <p>For return assistance, please contact our customer support team.</p>
-    <p className="mt-4">Email: <a className="text-[#8b6914] hover:underline" href="mailto:zafexcollectibles@gmail.com">zafexcollectibles@gmail.com</a><br />Phone / WhatsApp: <a className="text-[#8b6914] hover:underline" href="tel:+918273506540">+91-8273506540</a></p>
+    <ul><li>Custom-made products</li><li>Personalized items</li><li>Made-to-order products</li><li>Clearance or final sale items</li></ul>
+    <p className="mt-4">Email: <a className="text-[#8b6914] hover:underline" href="mailto:zafexcollectibles@gmail.com">zafexcollectibles@gmail.com</a></p>
   </ContentPage>
 );
 const Terms = () => (
   <ContentPage title="Terms & Conditions">
-    <p>By using the Zafex Collectibles website, you agree to the following terms.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Products</h3>
-    <p>All products are handcrafted. Minor differences in color, finish, texture, or dimensions are part of the handmade manufacturing process and should not be considered defects.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Pricing</h3>
-    <p>Prices may change without prior notice.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Orders</h3>
-    <p>We reserve the right to cancel or refuse any order if necessary, including cases involving pricing errors, suspected fraud, or product availability.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Custom Orders</h3>
-    <p>Custom-made products cannot be canceled once production has started.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Intellectual Property</h3>
-    <p>All website content, including text, photographs, logos, graphics, and product descriptions, is the property of Zafex Collectibles and may not be copied without written permission.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Limitation of Liability</h3>
-    <p>Zafex Collectibles shall not be liable for indirect or consequential damages arising from the use of our products or website.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Governing Law</h3>
-    <p>These Terms shall be governed by the laws of India.</p>
-
-    <h3 className="mt-8 mb-4 font-serif text-xl text-[#1a1a18]">Contact</h3>
-    <p>For questions regarding these Terms, please contact our customer support team.</p>
+    <p>By using the Zafex Collectibles website, you agree to the following terms. All products are handcrafted. Minor differences in color, finish, texture, or dimensions are part of the handmade manufacturing process and should not be considered defects. These Terms shall be governed by the laws of India.</p>
   </ContentPage>
 );
 const BuyingGuides = () => <ContentPage title="Buying Guides"><p>Explore our buying guides for choosing the right armor, chainmail, clothing, and accessories for your collection, reenactment, or costume.</p></ContentPage>;
@@ -280,10 +190,14 @@ function Router() {
         <Route path="/admin/products/:id/edit">
           {(params) => <AdminProductForm mode="edit" id={params.id} />}
         </Route>
+        <Route path="/admin/dashboard" component={AdminDashboard} />
+        <Route path="/admin/orders" component={AdminOrders} />
+        <Route path="/admin/customers" component={AdminCustomers} />
+        <Route path="/admin/contacts" component={AdminContacts} />
         <Route path="/admin/products" component={AdminProducts} />
         <Route path="/admin/homepage-images" component={AdminHomepageImages} />
         <Route path="/admin">
-          <Redirect to="/admin/products" />
+          <Redirect to="/admin/dashboard" />
         </Route>
       </Switch>
     );
@@ -301,6 +215,15 @@ function Router() {
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
           <Route path="/resources" component={Resources} />
+
+          {/* ── Auth & account ── */}
+          <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} />
+          <Route path="/account" component={Account} />
+          <Route path="/orders/:id" component={OrderDetail} />
+          <Route path="/cart" component={CartPage} />
+          <Route path="/wishlist" component={WishlistPage} />
+          <Route path="/checkout" component={Checkout} />
 
           {/* ── Named /cat/* overrides — MUST come before the generic :category catch-all ── */}
           <Route path="/cat/about-us" component={About} />
@@ -348,10 +271,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
-        <SmoothScrollProvider>
-          <ScrollProgress />
-          <Router />
-        </SmoothScrollProvider>
+        <AuthProvider>
+          <SmoothScrollProvider>
+            <ScrollProgress />
+            <Router />
+          </SmoothScrollProvider>
+        </AuthProvider>
       </WouterRouter>
       <Toaster />
     </QueryClientProvider>

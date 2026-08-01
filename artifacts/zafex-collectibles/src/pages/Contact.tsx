@@ -1,18 +1,48 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'wouter';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { submitContact } from '@/lib/api';
+import { useMutation } from '@tanstack/react-query';
 
 const Contact = () => {
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const mutation = useMutation({
+    mutationFn: (body: {
+      name: string;
+      email: string;
+      phone?: string;
+      subject?: string;
+      message: string;
+    }) => submitContact(body),
+    onSuccess: () => {
+      toast({
+        title: 'Message Sent!',
+        description: "We'll get back to you via email shortly.",
+      });
+      formRef.current?.reset();
+    },
+    onError: (err: unknown) => {
+      toast({
+        title: 'Failed to send message',
+        description: err instanceof Error ? err.message : 'Please try again later.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast({
-      title: "Message Sent",
-      description: "We'll get back to you via raven (or email) shortly.",
+    const fd = new FormData(e.currentTarget);
+    mutation.mutate({
+      name:    fd.get('name')    as string,
+      email:   fd.get('email')   as string,
+      phone:   (fd.get('phone')  as string) || undefined,
+      subject: (fd.get('subject') as string) || undefined,
+      message: fd.get('message') as string,
     });
-    (e.target as HTMLFormElement).reset();
   };
 
   return (
@@ -41,27 +71,58 @@ const Contact = () => {
               Have a question about an order, a custom forging request, or need help with sizing? Fill out the form below.
             </p>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Your Name</label>
-                  <input required type="text" className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]" />
+                  <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Your Name *</label>
+                  <input
+                    name="name"
+                    required
+                    type="text"
+                    className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]"
+                  />
                 </div>
                 <div>
-                  <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Email Address</label>
-                  <input required type="email" className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]" />
+                  <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Email Address *</label>
+                  <input
+                    name="email"
+                    required
+                    type="email"
+                    className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]"
+                  />
                 </div>
+              </div>
+              <div>
+                <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Phone (optional)</label>
+                <input
+                  name="phone"
+                  type="tel"
+                  className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]"
+                />
               </div>
               <div>
                 <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Subject</label>
-                <input required type="text" className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]" />
+                <input
+                  name="subject"
+                  type="text"
+                  className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]"
+                />
               </div>
               <div>
-                <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Message</label>
-                <textarea required rows={5} className="w-full bg-white border border-[#d4cfc7] p-4 font-sans focus:outline-none focus:border-[#d4af37] resize-none"></textarea>
+                <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Message *</label>
+                <textarea
+                  name="message"
+                  required
+                  rows={5}
+                  className="w-full bg-white border border-[#d4cfc7] p-4 font-sans focus:outline-none focus:border-[#d4af37] resize-none"
+                ></textarea>
               </div>
-              <button type="submit" className="h-[52px] bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] hover:bg-[#d4af37] transition-colors w-full md:w-auto px-8 self-start">
-                SEND MESSAGE
+              <button
+                type="submit"
+                disabled={mutation.isPending}
+                className="h-[52px] bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors w-full md:w-auto px-8 self-start disabled:opacity-60"
+              >
+                {mutation.isPending ? 'SENDING…' : 'SEND MESSAGE'}
               </button>
             </form>
           </div>
@@ -70,7 +131,7 @@ const Contact = () => {
           <div>
             <h2 className="font-serif text-[28px] font-bold text-[#1a1a18] uppercase tracking-[1px] mb-2">Workshop & HQ</h2>
             <div className="w-[40px] h-[3px] bg-[#9c1c1c] mb-8"></div>
-            
+
             <div className="flex flex-col gap-8 bg-white border border-[#d4cfc7] p-8">
               <div className="flex gap-4">
                 <MapPin className="text-[#d4af37] shrink-0" size={24} />
@@ -90,7 +151,7 @@ const Contact = () => {
                 <div>
                   <h4 className="font-serif text-[13px] font-bold text-[#1a1a18] uppercase tracking-[1px] mb-2">Phone</h4>
                   <p className="font-sans text-[14px] text-[#6b6b6b] leading-relaxed">
-                    +91-8273506540
+                    <a href="tel:+918273506540" className="hover:text-[#d4af37] transition-colors">+91-8273506540</a>
                   </p>
                 </div>
               </div>
@@ -99,9 +160,11 @@ const Contact = () => {
                 <Mail className="text-[#d4af37] shrink-0" size={24} />
                 <div>
                   <h4 className="font-serif text-[13px] font-bold text-[#1a1a18] uppercase tracking-[1px] mb-2">Email</h4>
-                  <a href="mailto:zafexenterprises@gmail.com" className="font-sans text-[14px] text-[#d4af37] hover:underline">
-                    zafexenterprises@gmail.com
-                  </a>
+                  <p className="font-sans text-[14px] text-[#6b6b6b] leading-relaxed">
+                    <a href="mailto:zafexcollectibles@gmail.com" className="hover:text-[#d4af37] transition-colors">
+                      zafexcollectibles@gmail.com
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>

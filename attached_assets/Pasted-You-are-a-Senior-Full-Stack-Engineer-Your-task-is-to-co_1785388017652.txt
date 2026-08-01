@@ -1,0 +1,524 @@
+You are a Senior Full Stack Engineer.
+
+Your task is to complete this existing project without breaking any current functionality.
+
+IMPORTANT RULES
+
+- Do NOT recreate the project.
+- Do NOT change the UI unless necessary.
+- Keep existing design.
+- Keep existing folder structure.
+- Keep existing coding style.
+- Reuse existing components.
+- Do NOT hardcode any data.
+- Every dynamic data must come from PostgreSQL through Drizzle ORM and Express APIs.
+- Use TypeScript everywhere.
+- Build production-quality code.
+
+==========================================================
+PROJECT STACK
+==========================================================
+
+Frontend
+- React 19
+- Vite
+- TypeScript
+- Tailwind CSS
+
+Backend
+- Express
+- PostgreSQL
+- Drizzle ORM
+- express-session
+- Multer
+
+Database
+- PostgreSQL
+
+Current Features
+- Homepage
+- Products
+- Admin Login
+- Product CRUD
+- Homepage Image Upload
+- Product Database
+- Orders Table
+- Order Items Table
+
+==========================================================
+MAIN GOAL
+==========================================================
+
+Complete the USER SIDE of this ecommerce project.
+
+Everything must work from frontend to backend.
+
+No hardcoded data.
+
+Everything stored in PostgreSQL.
+
+==========================================================
+PART 1
+USER AUTHENTICATION
+==========================================================
+
+Implement complete authentication.
+
+Features
+
+- User Registration
+- User Login
+- Logout
+- Remember Login
+- Session Authentication
+- Password Hashing using bcrypt
+- Email Validation
+- Duplicate Email Validation
+- Duplicate Phone Validation
+- Protected Routes
+- Profile Page
+- Edit Profile
+- Change Password
+
+Create Database Table
+
+users
+
+Fields
+
+id
+name
+email
+phone
+password
+avatar
+createdAt
+updatedAt
+
+Backend APIs
+
+POST /api/auth/register
+
+POST /api/auth/login
+
+POST /api/auth/logout
+
+GET /api/auth/me
+
+PUT /api/auth/profile
+
+PUT /api/auth/password
+
+Frontend
+
+Registration page
+
+Login page
+
+Profile page
+
+Navbar Login State
+
+==========================================================
+PART 2
+SHOPPING CART
+==========================================================
+
+Implement complete cart system.
+
+Database
+
+cart
+
+Fields
+
+id
+
+userId
+
+productId
+
+quantity
+
+createdAt
+
+Backend APIs
+
+GET /api/cart
+
+POST /api/cart
+
+PUT /api/cart/:id
+
+DELETE /api/cart/:id
+
+DELETE /api/cart
+
+Frontend
+
+Add To Cart
+
+Cart Badge
+
+Cart Page
+
+Quantity Increase
+
+Quantity Decrease
+
+Remove Item
+
+Clear Cart
+
+Live Total
+
+Subtotal
+
+Shipping
+
+Grand Total
+
+==========================================================
+PART 3
+WISHLIST
+==========================================================
+
+Create Wishlist
+
+Database
+
+wishlist
+
+Fields
+
+id
+
+userId
+
+productId
+
+Backend APIs
+
+GET /api/wishlist
+
+POST /api/wishlist
+
+DELETE /api/wishlist/:id
+
+Frontend
+
+Heart Icon
+
+Wishlist Page
+
+Move To Cart
+
+==========================================================
+PART 4
+CHECKOUT
+==========================================================
+
+Checkout Page
+
+Collect
+
+Name
+
+Phone
+
+Email
+
+Address
+
+State
+
+City
+
+Pin Code
+
+Country
+
+Notes
+
+Save Address
+
+Validation
+
+==========================================================
+PART 5
+ORDERS
+==========================================================
+
+Use existing Orders Table.
+
+Improve it.
+
+Database
+
+orders
+
+order_items
+
+order_status_history
+
+Order Status
+
+Pending
+
+Confirmed
+
+Packed
+
+Shipped
+
+Delivered
+
+Cancelled
+
+Customer Features
+
+Order History
+
+Order Details
+
+Invoice
+
+Cancel Order
+
+==========================================================
+PART 6
+PAYMENT
+==========================================================
+
+Use Razorpay only.
+
+No Stripe.
+
+Implement
+
+Create Order API
+
+Verify Payment API
+
+Payment Success
+
+Payment Failed
+
+Save paymentId
+
+Save orderId
+
+Save signature
+
+Save payment status
+
+Do NOT mark order as paid until signature verification succeeds.
+
+==========================================================
+PART 7
+DATABASE
+==========================================================
+
+Create proper schema
+
+Foreign Keys
+
+Indexes
+
+Cascade Deletes
+
+Validation
+
+Migration
+
+Seed
+
+==========================================================
+PART 8
+ADMIN PANEL
+==========================================================
+
+Extend existing Admin Panel.
+
+Dashboard
+
+Total Users
+
+Total Orders
+
+Revenue
+
+Pending Orders
+
+Low Stock
+
+Order Management
+
+Update Order Status
+
+Customer List
+
+View Payments
+
+==========================================================
+PART 9
+PRODUCT PAGE
+==========================================================
+
+Use database.
+
+Remove every hardcoded product.
+
+Add
+
+Related Products
+
+Latest Products
+
+Featured Products
+
+Search
+
+Category Filter
+
+Price Filter
+
+Sort
+
+Pagination
+
+==========================================================
+PART 10
+SEARCH
+==========================================================
+
+Backend Search API
+
+Live Search
+
+Suggestions
+
+==========================================================
+PART 11
+REVIEWS
+==========================================================
+
+Database
+
+reviews
+
+Customer can
+
+Add Review
+
+Edit Review
+
+Delete Review
+
+Rating
+
+Average Rating
+
+==========================================================
+PART 12
+CONTACT
+==========================================================
+
+Contact Form
+
+Save to database
+
+Admin View
+
+==========================================================
+PART 13
+EMAIL
+==========================================================
+
+Send email
+
+Registration
+
+Order Confirmation
+
+Payment Success
+
+==========================================================
+PART 14
+SECURITY
+==========================================================
+
+Helmet
+
+Rate Limit
+
+Input Validation
+
+Zod
+
+Sanitize Inputs
+
+==========================================================
+PART 15
+ERROR HANDLING
+==========================================================
+
+Use proper error middleware.
+
+No crashes.
+
+Meaningful API errors.
+
+==========================================================
+PART 16
+RESPONSIVE
+==========================================================
+
+Everything responsive.
+
+Desktop
+
+Tablet
+
+Mobile
+
+==========================================================
+PART 17
+FINAL REQUIREMENT
+==========================================================
+
+Remove every remaining hardcoded product/customer/order/cart data.
+
+Everything must come from PostgreSQL.
+
+Connect every frontend page with backend APIs.
+
+Use existing architecture.
+
+Do NOT duplicate code.
+
+Refactor reusable components.
+
+Use reusable hooks.
+
+Keep code clean.
+
+Generate all migrations.
+
+Generate all APIs.
+
+Generate all React pages.
+
+Generate all React hooks.
+
+Generate all database schemas.
+
+Generate all backend controllers.
+
+Generate all routes.
+
+Generate all validation.
+
+Generate complete working project.
+
+At the end provide a checklist of completed features and any remaining work.

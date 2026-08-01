@@ -3,8 +3,11 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { errorHandler } from "./middlewares/errorHandler";
 
 // Ensure session type augmentation is loaded
 import "./types/session.d.ts";
@@ -12,6 +15,9 @@ import "./types/session.d.ts";
 const app: Express = express();
 
 app.set("trust proxy", 1);
+
+// Security headers — CSP disabled so the Vite dev proxy and inline scripts work
+app.use(helmet({ contentSecurityPolicy: false }));
 
 app.use(
   pinoHttp({
@@ -30,8 +36,6 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (server-to-server, curl)
-      // Allow localhost (Vite dev proxy) and Replit preview domains
       if (
         !origin ||
         /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
@@ -47,6 +51,16 @@ app.use(
   }),
 );
 
+// General rate-limit: 300 req / 15 min
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }),
+);
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -55,7 +69,7 @@ const sessionSecret = process.env["SESSION_SECRET"];
 if (!sessionSecret) {
   throw new Error(
     "SESSION_SECRET environment variable must be set. " +
-    "Add it as a Replit Secret before starting the server.",
+      "Add it as a Replit Secret before starting the server.",
   );
 }
 
@@ -74,5 +88,8 @@ app.use(
 );
 
 app.use("/api", router);
+
+// Global error handler — must be last middleware
+app.use(errorHandler);
 
 export default app;

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
 import { PRODUCTS } from '@/data/products';
+import { useQuery } from '@tanstack/react-query';
+import { getProduct, getReviews, createReview, updateReview, deleteReview } from '@/lib/api';
 import {
   Heart,
   ShieldCheck,
@@ -13,128 +15,335 @@ import {
   ZoomIn,
   ShoppingBag,
   Share2,
+  Star,
+  Trash2,
+  Pencil,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAddToCart } from '@/hooks/useCart';
+import { useIsInWishlist, useWishlistItem, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import ProductCard from '@/components/ProductCard';
 
-/* ─── FAQ Accordion ─────────────────────────────────────────────────── */
+/* ─── Star Rating ───────────────────────────────────────────────────── */
+function StarRating({ value, onChange, readonly = false }: { value: number; onChange?: (v: number) => void; readonly?: boolean }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type={readonly ? 'button' : 'button'}
+          disabled={readonly}
+          onClick={() => !readonly && onChange?.(star)}
+          onMouseEnter={() => !readonly && setHover(star)}
+          onMouseLeave={() => !readonly && setHover(0)}
+          className={`transition-colors ${readonly ? 'cursor-default' : 'cursor-pointer'}`}
+          aria-label={`${star} star`}
+        >
+          <Star
+            size={16}
+            className={(hover || value) >= star ? 'text-[#d4af37]' : 'text-[#d4cfc7]'}
+            fill={(hover || value) >= star ? 'currentColor' : 'none'}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
 
+/* ─── FAQ Accordion ─────────────────────────────────────────────────── */
 const FAQS = [
-  {
-    q: 'Is this suitable for LARP / battle use?',
-    a: 'Our steel pieces are crafted from high-carbon steel and are suitable for display and light reenactment. Items marked "battle-ready" have reinforced construction with rounded edges. LARP-specific foam weapons are safe for full-contact fighting.',
-  },
-  {
-    q: 'What is your return / exchange policy?',
-    a: 'We accept returns within 14 days of delivery for standard catalog items, provided the item is unused and in original condition. Custom commissions are non-refundable once production begins.',
-  },
-  {
-    q: 'How long does shipping take?',
-    a: 'Domestic orders dispatch within 2–3 business days. International shipping via express courier typically takes 7–14 days depending on the destination and customs clearance.',
-  },
-  {
-    q: 'How do I care for my piece?',
-    a: 'Steel items should be lightly oiled after handling to prevent rust — Renaissance wax or mineral oil works best. Store in a dry, climate-controlled space. Leather goods should be conditioned periodically with mink oil or a quality leather conditioner.',
-  },
+  { q: 'Is this suitable for LARP / battle use?', a: 'Our steel pieces are crafted from high-carbon steel and are suitable for display and light reenactment. Items marked "battle-ready" have reinforced construction with rounded edges. LARP-specific foam weapons are safe for full-contact fighting.' },
+  { q: 'What is your return / exchange policy?', a: 'We accept returns within 14 days of delivery for standard catalog items, provided the item is unused and in original condition. Custom commissions are non-refundable once production begins.' },
+  { q: 'How long does shipping take?', a: 'Domestic orders dispatch within 2–3 business days. International shipping via express courier typically takes 7–14 days depending on the destination and customs clearance.' },
+  { q: 'How do I care for my piece?', a: 'Steel items should be lightly oiled after handling to prevent rust — Renaissance wax or mineral oil works best. Store in a dry, climate-controlled space. Leather goods should be conditioned periodically with mink oil or a quality leather conditioner.' },
 ];
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-[#d4cfc7]">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between py-4 text-left gap-4"
-        aria-expanded={open}
-      >
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between py-4 text-left gap-4" aria-expanded={open}>
         <span className="font-serif text-[14px] text-[#1a1a18] leading-snug">{q}</span>
-        <ChevronDown
-          size={16}
-          className={`flex-shrink-0 text-[#6b6b6b] transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
-        />
+        <ChevronDown size={16} className={`flex-shrink-0 text-[#6b6b6b] transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
       </button>
-      <div
-        className="overflow-hidden transition-all duration-300"
-        style={{ maxHeight: open ? '300px' : '0', opacity: open ? 1 : 0 }}
-      >
+      <div className="overflow-hidden transition-all duration-300" style={{ maxHeight: open ? '300px' : '0', opacity: open ? 1 : 0 }}>
         <p className="font-sans text-[13px] text-[#4a4a4a] leading-relaxed pb-5">{a}</p>
       </div>
     </div>
   );
 }
 
-/* ─── Main Component ──────────────────────────────────────────────────── */
-
-const ProductDetail = () => {
-  const { id } = useParams();
-  const product = PRODUCTS.find((p) => p.id === id);
+/* ─── Reviews Section ───────────────────────────────────────────────── */
+function ReviewsSection({ productId }: { productId: string }) {
+  const { isLoggedIn } = useAuth();
   const { toast } = useToast();
+  const qc = useQueryClient();
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editRating, setEditRating] = useState(5);
+  const [editComment, setEditComment] = useState('');
+
+  const { data } = useQuery({
+    queryKey: ['reviews', productId],
+    queryFn: () => getReviews(productId),
+    staleTime: 60 * 1000,
+  });
+
+  const reviews = data?.reviews ?? [];
+  const avgRating = data?.averageRating ?? 0;
+  const totalReviews = data?.totalReviews ?? 0;
+
+  const submitMutation = useMutation({
+    mutationFn: (body: { productId: string; rating: number; comment?: string }) =>
+      createReview(body.productId, body.rating, body.comment),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['reviews', productId] });
+      setRating(5);
+      setComment('');
+      toast({ title: 'Review submitted!', description: 'Thank you for your feedback.' });
+    },
+    onError: (err: unknown) => {
+      toast({ title: 'Failed to submit', description: err instanceof Error ? err.message : 'Please try again', variant: 'destructive' });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (body: { id: number; rating: number; comment?: string }) =>
+      updateReview(body.id, body.rating, body.comment),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['reviews', productId] });
+      setEditingId(null);
+      toast({ title: 'Review updated' });
+    },
+    onError: (err: unknown) => {
+      toast({ title: 'Failed to update', description: err instanceof Error ? err.message : 'Please try again', variant: 'destructive' });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteReview(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['reviews', productId] });
+      toast({ title: 'Review deleted' });
+    },
+  });
+
+  return (
+    <div className="mt-16 pt-12 border-t border-[#d4cfc7]">
+      <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block mb-2">CUSTOMER FEEDBACK</span>
+      <h2 className="font-serif text-[28px] font-bold text-[#1a1a18] uppercase mb-2">Reviews</h2>
+
+      {/* Rating summary */}
+      {totalReviews > 0 && (
+        <div className="flex items-center gap-4 mb-8">
+          <span className="font-serif text-[40px] font-bold text-[#1a1a18]">{avgRating.toFixed(1)}</span>
+          <div>
+            <StarRating value={Math.round(avgRating)} readonly />
+            <span className="font-sans text-[12px] text-[#6b6b6b] mt-1 block">{totalReviews} review{totalReviews !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Review list */}
+      {reviews.length > 0 && (
+        <div className="flex flex-col gap-6 mb-10">
+          {reviews.map((review) => (
+            <div key={review.id} className="border-b border-[#d4cfc7] pb-6">
+              {editingId === review.id ? (
+                <div className="flex flex-col gap-3">
+                  <StarRating value={editRating} onChange={setEditRating} />
+                  <textarea
+                    value={editComment}
+                    onChange={(e) => setEditComment(e.target.value)}
+                    rows={3}
+                    className="w-full border border-[#d4cfc7] p-3 font-sans text-[13px] focus:outline-none focus:border-[#d4af37] resize-none"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => updateMutation.mutate({ id: review.id, rating: editRating, comment: editComment || undefined })}
+                      disabled={updateMutation.isPending}
+                      className="h-[36px] px-5 bg-[#1a1a18] text-white font-serif text-[11px] uppercase tracking-[1px] hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors disabled:opacity-60"
+                    >
+                      {updateMutation.isPending ? 'Saving…' : 'Save'}
+                    </button>
+                    <button onClick={() => setEditingId(null)} className="h-[36px] px-5 border border-[#d4cfc7] font-serif text-[11px] uppercase tracking-[1px] hover:border-[#1a1a18] transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <StarRating value={review.rating} readonly />
+                        <span className="font-sans text-[11px] text-[#6b6b6b]">
+                          by {review.user?.name ?? 'Anonymous'}
+                        </span>
+                      </div>
+                      {review.comment && (
+                        <p className="font-sans text-[14px] text-[#4a4a4a] leading-relaxed mt-2">{review.comment}</p>
+                      )}
+                      <span className="font-sans text-[11px] text-[#a39b8e] block mt-2">
+                        {new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+                    {isLoggedIn && (
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => { setEditingId(review.id); setEditRating(review.rating); setEditComment(review.comment ?? ''); }}
+                          className="text-[#6b6b6b] hover:text-[#1a1a18] transition-colors"
+                          aria-label="Edit review"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => deleteMutation.mutate(review.id)}
+                          className="text-[#6b6b6b] hover:text-[#9c1c1c] transition-colors"
+                          aria-label="Delete review"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Write a review */}
+      {isLoggedIn ? (
+        <div className="bg-[#faf8f3] border border-[#d4cfc7] p-6">
+          <h3 className="font-serif text-[16px] font-bold text-[#1a1a18] uppercase mb-4">Write a Review</h3>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Rating</label>
+              <StarRating value={rating} onChange={setRating} />
+            </div>
+            <div>
+              <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Comment (optional)</label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={4}
+                className="w-full border border-[#d4cfc7] p-3 font-sans text-[13px] focus:outline-none focus:border-[#d4af37] resize-none bg-white"
+                placeholder="Share your experience with this product…"
+              />
+            </div>
+            <button
+              onClick={() => submitMutation.mutate({ productId, rating, comment: comment || undefined })}
+              disabled={submitMutation.isPending}
+              className="h-[48px] self-start px-8 bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors disabled:opacity-60"
+            >
+              {submitMutation.isPending ? 'Submitting…' : 'Submit Review'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-[#faf8f3] border border-[#d4cfc7] p-6 text-center">
+          <p className="font-sans text-[14px] text-[#6b6b6b] mb-4">Sign in to leave a review</p>
+          <Link href="/login" className="inline-flex h-[44px] items-center px-8 bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors">
+            Sign In
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Main Component ──────────────────────────────────────────────────── */
+const ProductDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
+  const { isLoggedIn } = useAuth();
+
+  // Fetch product from API (fallback to static data)
+  const { data: apiProduct } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => getProduct(id!),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  const staticProduct = PRODUCTS.find((p) => p.id === id);
+  const product = apiProduct ?? staticProduct;
+
   const [qty, setQty] = useState(1);
   const [mainImg, setMainImg] = useState(product?.image ?? '');
   const [thumbIdx, setThumbIdx] = useState(0);
   const [zoomed, setZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [adding, setAdding] = useState(false);
 
-  // Pseudo gallery — repeat the single image 3 times (would be real images in production)
+  const addToCart = useAddToCart();
+  const addToWishlist = useAddToWishlist();
+  const removeFromWishlist = useRemoveFromWishlist();
+  const isInWishlist = useIsInWishlist(id ?? '');
+  const wishlistItem = useWishlistItem(id ?? '');
+
   const gallery = product ? [product.image, product.image, product.image] : [];
-
-  // Related products — same category, excluding current
   const related = PRODUCTS.filter((p) => p.cat === product?.cat && p.id !== id).slice(0, 4);
 
   useEffect(() => {
-    if (product) {
-      setMainImg(product.image);
-      setThumbIdx(0);
-    }
+    if (product) { setMainImg(product.image); setThumbIdx(0); }
   }, [id, product]);
 
   if (!product) {
     return (
       <div className="min-h-screen bg-[#f5f0e8] flex flex-col items-center justify-center">
         <h1 className="font-serif text-4xl mb-4 text-[#1a1a18]">Product Not Found</h1>
-        <Link href="/shop" className="text-[#d4af37] font-serif uppercase tracking-[2px] hover:underline">
-          Return to Shop
-        </Link>
+        <Link href="/shop" className="text-[#d4af37] font-serif uppercase tracking-[2px] hover:underline">Return to Shop</Link>
       </div>
     );
   }
 
-  const handleAddToCart = () => {
-    setAdding(true);
-    setTimeout(() => {
-      setAdding(false);
-      toast({
-        title: 'Added to cart!',
-        description: `${qty}× ${product.name} has been added to your cart.`,
-      });
-    }, 600);
+  const handleAddToCart = async () => {
+    if (!isLoggedIn) {
+      toast({ title: 'Please sign in', description: 'You need to sign in to add items to your cart.', variant: 'destructive' });
+      return;
+    }
+    try {
+      await addToCart.mutateAsync({ productId: id!, quantity: qty });
+      toast({ title: 'Added to cart!', description: `${qty}× ${product.name} has been added to your cart.` });
+    } catch (err: unknown) {
+      toast({ title: 'Failed to add to cart', description: err instanceof Error ? err.message : 'Please try again', variant: 'destructive' });
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!isLoggedIn) {
+      toast({ title: 'Please sign in', description: 'You need to sign in to save items to your wishlist.', variant: 'destructive' });
+      return;
+    }
+    try {
+      if (isInWishlist && wishlistItem) {
+        await removeFromWishlist.mutateAsync(wishlistItem.id);
+        toast({ title: 'Removed from wishlist', description: product.name });
+      } else {
+        await addToWishlist.mutateAsync(id!);
+        toast({ title: 'Added to wishlist!', description: product.name });
+      }
+    } catch {
+      toast({ title: 'Wishlist update failed', variant: 'destructive' });
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!zoomed) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setZoomPos({ x, y });
+    setZoomPos({ x: ((e.clientX - rect.left) / rect.width) * 100, y: ((e.clientY - rect.top) / rect.height) * 100 });
   };
 
-  const handleThumb = (img: string, idx: number) => {
-    setMainImg(img);
-    setThumbIdx(idx);
-    setZoomed(false);
-  };
-
-  const prevThumb = () => {
-    const idx = (thumbIdx - 1 + gallery.length) % gallery.length;
-    handleThumb(gallery[idx], idx);
-  };
-
-  const nextThumb = () => {
-    const idx = (thumbIdx + 1) % gallery.length;
-    handleThumb(gallery[idx], idx);
-  };
+  const handleThumb = (img: string, idx: number) => { setMainImg(img); setThumbIdx(idx); setZoomed(false); };
+  const prevThumb = () => { const idx = (thumbIdx - 1 + gallery.length) % gallery.length; handleThumb(gallery[idx], idx); };
+  const nextThumb = () => { const idx = (thumbIdx + 1) % gallery.length; handleThumb(gallery[idx], idx); };
 
   return (
     <div className="min-h-screen bg-[#f5f0e8]">
@@ -145,18 +354,14 @@ const ProductDetail = () => {
           <span className="text-[#d4cfc7]">/</span>
           <Link href="/shop" className="hover:text-[#1a1a18] transition-colors">SHOP</Link>
           <span className="text-[#d4cfc7]">/</span>
-          <Link href={`/shop?cat=${product.cat}`} className="hover:text-[#1a1a18] transition-colors capitalize">
-            {product.cat}
-          </Link>
+          <Link href={`/shop?cat=${product.cat}`} className="hover:text-[#1a1a18] transition-colors capitalize">{product.cat}</Link>
           <span className="text-[#d4cfc7]">/</span>
           <span className="text-[#1a1a18]">{product.name}</span>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-10 xl:gap-16">
-
           {/* ── Left: Image Gallery ── */}
           <div className="w-full lg:w-[55%] flex flex-col gap-4">
-            {/* Main image with zoom */}
             <div
               className="relative overflow-hidden bg-[#ede9e3] aspect-square cursor-crosshair select-none"
               onMouseEnter={() => setZoomed(true)}
@@ -167,15 +372,7 @@ const ProductDetail = () => {
                 src={mainImg}
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-500"
-                style={
-                  zoomed
-                    ? {
-                        transform: 'scale(1.85)',
-                        transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                        transition: 'transform 0.1s linear',
-                      }
-                    : { transform: 'scale(1)', transition: 'transform 0.4s ease' }
-                }
+                style={zoomed ? { transform: 'scale(1.85)', transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`, transition: 'transform 0.1s linear' } : { transform: 'scale(1)', transition: 'transform 0.4s ease' }}
                 loading="eager"
               />
               {!zoomed && (
@@ -184,35 +381,12 @@ const ProductDetail = () => {
                   <span className="font-sans text-[11px]">Hover to zoom</span>
                 </div>
               )}
-
-              {/* Nav arrows */}
-              <button
-                onClick={prevThumb}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white flex items-center justify-center transition-colors"
-                aria-label="Previous image"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={nextThumb}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white flex items-center justify-center transition-colors"
-                aria-label="Next image"
-              >
-                <ChevronRight size={18} />
-              </button>
+              <button onClick={prevThumb} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white flex items-center justify-center transition-colors" aria-label="Previous image"><ChevronLeft size={18} /></button>
+              <button onClick={nextThumb} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white flex items-center justify-center transition-colors" aria-label="Next image"><ChevronRight size={18} /></button>
             </div>
-
-            {/* Thumbnails */}
             <div className="flex gap-3">
               {gallery.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleThumb(img, i)}
-                  className={`w-[80px] h-[80px] bg-[#ede9e3] border-2 transition-all overflow-hidden ${
-                    thumbIdx === i ? 'border-[#1a1a18]' : 'border-transparent hover:border-[#d4cfc7]'
-                  }`}
-                  aria-label={`Image ${i + 1}`}
-                >
+                <button key={i} onClick={() => handleThumb(img, i)} className={`w-[80px] h-[80px] bg-[#ede9e3] border-2 transition-all overflow-hidden ${thumbIdx === i ? 'border-[#1a1a18]' : 'border-transparent hover:border-[#d4cfc7]'}`} aria-label={`Image ${i + 1}`}>
                   <img src={img} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
@@ -221,45 +395,28 @@ const ProductDetail = () => {
 
           {/* ── Right: Purchase Panel ── */}
           <div className="w-full lg:w-[45%] lg:sticky lg:top-6 lg:self-start flex flex-col">
-            {/* Badge */}
             {product.badge && (
-              <div
-                className={`inline-flex self-start px-3 py-1 mb-4 font-serif text-[10px] uppercase tracking-[1px] ${
-                  product.badge === 'new' ? 'bg-[#1a1a18] text-white' : 'bg-[#d4af37] text-[#1a1a18]'
-                }`}
-              >
+              <div className={`inline-flex self-start px-3 py-1 mb-4 font-serif text-[10px] uppercase tracking-[1px] ${product.badge === 'new' ? 'bg-[#1a1a18] text-white' : 'bg-[#d4af37] text-[#1a1a18]'}`}>
                 {product.badge}
               </div>
             )}
 
-            <h1 className="font-serif text-[32px] sm:text-[38px] font-bold text-[#1a1a18] leading-tight mb-3">
-              {product.name}
-            </h1>
-
-            <p className="font-sans text-[28px] text-[#d4af37] font-semibold mb-6">
-              ₹{product.price.toLocaleString('en-IN')}
-            </p>
-
+            <h1 className="font-serif text-[32px] sm:text-[38px] font-bold text-[#1a1a18] leading-tight mb-3">{product.name}</h1>
+            <p className="font-sans text-[28px] text-[#d4af37] font-semibold mb-6">₹{product.price.toLocaleString('en-IN')}</p>
             <p className="font-sans text-[14px] text-[#4a4a4a] leading-[1.8] mb-6">
-              {product.desc ||
-                'An exquisite piece crafted with historical accuracy and premium materials. Meticulously detailed by our master artisans to withstand the rigors of display and light reenactment. Every piece carries the heritage of the past.'}
+              {product.desc || 'An exquisite piece crafted with historical accuracy and premium materials. Meticulously detailed by our master artisans to withstand the rigors of display and light reenactment.'}
             </p>
 
-            {/* Meta */}
             <div className="flex flex-col gap-2.5 mb-8 py-5 border-y border-[#d4cfc7]">
               {[
                 { label: 'Category', value: `${product.cat} / ${product.sub.replace('-', ' ')}` },
                 ...(product.tags ? [{ label: 'Tags', value: product.tags.join(', ') }] : []),
-                { label: 'Availability', value: '✓ In Stock', green: true },
+                { label: 'Availability', value: product.inStock !== false ? '✓ In Stock' : '✗ Out of Stock', green: product.inStock !== false },
                 { label: 'Shipping', value: 'Free above ₹5,000 · Worldwide' },
               ].map(({ label, value, green }) => (
                 <div key={label} className="flex items-start gap-3">
-                  <span className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold w-[100px] flex-shrink-0 pt-px">
-                    {label}:
-                  </span>
-                  <span className={`font-sans text-[13px] capitalize ${green ? 'text-green-700 font-medium' : 'text-[#4a4a4a]'}`}>
-                    {value}
-                  </span>
+                  <span className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold w-[100px] flex-shrink-0 pt-px">{label}:</span>
+                  <span className={`font-sans text-[13px] capitalize ${green ? 'text-green-700 font-medium' : 'text-[#4a4a4a]'}`}>{value}</span>
                 </div>
               ))}
             </div>
@@ -267,57 +424,31 @@ const ProductDetail = () => {
             {/* Qty + Add to Cart */}
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-[52px] border border-[#d4cfc7]">
-                <button
-                  onClick={() => setQty(Math.max(1, qty - 1))}
-                  className="w-10 flex items-center justify-center font-serif text-[#1a1a18] hover:bg-black/5 transition-colors text-lg"
-                >
-                  −
-                </button>
-                <div className="w-10 flex items-center justify-center font-sans text-[14px] text-[#1a1a18] border-x border-[#d4cfc7]">
-                  {qty}
-                </div>
-                <button
-                  onClick={() => setQty(qty + 1)}
-                  className="w-10 flex items-center justify-center font-serif text-[#1a1a18] hover:bg-black/5 transition-colors text-lg"
-                >
-                  +
-                </button>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 flex items-center justify-center font-serif text-[#1a1a18] hover:bg-black/5 transition-colors text-lg">−</button>
+                <div className="w-10 flex items-center justify-center font-sans text-[14px] text-[#1a1a18] border-x border-[#d4cfc7]">{qty}</div>
+                <button onClick={() => setQty(qty + 1)} className="w-10 flex items-center justify-center font-serif text-[#1a1a18] hover:bg-black/5 transition-colors text-lg">+</button>
               </div>
-
               <button
                 onClick={handleAddToCart}
-                disabled={adding}
-                className={`flex-1 h-[52px] font-serif text-[12px] uppercase font-bold tracking-[2px] transition-all duration-300 flex items-center justify-center gap-2 ${
-                  adding
-                    ? 'bg-[#d4af37] text-[#1a1a18] scale-[0.98]'
-                    : 'bg-[#1a1a18] text-white hover:bg-[#d4af37] hover:text-[#1a1a18]'
-                }`}
+                disabled={addToCart.isPending}
+                className={`flex-1 h-[52px] font-serif text-[12px] uppercase font-bold tracking-[2px] transition-all duration-300 flex items-center justify-center gap-2 ${addToCart.isPending ? 'bg-[#d4af37] text-[#1a1a18] scale-[0.98]' : 'bg-[#1a1a18] text-white hover:bg-[#d4af37] hover:text-[#1a1a18]'}`}
               >
-                <ShoppingBag size={16} className={adding ? 'animate-bounce' : ''} />
-                {adding ? 'Adding…' : '+ Add to Cart'}
+                <ShoppingBag size={16} className={addToCart.isPending ? 'animate-bounce' : ''} />
+                {addToCart.isPending ? 'Adding…' : '+ Add to Cart'}
               </button>
             </div>
 
             <div className="flex gap-2 mb-8">
               <button
-                onClick={() => {
-                  setIsWishlisted((v) => !v);
-                  toast({ title: isWishlisted ? 'Removed from wishlist' : 'Added to wishlist', description: product.name });
-                }}
-                className={`h-[52px] px-4 border flex items-center gap-2 font-serif text-[11px] uppercase tracking-[1px] transition-all ${
-                  isWishlisted
-                    ? 'bg-[#9c1c1c] border-[#9c1c1c] text-white'
-                    : 'border-[#d4cfc7] text-[#1a1a18] hover:bg-[#d4af37] hover:border-[#d4af37]'
-                }`}
+                onClick={handleToggleWishlist}
+                disabled={addToWishlist.isPending || removeFromWishlist.isPending}
+                className={`h-[52px] px-4 border flex items-center gap-2 font-serif text-[11px] uppercase tracking-[1px] transition-all ${isInWishlist ? 'bg-[#9c1c1c] border-[#9c1c1c] text-white' : 'border-[#d4cfc7] text-[#1a1a18] hover:bg-[#d4af37] hover:border-[#d4af37]'}`}
               >
-                <Heart size={16} strokeWidth={1.5} fill={isWishlisted ? 'currentColor' : 'none'} />
-                Wishlist
+                <Heart size={16} strokeWidth={1.5} fill={isInWishlist ? 'currentColor' : 'none'} />
+                {isInWishlist ? 'Wishlisted' : 'Wishlist'}
               </button>
               <button
-                onClick={() => {
-                  navigator.clipboard?.writeText(window.location.href);
-                  toast({ title: 'Link copied!', description: 'Product link copied to clipboard.' });
-                }}
+                onClick={() => { navigator.clipboard?.writeText(window.location.href); toast({ title: 'Link copied!', description: 'Product link copied to clipboard.' }); }}
                 className="h-[52px] px-4 border border-[#d4cfc7] text-[#1a1a18] hover:border-[#1a1a18] transition-colors flex items-center"
                 aria-label="Share"
               >
@@ -342,18 +473,17 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* ── FAQ Section ── */}
+        {/* Reviews */}
+        {id && <ReviewsSection productId={id} />}
+
+        {/* FAQ */}
         <div className="mt-16 pt-12 border-t border-[#d4cfc7] max-w-[800px]">
           <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block mb-2">NEED TO KNOW</span>
-          <h2 className="font-serif text-[28px] font-bold text-[#1a1a18] uppercase mb-8">
-            Frequently Asked Questions
-          </h2>
-          {FAQS.map((faq, i) => (
-            <FaqItem key={i} q={faq.q} a={faq.a} />
-          ))}
+          <h2 className="font-serif text-[28px] font-bold text-[#1a1a18] uppercase mb-8">Frequently Asked Questions</h2>
+          {FAQS.map((faq, i) => <FaqItem key={i} q={faq.q} a={faq.a} />)}
         </div>
 
-        {/* ── Related Products ── */}
+        {/* Related Products */}
         {related.length > 0 && (
           <div className="mt-16 pt-12 border-t border-[#d4cfc7]">
             <div className="mb-10">
@@ -362,9 +492,7 @@ const ProductDetail = () => {
               <div className="w-10 h-[3px] bg-[#9c1c1c] mt-4" />
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-[18px]">
-              {related.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} />
-              ))}
+              {related.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
             </div>
           </div>
         )}
