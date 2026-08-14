@@ -632,8 +632,8 @@ const Home = () => {
         </div>
       </section>
 
-      <div className="w-full overflow-x-auto">
-        <div className="flex w-max gap-0">
+      <div className="w-full overflow-x-auto -mx-5">
+        <div className="flex w-max gap-0 px-5">
           {[
             { name: 'MEDIEVAL CLOTHING', img: '/images/hp-stl-main.png', href: '/shop?category=medieval-clothing' },
             { name: 'GAMBESONS', img: '/images/gambeson.png', href: '/shop?category=gambesons' },
@@ -656,8 +656,6 @@ const Home = () => {
           ))}
         </div>
       </div>
-
-      </section>
 
       {/* ── SHOP THE LOOK ── */}
       <section className="py-[80px] bg-[#f5f0e8]">
