@@ -94,6 +94,11 @@ const ProductDetail = () => {
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [adding, setAdding] = useState(false);
+  // Size & color defaults (fall back when product doesn't declare them)
+  const SIZE_OPTIONS = product?.tags?.includes('women') ? ['S/M','L/XL'] : ['S/M','L/XL','2XL/3XL'];
+  const [selectedSize, setSelectedSize] = useState<string | null>(SIZE_OPTIONS[0]);
+  const COLOR_OPTIONS = product?.colors && product.colors.length > 0 ? product.colors : ['#000000', '#ffffff'];
+  const [selectedColor, setSelectedColor] = useState<string | null>(COLOR_OPTIONS[0]);
 
   // Pseudo gallery — repeat the single image 3 times (would be real images in production)
   const gallery = product?.gallery && product.gallery.length > 0 ? product.gallery : [product?.image ?? ''];
@@ -131,7 +136,7 @@ const ProductDetail = () => {
       setAdding(false);
       toast({
         title: 'Added to cart!',
-        description: `${qty}× ${product.name} has been added to your cart.`,
+        description: `${qty}× ${product.name}${selectedSize ? ' — ' + selectedSize : ''}${selectedColor ? ' (' + selectedColor + ')' : ''} has been added to your cart.`,
       });
     }, 600);
   };
@@ -312,14 +317,46 @@ const ProductDetail = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[11px] uppercase tracking-[2px] text-[#6b6b6b] mb-2">Size</label>
-                    <select className="w-full rounded-3xl border border-[#d4cfc7] bg-[#faf6f0] px-4 py-3 text-[14px] text-[#1a1a18]">
-                      <option>Small</option>
-                      <option>Medium</option>
-                      <option>Large</option>
-                      <option>Custom</option>
-                    </select>
+                    <label className="block text-[11px] uppercase tracking-[2px] text-[#6b6b6b] mb-2">Color</label>
+                    <div className="flex items-center gap-3">
+                      {COLOR_OPTIONS.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setSelectedColor(c)}
+                          aria-label={`Choose color ${c}`}
+                          className={`h-8 w-8 rounded-md border ${selectedColor === c ? 'ring-2 ring-offset-1 ring-[#ff7a00]' : 'border-[#e6e1da]'}`}
+                          style={{ background: c.startsWith('#') ? c : undefined }}
+                        >
+                          {!c.startsWith('#') && <span className="sr-only">{c}</span>}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+
+                  <div>
+                    <label className="block text-[11px] uppercase tracking-[2px] text-[#6b6b6b] mb-2">Size</label>
+                    <div className="flex items-center gap-3">
+                      {SIZE_OPTIONS.map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setSelectedSize(s)}
+                          className={`px-4 py-2 rounded-md border text-[13px] ${selectedSize === s ? 'bg-[#1a1a18] text-white' : 'bg-[#faf6f0] text-[#1a1a18] border-[#d4cfc7]'}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] uppercase tracking-[2px] text-[#6b6b6b] mb-2">Quantity</label>
+                    <div className="inline-flex items-center gap-3">
+                      <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-9 h-9 rounded-md border bg-[#faf6f0]">-</button>
+                      <div className="px-4 font-semibold">{qty}</div>
+                      <button onClick={() => setQty((q) => q + 1)} className="w-9 h-9 rounded-md border bg-[#faf6f0]">+</button>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-[11px] uppercase tracking-[2px] text-[#6b6b6b] mb-2">Material</label>
                     <select className="w-full rounded-3xl border border-[#d4cfc7] bg-[#faf6f0] px-4 py-3 text-[14px] text-[#1a1a18]">
@@ -327,18 +364,6 @@ const ProductDetail = () => {
                       <option>Stainless Steel</option>
                       <option>Brass</option>
                     </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] uppercase tracking-[2px] text-[#6b6b6b] mb-2">Finish</label>
-                    <select className="w-full rounded-3xl border border-[#d4cfc7] bg-[#faf6f0] px-4 py-3 text-[14px] text-[#1a1a18]">
-                      <option>{product.finish ?? 'Black Oiled'}</option>
-                      <option>Raw Steel</option>
-                      <option>Antique</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] uppercase tracking-[2px] text-[#6b6b6b] mb-2">Personalization</label>
-                    <input placeholder="Engraving / initials" className="w-full rounded-3xl border border-[#d4cfc7] bg-[#faf6f0] px-4 py-3 text-[14px] text-[#1a1a18]" />
                   </div>
                 </div>
 

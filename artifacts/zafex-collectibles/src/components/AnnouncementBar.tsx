@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const ITEMS = [
   '✓ Authentic Handmade Products',
@@ -9,37 +9,19 @@ const ITEMS = [
 ];
 
 const AnnouncementBar = () => {
-  const text = ITEMS.join('   ');
+  const [index, setIndex] = useState(0);
+n  useEffect(() => {
+    const t = setInterval(() => setIndex((i) => (i + 1) % ITEMS.length), 3000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
-    <div className="bg-[#9c1c1c] overflow-hidden h-[40px] flex items-center">
-      <div
-        className="group flex min-w-full whitespace-nowrap"
-        role="status"
-        aria-live="polite"
-        aria-label="Site announcements"
-      >
-        <div className="flex animate-marquee-rtl items-center">
-          <span className="inline-block pr-14 font-serif text-[12px] uppercase tracking-[1.5px] text-white">
-            {text}
-          </span>
-          <span className="inline-block pr-14 font-serif text-[12px] uppercase tracking-[1.5px] text-white" aria-hidden>
-            {text}
-          </span>
-        </div>
+    <div className="bg-[#9c1c1c] h-[40px] flex items-center">
+      <div className="w-full text-center" role="status" aria-live="polite" aria-label="Site announcements">
+        <span className="inline-block font-serif text-[12px] uppercase tracking-[1.5px] text-white transition-opacity duration-300">
+          {ITEMS[index]}
+        </span>
       </div>
-      <style>{`
-        @keyframes marquee-rtl {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee-rtl {
-          animation: marquee-rtl 24s linear infinite;
-          will-change: transform;
-        }
-        .group:hover .animate-marquee-rtl {
-          animation-play-state: paused;
-        }
-      `}</style>
     </div>
   );
 };

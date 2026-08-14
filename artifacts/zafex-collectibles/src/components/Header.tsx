@@ -265,29 +265,27 @@ const Header = () => {
     '✓ Secure Payments',
   ];
   const announcementText = ANNOUNCEMENTS.join('   ');
+  const [annIndex, setAnnIndex] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setAnnIndex((i) => (i + 1) % ANNOUNCEMENTS.length), 3000);
+    return () => clearInterval(t);
+  }, [ANNOUNCEMENTS.length]);
 
   return (
     <>
       <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} />
       <header className="sticky top-0 z-50 w-full">
-        <div className="flex h-[40px] items-center overflow-hidden bg-[#a91f22] text-white">
-          <div className="flex min-w-max animate-[marquee_26s_linear_infinite] items-center font-sans text-[11px] font-semibold uppercase tracking-[2px]">
-            <span className="mx-8">{announcementText}</span>
-            <span className="mx-8" aria-hidden="true">{announcementText}</span>
+        <div className="flex h-[40px] items-center justify-center bg-[#a91f22] text-white">
+          <div className="w-full text-center font-sans text-[11px] font-semibold uppercase tracking-[2px]">
+            <span role="status" aria-live="polite" className="inline-block">{ANNOUNCEMENTS[annIndex]}</span>
           </div>
         </div>
-        <style>{`
-          @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `}</style>
         <div className="flex min-h-[82px] items-center justify-between gap-5 border-b border-[#ded8cd] bg-[#f4f0e8] px-5 py-3 sm:px-10 lg:px-16">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <div className="flex h-[48px] w-[25px] items-center justify-center border-x-2 border-[#32291d] text-[29px] text-[#32291d]">†</div>
             <div>
               <div className="font-serif text-[24px] font-semibold leading-none tracking-[3px] text-[#211b14] sm:text-[30px]">
-                <span className="text-[#c78a2b]">Zaf</span><span className="text-[#211b14]">Ex</span>
+                <span className="text-[#ff7a00]">Zaf</span><span className="text-[#000000]">Ex</span>
               </div>
               <div className="mt-1 font-serif text-[10px] font-semibold tracking-[3px] text-[#211b14]">COLLECTIBLES</div>
             </div>

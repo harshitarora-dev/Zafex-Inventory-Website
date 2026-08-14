@@ -414,7 +414,7 @@ const Home = () => {
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-16 text-center">
             <h2 className="font-serif text-[44px] font-semibold uppercase tracking-[0.28em] text-[#171717] leading-tight">
-              EXPLORE <span className="text-[#c78a2b]">Zaf</span><span className="text-[#171717]">Ex</span> COLLECTIONS
+              EXPLORE <span className="text-[#ff7a00]">Zaf</span><span className="text-[#000000]">Ex</span> COLLECTIONS
             </h2>
             <div className="mx-auto mt-5 h-[1px] w-[72px] bg-[#b79d6b] opacity-80"></div>
             <p className="mx-auto mt-8 max-w-[760px] font-sans text-[16px] leading-[1.85] text-[#3f3f3f]">
@@ -462,7 +462,7 @@ const Home = () => {
             <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">MATERIAL SELECTION</span>
             <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">THE ART OF MATERIALS</h2>
             <p className="mx-auto mt-5 max-w-[760px] font-sans text-[15px] leading-[1.8] text-[#3f3f3f]">
-              Every <span className="text-[#c78a2b]">Zaf</span><span className="text-[#171717]">Ex</span> creation begins with carefully selected materials, shaped by skilled hands and inspired by history.
+              Every <span className="text-[#ff7a00]">Zaf</span><span className="text-[#000000]">Ex</span> creation begins with carefully selected materials, shaped by skilled hands and inspired by history.
             </p>
           </Reveal>
 
@@ -578,8 +578,9 @@ const Home = () => {
           <Reveal className="mb-12 text-center">
             <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">
               <span className="text-[#1a1a18]">The</span>{' '}
-              <span className="text-[#d9730c]">Zaf</span>
-              <span className="text-[#1a1a18]">Ex Experience</span>
+              <span className="text-[#ff7a00]">Zaf</span>
+              <span className="text-[#000000]">Ex</span>
+              <span className="text-[#1a1a18]"> Experience</span>
             </h2>
           </Reveal>
 
@@ -612,13 +613,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── THE ZAFEX COLLECTION MARQUEE ── */}
-      <section className="bg-[#f5f0e8] py-[90px]">
-        <div className="mx-auto w-full max-w-[1680px] px-5">
-          <div className="mb-8 text-center sm:text-left">
-          </div>
-        </div>
-      </section>
 
       {/* ── THE ZAFEX COLLECTION (NEW) ── */}
       <section className="py-[60px] bg-[#f5f0e8]">
@@ -633,7 +627,7 @@ const Home = () => {
       </section>
 
       <div className="w-full overflow-x-auto -mx-5">
-        <div className="flex w-max gap-0 px-5">
+        <div className="flex w-max gap-[18px] px-5">
           {[
             { name: 'MEDIEVAL CLOTHING', img: '/images/hp-stl-main.png', href: '/shop?category=medieval-clothing' },
             { name: 'GAMBESONS', img: '/images/gambeson.png', href: '/shop?category=gambesons' },
@@ -781,7 +775,7 @@ const Home = () => {
 
           <Reveal delay={0.12} className="relative overflow-hidden rounded-[32px] bg-[#1a1a18] shadow-xl">
             <img
-              src="/images/about-us.jpg"
+            src="/images/hp-stl-main.png"
               alt="Zafex Collectibles artisan armor"
               className="w-full h-full object-cover min-h-[360px]"
               loading="lazy"

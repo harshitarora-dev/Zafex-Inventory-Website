@@ -16,9 +16,7 @@ const Footer = () => {
                 ZC
               </div>
               <div className="flex flex-col">
-                <span className="font-serif font-semibold text-[14px] leading-tight uppercase text-white">
-                  <span className="text-[#d4af37]">Zaf</span><span className="text-white">Ex</span> COLLECTIBLES
-                </span>
+                <span className="font-serif font-semibold text-[14px] leading-tight uppercase text-white">ZafEx COLLECTIBLES</span>
                 <span className="font-serif text-[10px] text-white/70 tracking-[1px] uppercase">
                   BRAND: ZAFS
                 </span>

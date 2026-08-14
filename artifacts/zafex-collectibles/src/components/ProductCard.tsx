@@ -68,7 +68,8 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   };
 
   const image = product.image;
-  const hoverImage = product.hoverImage || product.image;
+  const gallery = product.gallery && product.gallery.length > 0 ? product.gallery : [product.image];
+  const hoverImage = (gallery && gallery[1]) || product.hoverImage || product.image;
   const rating = clampRating(product.rating ?? 4.9);
   const reviewCount = getReviewCount(product);
   const materialLabel = product.material ?? (product.tags?.includes('handmade') ? 'Handmade' : 'Handcrafted');
@@ -129,6 +130,15 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               <span className="ml-1">{stockLabel}</span>
             </span>
           </div>
+
+          {/* Small gallery indicators (show up to 2 extra images) */}
+          {gallery && gallery.length > 1 && (
+            <div className="absolute left-3 bottom-3 z-20 flex gap-2">
+              {gallery.slice(1, 3).map((g, i) => (
+                <img key={i} src={g} alt={`Extra ${i + 1}`} className="h-10 w-10 object-cover rounded-md border border-white/60 shadow-sm" />
+              ))}
+            </div>
+          )}
 
           <button
             onClick={handleWishlist}
