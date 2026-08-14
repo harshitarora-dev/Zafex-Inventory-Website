@@ -186,41 +186,73 @@ const Home = () => {
       name: 'HISTORICAL',
       description: 'Authentic-inspired pieces from legendary eras and civilizations.',
       href: '/shop?realm=historical',
+      badge: 'Legacy',
+      stripe: 'bg-[#b98d46]',
+      panel: 'bg-[#f3e8d7]',
+      image: '/images/hp-hero-1.png',
     },
     {
       name: 'ROMAN',
       description: 'Armor, helmets, shields, and accessories inspired by ancient Rome.',
       href: '/shop?realm=roman',
+      badge: 'Imperium',
+      stripe: 'bg-[#7b6d59]',
+      panel: 'bg-[#efe6dc]',
+      image: '/images/full-body-armor.png',
     },
     {
       name: 'VIKING',
       description: 'Norse-inspired armor, chainmail, helmets, and accessories.',
       href: '/shop?realm=viking',
+      badge: 'Valhalla',
+      stripe: 'bg-[#5f6c75]',
+      panel: 'bg-[#edf0ec]',
+      image: '/images/viking-helmet.png',
     },
     {
       name: 'TEMPLAR',
       description: 'Medieval knightly armor and accessories inspired by the Knights Templar.',
       href: '/shop?realm=templar',
+      badge: 'Crusade',
+      stripe: 'bg-[#9e765b]',
+      panel: 'bg-[#f1eadb]',
+      image: '/images/arm-armor.png',
     },
     {
       name: 'FANTASY',
       description: 'Legendary armor and creations inspired by mythical worlds and warriors.',
       href: '/shop?realm=fantasy',
+      badge: 'Mythic',
+      stripe: 'bg-[#7c678a]',
+      panel: 'bg-[#f2ebf7]',
+      image: '/images/hp-stl-1.png',
     },
     {
       name: "WOMEN'S ARMOR",
       description: 'Handcrafted armor and medieval pieces designed for women.',
       href: '/shop?realm=womens-armor',
+      badge: 'Crafted',
+      stripe: 'bg-[#9d7278]',
+      panel: 'bg-[#f7ecec]',
+      image: '/images/hp-stl-2.png',
     },
     {
       name: 'LARP & COSPLAY',
       description: 'Armor, costumes, helmets, and accessories for immersive characters and events.',
       href: '/shop?realm=larp-cosplay',
+      badge: 'Stage',
+      stripe: 'bg-[#5f7b7d]',
+      panel: 'bg-[#edf4f2]',
+      image: '/images/hp-stl-3.png',
     },
     {
       name: 'CINEMATIC & CHARACTER',
       description: 'Character-inspired pieces created for collectors, performers, and enthusiasts.',
       href: '/shop?realm=cinematic-character',
+      badge: 'Screen',
+      stripe: 'bg-[#a55d3f]',
+      panel: 'bg-[#f6eee7]',
+      image: '/images/hp-stl-4.png',
     },
   ];
   const whyChoose = [
@@ -287,6 +319,7 @@ const Home = () => {
   return (
     <div className="flex flex-col w-full min-h-[100dvh] bg-[#f5f0e8]">
 
+
       {/* ── HERO IMAGE ── */}
       <section className="relative flex min-h-[430px] w-full items-center overflow-hidden bg-[#111] sm:min-h-[540px] lg:min-h-[620px]">
         {heroImages.map((image, index) => (
@@ -301,7 +334,6 @@ const Home = () => {
         ))}
         <div className="absolute inset-0 bg-gradient-to-r from-[#080b0d]/90 via-[#080b0d]/45 to-transparent" />
         <div className="relative z-10 max-w-[560px] px-8 py-20 sm:px-16 lg:px-24">
-          <span className="font-serif text-[11px] uppercase tracking-[4px] text-[#d4af37]">THE ZAFEX COLLECTION</span>
           <h1 className="mt-5 font-serif text-[clamp(38px,5vw,72px)] font-semibold uppercase leading-[0.95] tracking-[2px] text-[#f5f0e8]">
             Crafted for history.
           </h1>
@@ -354,8 +386,8 @@ const Home = () => {
           </div>
           <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
             {bestSellers.map((product, i) => (
-              <div key={product.id} className="rounded-[20px] border border-[#ddd] bg-[#f8f1e6] p-5 transition-shadow hover:shadow-xl">
-                <Link href={`/shop/${product.id}`} className="block overflow-hidden rounded-[18px] bg-[#1a1a18] mb-5">
+              <div key={product.id} className="rounded-none border border-[#ddd] bg-[#f8f1e6] p-5 transition-shadow hover:shadow-none">
+                <Link href={`/shop/${product.id}`} className="block overflow-hidden rounded-none bg-[#1a1a18] mb-5">
                   <img src={product.image} alt={product.name} className="h-[260px] w-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy" />
                 </Link>
                 <div className="space-y-3">
@@ -382,7 +414,7 @@ const Home = () => {
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-16 text-center">
             <h2 className="font-serif text-[44px] font-semibold uppercase tracking-[0.28em] text-[#171717] leading-tight">
-              EXPLORE ZafEx COLLECTIONS
+              EXPLORE <span className="text-[#c78a2b]">Zaf</span><span className="text-[#171717]">Ex</span> COLLECTIONS
             </h2>
             <div className="mx-auto mt-5 h-[1px] w-[72px] bg-[#b79d6b] opacity-80"></div>
             <p className="mx-auto mt-8 max-w-[760px] font-sans text-[16px] leading-[1.85] text-[#3f3f3f]">
@@ -395,7 +427,7 @@ const Home = () => {
               <Link
                 key={collection.name}
                 href={collection.href}
-                className="group mx-auto flex h-full w-full max-w-[400px] flex-col overflow-hidden rounded-[22px] border border-[#d8d0c2] bg-white shadow-[0_14px_34px_rgba(22,22,22,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_42px_rgba(22,22,22,0.12)] hover:border-[#b79d6b]"
+                className="group mx-auto flex h-full w-full max-w-[400px] flex-col overflow-hidden rounded-none border border-[#d8d0c2] bg-[#f9f5f0] shadow-none transition duration-300 hover:-translate-y-0 hover:shadow-none hover:border-[#b79d6b]"
               >
                 <div className="overflow-hidden bg-[#f9f3e7]">
                   <img
@@ -430,7 +462,7 @@ const Home = () => {
             <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">MATERIAL SELECTION</span>
             <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">THE ART OF MATERIALS</h2>
             <p className="mx-auto mt-5 max-w-[760px] font-sans text-[15px] leading-[1.8] text-[#3f3f3f]">
-              Every ZafEx creation begins with carefully selected materials, shaped by skilled hands and inspired by history.
+              Every <span className="text-[#c78a2b]">Zaf</span><span className="text-[#171717]">Ex</span> creation begins with carefully selected materials, shaped by skilled hands and inspired by history.
             </p>
           </Reveal>
 
@@ -474,20 +506,43 @@ const Home = () => {
             </p>
           </Reveal>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {realmCards.map((realm) => (
               <Link
                 key={realm.name}
                 href={realm.href}
-                className="group rounded-[18px] border border-[#d8d0c2] bg-[#f7f2e9] px-5 py-5 text-left transition-all duration-300 hover:-translate-y-[2px] hover:border-[#b79d6b] hover:bg-[#f8f3ea]"
+                className="group overflow-hidden rounded-none border border-[#b58b62] bg-[#f5ecdf] text-left transition-all duration-300 hover:-translate-y-0 hover:shadow-none"
               >
-                <div className="flex min-h-[150px] flex-col justify-between">
-                  <span className="font-serif text-[18px] font-semibold uppercase tracking-[0.14em] text-[#171717]">
-                    {realm.name}
-                  </span>
-                  <p className="mt-4 text-[13px] leading-[1.7] text-[#4a433d]">
-                    {realm.description}
-                  </p>
+                <div className={`h-[4px] w-full ${realm.stripe}`} />
+                <div className="flex flex-col">
+                  <div className="relative h-[250px] overflow-hidden bg-[#efe5d3]">
+                    <img
+                      src={realm.image}
+                      alt={realm.name}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                  </div>
+
+                  <div className="flex min-h-[150px] flex-col gap-2 px-3 pb-3 pt-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-full border border-[#b58b62]/60 bg-white/80 px-1.5 py-0.5 text-[6px] font-semibold uppercase tracking-[2px] text-[#1a1a18]">
+                        {realm.badge}
+                      </span>
+                      <span className="text-[6.5px] font-semibold uppercase tracking-[2px] text-[#5d4f41]">
+                        View →
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <span className="block font-serif text-[17px] font-semibold uppercase tracking-[0.12em] text-[#171717] leading-[1.2]">
+                        {realm.name}
+                      </span>
+                      <p className="text-[11px] leading-[1.5] text-[#4a433d]">
+                        {realm.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </Link>
             ))}
@@ -557,97 +612,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── CATEGORY BANNERS ── */}
-      <section className="bg-[#1a1a18] py-[100px]">
+      {/* ── THE ZAFEX COLLECTION MARQUEE ── */}
+      <section className="bg-[#f5f0e8] py-[90px]">
         <div className="mx-auto w-full max-w-[1680px] px-5">
-          <Reveal className="mb-10 text-center">
-            <h2 className="font-serif text-[42px] font-bold uppercase leading-none tracking-[1px] text-white">
-              THE <span className="text-[#f5b23c]">Zaf</span><span className="text-[#e32525]">Ex</span> COLLECTION
-            </h2>
-          </Reveal>
-
-          <div className="grid w-full grid-cols-1 gap-0 md:grid-cols-4">
-            {[
-              { name: 'WEAPONRY', sub: 'Swords, Axes, Bows & Daggers', img: '/images/hp-cat-weaponry.png', link: '/shop?cat=weaponry' },
-              { name: 'ARMOUR', sub: 'Breastplates, Helms & Chainmail', img: '/images/hp-cat-armour.png', link: '/shop?cat=armour' },
-              { name: 'CLOTHING', sub: 'Tabards, Tunics & Cloaks', img: '/images/hp-cat-clothing.png', link: '/shop?cat=clothing' },
-              { name: 'ACCESSORIES', sub: 'Belts, Pouches & Jewellery', img: '/images/hp-cat-accessories.png', link: '/shop?cat=accessories' },
-            ].map((cat, i) => (
-              <Link key={i} href={cat.link} className="group relative block h-[400px] overflow-hidden rounded-none">
-                <img
-                  src={cat.img}
-                  alt={cat.name}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 will-change-transform"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/50 transition-colors group-hover:bg-black/35" />
-                <div className="absolute bottom-0 left-0 z-10 w-full p-6 translate-y-2 transition-transform duration-300 group-hover:translate-y-0">
-                  <h3 className="font-serif text-[20px] font-bold uppercase tracking-[1.5px] text-white">{cat.name}</h3>
-                  <p className="mt-1 text-[12px] text-white/80">{cat.sub}</p>
-                  <div className="mt-3 h-[2px] w-0 bg-[#d4af37] transition-all duration-500 group-hover:w-8" />
-                </div>
-              </Link>
-            ))}
+          <div className="mb-8 text-center sm:text-left">
           </div>
 
-          <div className="mt-12 overflow-hidden border-t border-[#2b2a28] pt-8">
-            <div className="zafex-marquee-track flex w-max min-w-full items-center gap-4 whitespace-nowrap">
-              {[
-                'MEDIEVAL CLOTHING',
-                'GAMBESONS',
-                'MEDIEVAL HELMETS',
-                'PLATE ARMOR',
-                'LEATHER ARMOR',
-                'SHIELDS',
-                'WEAPONS',
-                'ACCESSORIES',
-                'MEDIEVAL CLOTHING',
-                'GAMBESONS',
-                'MEDIEVAL HELMETS',
-                'PLATE ARMOR',
-                'LEATHER ARMOR',
-                'SHIELDS',
-                'WEAPONS',
-                'ACCESSORIES',
-              ].map((item, index) => (
-                <div key={`${item}-${index}`} className="flex items-center shrink-0">
-                  <span className="font-serif text-[18px] font-medium uppercase tracking-[0.12em] text-[#1a1a18] sm:text-[20px]">
-                    {item}
-                  </span>
-                  {index !== 15 && <span className="mx-4 text-[18px] text-[#b58a16]">•</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <style>{`
-        .zafex-marquee-track {
-          animation: zafex-marquee-ltr 24s linear infinite;
-          will-change: transform;
-          cursor: pointer;
-        }
-
-        .zafex-marquee-track:hover {
-          animation-play-state: paused;
-        }
-
-        @keyframes zafex-marquee-ltr {
-          0% {
-            transform: translate3d(-50%, 0, 0);
-          }
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-        }
-
-        @media (max-width: 768px) {
-          .zafex-marquee-track {
-            animation-duration: 18s;
-          }
-        }
-      `}</style>
 
       {/* ── SHOP THE LOOK ── */}
       <section className="py-[80px] bg-[#f5f0e8]">

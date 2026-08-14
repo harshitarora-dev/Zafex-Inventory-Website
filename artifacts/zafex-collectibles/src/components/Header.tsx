@@ -286,7 +286,9 @@ const Header = () => {
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <div className="flex h-[48px] w-[25px] items-center justify-center border-x-2 border-[#32291d] text-[29px] text-[#32291d]">†</div>
             <div>
-              <div className="font-serif text-[24px] font-semibold leading-none tracking-[3px] text-[#211b14] sm:text-[30px]">ZAFEX</div>
+              <div className="font-serif text-[24px] font-semibold leading-none tracking-[3px] text-[#211b14] sm:text-[30px]">
+                <span className="text-[#c78a2b]">Zaf</span><span className="text-[#211b14]">Ex</span>
+              </div>
               <div className="mt-1 font-serif text-[10px] font-semibold tracking-[3px] text-[#211b14]">COLLECTIBLES</div>
             </div>
           </Link>

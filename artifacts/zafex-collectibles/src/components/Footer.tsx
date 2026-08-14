@@ -16,8 +16,8 @@ const Footer = () => {
                 ZC
               </div>
               <div className="flex flex-col">
-                <span className="font-serif font-semibold text-[14px] leading-tight text-white uppercase">
-                  ZAFEX COLLECTIBLES
+                <span className="font-serif font-semibold text-[14px] leading-tight uppercase text-white">
+                  <span className="text-[#d4af37]">Zaf</span><span className="text-white">Ex</span> COLLECTIBLES
                 </span>
                 <span className="font-serif text-[10px] text-white/70 tracking-[1px] uppercase">
                   BRAND: ZAFS
@@ -30,10 +30,10 @@ const Footer = () => {
             </p>
 
             <div className="flex items-center gap-2">
-              <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
+              <a href="https://www.facebook.com/share/191LLx8eFb/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
                 <Facebook size={16} />
               </a>
-              <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
+              <a href="https://www.instagram.com/zafex_collectibles?igsh=ZjA2aXQzanY1d205&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
                 <Instagram size={16} />
               </a>
               <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
