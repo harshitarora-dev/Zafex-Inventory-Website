@@ -629,31 +629,34 @@ const Home = () => {
             </h2>
           </Reveal>
 
-          <div className="overflow-x-auto -mx-5">
-            <div className="flex w-max gap-0 px-5">
-              {[
-                { name: 'MEDIEVAL CLOTHING', img: '/images/hp-stl-main.png', href: '/shop?category=medieval-clothing' },
-                { name: 'GAMBESONS', img: '/images/gambeson.png', href: '/shop?category=gambesons' },
-                { name: 'MEDIEVAL HELMETS', img: '/images/viking-helmet.png', href: '/shop?category=medieval-helmets' },
-                { name: 'PLATE ARMOR', img: '/images/full-body-armor.png', href: '/shop?category=plate-armor' },
-                { name: 'LEATHER ARMOR', img: '/images/leather-breastplates.png', href: '/shop?category=leather-armor' },
-                { name: 'SHIELDS', img: '/images/round-shields.png', href: '/shop?category=shields' },
-                { name: 'WEAPONS', img: '/images/axes.png', href: '/shop?category=weapons' },
-                { name: 'ACCESSORIES', img: '/images/hp-stl-4.png', href: '/shop?category=accessories' },
-              ].map((c, i) => (
-                <Link key={c.name} href={c.href} className="group block min-w-[300px] sm:min-w-[360px] lg:min-w-[420px] h-[240px] sm:h-[300px] lg:h-[360px] overflow-hidden">
-                  <div className="relative h-full w-full">
-                    <img src={c.img} alt={c.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" loading="lazy" />
-                    <div className="absolute inset-0 bg-black/30" />
-                    <div className="absolute left-6 bottom-6 z-10">
-                      <h3 className="font-serif text-[18px] sm:text-[20px] lg:text-[22px] font-bold uppercase text-white tracking-[0.12em]">{c.name}</h3>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
         </div>
+      </section>
+
+      <div className="w-full overflow-x-auto">
+        <div className="flex w-max gap-0">
+          {[
+            { name: 'MEDIEVAL CLOTHING', img: '/images/hp-stl-main.png', href: '/shop?category=medieval-clothing' },
+            { name: 'GAMBESONS', img: '/images/gambeson.png', href: '/shop?category=gambesons' },
+            { name: 'MEDIEVAL HELMETS', img: '/images/viking-helmet.png', href: '/shop?category=medieval-helmets' },
+            { name: 'PLATE ARMOR', img: '/images/full-body-armor.png', href: '/shop?category=plate-armor' },
+            { name: 'LEATHER ARMOR', img: '/images/leather-breastplates.png', href: '/shop?category=leather-armor' },
+            { name: 'SHIELDS', img: '/images/round-shields.png', href: '/shop?category=shields' },
+            { name: 'WEAPONS', img: '/images/axes.png', href: '/shop?category=weapons' },
+            { name: 'ACCESSORIES', img: '/images/hp-stl-4.png', href: '/shop?category=accessories' },
+          ].map((c, i) => (
+            <Link key={c.name} href={c.href} className="group block min-w-[300px] sm:min-w-[360px] lg:min-w-[420px] h-[240px] sm:h-[300px] lg:h-[360px] overflow-hidden">
+              <div className="relative h-full w-full">
+                <img src={c.img} alt={c.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" loading="lazy" />
+                <div className="absolute inset-0 bg-black/30" />
+                <div className="absolute left-6 bottom-6 z-10">
+                  <h3 className="font-serif text-[18px] sm:text-[20px] lg:text-[22px] font-bold uppercase text-white tracking-[0.12em]">{c.name}</h3>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       </section>
 
       {/* ── SHOP THE LOOK ── */}
