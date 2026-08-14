@@ -617,7 +617,8 @@ const Home = () => {
         <div className="mx-auto w-full max-w-[1680px] px-5">
           <div className="mb-8 text-center sm:text-left">
           </div>
-
+        </div>
+      </section>
 
       {/* ── SHOP THE LOOK ── */}
       <section className="py-[80px] bg-[#f5f0e8]">
