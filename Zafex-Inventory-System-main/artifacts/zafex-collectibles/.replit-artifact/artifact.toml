@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Zafex Collectibles & Zafs"
+version = "1.0.0"
+id = "artifacts/zafex-collectibles"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25544
+
+[services.development]
+run = "pnpm --filter @workspace/zafex-collectibles run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/zafex-collectibles", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/zafex-collectibles/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25544"
+BASE_PATH = "/"

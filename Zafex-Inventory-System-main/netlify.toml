@@ -1,0 +1,11 @@
+[build]
+  command = "pnpm --dir artifacts/zafex-collectibles build"
+  publish = "artifacts/zafex-collectibles/dist/public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[dev]
+  framework = "vite"
