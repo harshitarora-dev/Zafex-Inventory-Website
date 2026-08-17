@@ -10,7 +10,7 @@ const ITEMS = [
 
 const AnnouncementBar = () => {
   const [index, setIndex] = useState(0);
-n  useEffect(() => {
+  useEffect(() => {
     const t = setInterval(() => setIndex((i) => (i + 1) % ITEMS.length), 3000);
     return () => clearInterval(t);
   }, []);

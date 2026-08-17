@@ -84,9 +84,11 @@ export interface OrderItem {
   id: number;
   orderId: number;
   productId: string;
+  productName: string;
+  unitPrice: number;
   quantity: number;
-  price: number;
-  product: Product;
+  price?: number;
+  product?: Product;
 }
 
 export interface OrderStatusHistory {
@@ -109,28 +111,33 @@ export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface Order {
   id: number;
-  userId: number;
+  userId?: number | null;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string | null;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
-  paymentMethod: string | null;
-  razorpayOrderId: string | null;
-  razorpayPaymentId: string | null;
-  subtotal: number;
-  shippingCost: number;
-  total: number;
+  paymentMethod?: string | null;
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  subtotal?: number;
+  shippingCost?: number;
+  total?: number;
+  totalAmount: number;
   shippingAddress: string;
-  shippingCity: string;
-  shippingState: string;
-  shippingPincode: string;
-  shippingCountry: string;
-  phone: string;
-  notes: string | null;
+  shippingCity?: string;
+  shippingState?: string;
+  shippingPincode?: string;
+  shippingCountry?: string;
+  phone?: string;
+  notes?: string | null;
   createdAt: string;
   updatedAt: string;
   user?: User;
 }
 
-export interface OrderDetail extends Order {
+export interface OrderDetail {
+  order: Order;
   items: OrderItem[];
   statusHistory: OrderStatusHistory[];
 }
@@ -238,9 +245,10 @@ export function addToCart(body: {
 
 export function updateCartItem(
   id: number,
-  body: { quantity: number },
+  body: { quantity: number } | number,
 ): Promise<{ item: CartItem }> {
-  return apiFetch(`/cart/${id}`, jsonPut(body));
+  const payload = typeof body === 'number' ? { quantity: body } : body;
+  return apiFetch(`/cart/${id}`, jsonPut(payload));
 }
 
 export function removeCartItem(id: number): Promise<{ ok: true }> {
@@ -395,7 +403,7 @@ export function getAdminDashboard(): Promise<DashboardStats> {
 export function getAdminOrders(params?: {
   page?: number;
   limit?: number;
-}): Promise<{ orders: Order[]; total: number }> {
+}): Promise<{ orders: Order[]; total: number; page: number; limit: number; totalPages: number }> {
   const qs = params
     ? new URLSearchParams(
         Object.entries(params)
@@ -412,8 +420,13 @@ export function getAdminOrder(id: number): Promise<OrderDetail> {
 
 export function updateAdminOrderStatus(
   id: number,
-  body: { status: OrderStatus; note?: string },
+  statusOrBody: OrderStatus | string | { status: OrderStatus | string; note?: string },
+  note?: string,
 ): Promise<{ ok: true }> {
+  const body =
+    typeof statusOrBody === 'string'
+      ? { status: statusOrBody, ...(note ? { note } : {}) }
+      : statusOrBody;
   return apiFetch(`/admin/orders/${id}/status`, jsonPut(body));
 }
 

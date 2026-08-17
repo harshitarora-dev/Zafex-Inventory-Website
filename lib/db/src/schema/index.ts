@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -25,14 +25,44 @@ export const insertProductSchema = createInsertSchema(productsTable).omit({
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof productsTable.$inferSelect;
 
+// ── Users ─────────────────────────────────────────────────────────────────
+export const usersTable = pgTable("users", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone"),
+  password: text("password").notNull(),
+  avatar: text("avatar"),
+  role: text("role").notNull().default("customer"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(usersTable).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof usersTable.$inferSelect;
+
 // ── Orders ────────────────────────────────────────────────────────────────
 export const ordersTable = pgTable("orders", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => usersTable.id, { onDelete: "set null" }),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
   customerPhone: text("customer_phone"),
   shippingAddress: text("shipping_address").notNull(),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingPincode: text("shipping_pincode"),
+  shippingCountry: text("shipping_country").default("India"),
   status: text("status").notNull().default("pending"),
+  paymentStatus: text("payment_status").notNull().default("pending"),
+  razorpayOrderId: text("razorpay_order_id"),
+  paymentId: text("payment_id"),
+  paymentSignature: text("payment_signature"),
   totalAmount: integer("total_amount").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -66,3 +96,103 @@ export const insertOrderItemSchema = createInsertSchema(orderItemsTable).omit({
 });
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 export type OrderItem = typeof orderItemsTable.$inferSelect;
+
+// ── Order Status History ──────────────────────────────────────────────────
+export const orderStatusHistoryTable = pgTable("order_status_history", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id")
+    .notNull()
+    .references(() => ordersTable.id, { onDelete: "cascade" }),
+  status: text("status").notNull(),
+  note: text("note"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertOrderStatusHistorySchema = createInsertSchema(orderStatusHistoryTable).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertOrderStatusHistory = z.infer<typeof insertOrderStatusHistorySchema>;
+export type OrderStatusHistory = typeof orderStatusHistoryTable.$inferSelect;
+
+// ── Cart ──────────────────────────────────────────────────────────────────
+export const cartTable = pgTable("cart", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  productId: text("product_id")
+    .notNull()
+    .references(() => productsTable.id, { onDelete: "cascade" }),
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCartSchema = createInsertSchema(cartTable).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertCart = z.infer<typeof insertCartSchema>;
+export type CartItem = typeof cartTable.$inferSelect;
+
+// ── Wishlist ──────────────────────────────────────────────────────────────
+export const wishlistTable = pgTable("wishlist", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  productId: text("product_id")
+    .notNull()
+    .references(() => productsTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertWishlistSchema = createInsertSchema(wishlistTable).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertWishlist = z.infer<typeof insertWishlistSchema>;
+export type WishlistItem = typeof wishlistTable.$inferSelect;
+
+// ── Reviews ───────────────────────────────────────────────────────────────
+export const reviewsTable = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  productId: text("product_id")
+    .notNull()
+    .references(() => productsTable.id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertReviewSchema = createInsertSchema(reviewsTable).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviewsTable.$inferSelect;
+
+// ── Contact Inquiries ─────────────────────────────────────────────────────
+export const contactsTable = pgTable("contacts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  subject: text("subject"),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertContactSchema = createInsertSchema(contactsTable).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertContact = z.infer<typeof insertContactSchema>;
+export type Contact = typeof contactsTable.$inferSelect;

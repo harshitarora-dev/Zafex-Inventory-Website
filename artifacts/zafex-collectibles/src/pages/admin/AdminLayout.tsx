@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { checkAdminAuth, adminLogout } from '@/lib/adminApi';
-import { Package, LogOut, LayoutDashboard, Image } from 'lucide-react';
+import { Package, LogOut, LayoutDashboard, Image, ShoppingBag, Users, MessageSquare } from 'lucide-react';
 
 interface Props {
   children: React.ReactNode;
@@ -32,8 +32,12 @@ export default function AdminLayout({ children }: Props) {
   }
 
   const nav = [
-    { href: '/admin/products',       label: 'Products',         icon: Package },
-    { href: '/admin/homepage-images', label: 'Homepage Images', icon: Image   },
+    { href: '/admin/dashboard',       label: 'Dashboard',        icon: LayoutDashboard },
+    { href: '/admin/products',        label: 'Products',         icon: Package },
+    { href: '/admin/orders',          label: 'Orders',           icon: ShoppingBag },
+    { href: '/admin/customers',       label: 'Customers',        icon: Users },
+    { href: '/admin/contacts',        label: 'Inquiries',        icon: MessageSquare },
+    { href: '/admin/homepage-images', label: 'Homepage Images',  icon: Image },
   ];
 
   return (

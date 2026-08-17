@@ -63,10 +63,11 @@ router.get("/admin/products", requireAdmin, async (_req, res) => {
 /* ── GET /api/admin/products/:id ─────────────────────────────────────────*/
 router.get("/admin/products/:id", requireAdmin, async (req, res) => {
   try {
+    const id = req.params["id"] as string;
     const [product] = await db
       .select()
       .from(productsTable)
-      .where(eq(productsTable.id, req.params.id));
+      .where(eq(productsTable.id, id));
     if (!product) {
       res.status(404).json({ error: "Product not found" });
       return;
@@ -136,13 +137,14 @@ router.put(
   upload.single("image"),
   async (req, res) => {
     try {
+      const id = req.params["id"] as string;
       const { name, cat, sub, price, badge, desc, tags, inStock } =
         req.body as Record<string, string | undefined>;
 
       const existing = await db
         .select()
         .from(productsTable)
-        .where(eq(productsTable.id, req.params.id));
+        .where(eq(productsTable.id, id));
       if (!existing.length) {
         res.status(404).json({ error: "Product not found" });
         return;
@@ -186,7 +188,7 @@ router.put(
       const [updated] = await db
         .update(productsTable)
         .set(updates)
-        .where(eq(productsTable.id, req.params.id))
+        .where(eq(productsTable.id, id))
         .returning();
 
       res.json(updated);
@@ -199,9 +201,10 @@ router.put(
 /* ── DELETE /api/admin/products/:id ─────────────────────────────────────*/
 router.delete("/admin/products/:id", requireAdmin, async (req, res) => {
   try {
+    const id = req.params["id"] as string;
     const [deleted] = await db
       .delete(productsTable)
-      .where(eq(productsTable.id, req.params.id))
+      .where(eq(productsTable.id, id))
       .returning();
     if (!deleted) {
       res.status(404).json({ error: "Product not found" });

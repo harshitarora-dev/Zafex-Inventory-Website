@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { NAV_CATEGORIES, type NavCategory } from '@/data/categories';
+import { useCartItemCount } from '@/hooks/useCart';
 
 const shopGroups = [
   { title: 'CHAINMAIL ARMOR', slugs: ['chainmail-armor'] },
@@ -216,6 +217,9 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
             ['/cat/about-us', 'About Us'],
             ['/resources', 'Resources'],
             ['/contact', 'Contact Us'],
+            ['/wishlist', 'My Wishlist'],
+            ['/account', 'My Account'],
+            ['/cart', 'My Cart'],
           ].map(([href, label]) => (
             <Link key={href} href={href} onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
               {label}
@@ -228,10 +232,12 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
 }
 
 const Header = () => {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const cartCount = useCartItemCount();
   const shopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const collectionsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -257,6 +263,13 @@ const Header = () => {
     collectionsTimerRef.current = setTimeout(() => setCollectionsOpen(false), 140);
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   const ANNOUNCEMENTS = [
     '✓ Authentic Handmade Products',
     '✓ Free Worldwide Shipping',
@@ -264,7 +277,6 @@ const Header = () => {
     '✓ Trusted by Customers in 25+ Countries',
     '✓ Secure Payments',
   ];
-  const announcementText = ANNOUNCEMENTS.join('   ');
   const [annIndex, setAnnIndex] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setAnnIndex((i) => (i + 1) % ANNOUNCEMENTS.length), 3000);
@@ -291,14 +303,36 @@ const Header = () => {
             </div>
           </Link>
 
-          <div className="hidden h-[34px] max-w-[310px] flex-1 items-center border border-[#d7d0c4] bg-[#faf8f3] px-3 lg:flex">
-            <input aria-label="Search products" placeholder="Search for products..." className="min-w-0 flex-1 bg-transparent font-sans text-[11px] outline-none placeholder:text-[#a39b8e]" />
-            <Search size={18} strokeWidth={1.5} className="text-[#4b453d]" />
-          </div>
+          <form onSubmit={handleSearch} className="hidden h-[34px] max-w-[310px] flex-1 items-center border border-[#d7d0c4] bg-[#faf8f3] px-3 lg:flex">
+            <input
+              aria-label="Search products"
+              placeholder="Search for products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="min-w-0 flex-1 bg-transparent font-sans text-[11px] outline-none placeholder:text-[#a39b8e]"
+            />
+            <button type="submit" aria-label="Submit search">
+              <Search size={18} strokeWidth={1.5} className="text-[#4b453d] hover:text-[#8b6914] transition-colors" />
+            </button>
+          </form>
           <div className="flex items-center gap-5 text-[#2a241c]">
-            <button aria-label="Wishlist" className="hidden flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914] sm:flex"><Heart size={20} strokeWidth={1.4} /><span>Wishlist</span></button>
-            <button aria-label="Account" className="hidden flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914] sm:flex"><UserRound size={20} strokeWidth={1.4} /><span>Account</span></button>
-            <button aria-label="Cart" className="relative flex flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914]"><ShoppingCart size={21} strokeWidth={1.4} /><span>Cart</span><span className="absolute -right-2 -top-2 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#c6a767] text-[8px] text-[#211b14]">0</span></button>
+            <Link href="/wishlist" aria-label="Wishlist" className="hidden flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914] sm:flex">
+              <Heart size={20} strokeWidth={1.4} />
+              <span>Wishlist</span>
+            </Link>
+            <Link href="/account" aria-label="Account" className="hidden flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914] sm:flex">
+              <UserRound size={20} strokeWidth={1.4} />
+              <span>Account</span>
+            </Link>
+            <Link href="/cart" aria-label="Cart" className="relative flex flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914]">
+              <ShoppingCart size={21} strokeWidth={1.4} />
+              <span>Cart</span>
+              {cartCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#c6a767] text-[8px] text-[#211b14] font-bold">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
             <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="lg:hidden"><Menu size={22} /></button>
           </div>
         </div>

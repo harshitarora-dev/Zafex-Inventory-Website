@@ -9,7 +9,13 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ScrollProgress } from '@/components/ScrollProgress';
+import { AuthProvider } from '@/contexts/AuthContext';
+
 import AdminLogin from '@/pages/admin/AdminLogin';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminOrders from '@/pages/admin/AdminOrders';
+import AdminCustomers from '@/pages/admin/AdminCustomers';
+import AdminContacts from '@/pages/admin/AdminContacts';
 import AdminProducts from '@/pages/admin/AdminProducts';
 import AdminProductForm from '@/pages/admin/AdminProductForm';
 import AdminHomepageImages from '@/pages/admin/AdminHomepageImages';
@@ -17,6 +23,13 @@ import AdminHomepageImages from '@/pages/admin/AdminHomepageImages';
 import Home from '@/pages/Home';
 import Shop from '@/pages/Shop';
 import ProductDetail from '@/pages/ProductDetail';
+import Cart from '@/pages/Cart';
+import Wishlist from '@/pages/Wishlist';
+import Checkout from '@/pages/Checkout';
+import Account from '@/pages/Account';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import OrderDetail from '@/pages/OrderDetail';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import CategoryPage from '@/pages/CategoryPage';
@@ -649,6 +662,10 @@ function Router() {
     return (
       <Switch>
         <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin/dashboard" component={AdminDashboard} />
+        <Route path="/admin/orders" component={AdminOrders} />
+        <Route path="/admin/customers" component={AdminCustomers} />
+        <Route path="/admin/contacts" component={AdminContacts} />
         <Route path="/admin/products/new">
           <AdminProductForm mode="create" />
         </Route>
@@ -658,7 +675,7 @@ function Router() {
         <Route path="/admin/products" component={AdminProducts} />
         <Route path="/admin/homepage-images" component={AdminHomepageImages} />
         <Route path="/admin">
-          <Redirect to="/admin/products" />
+          <Redirect to="/admin/dashboard" />
         </Route>
       </Switch>
     );
@@ -673,6 +690,13 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/shop" component={Shop} />
           <Route path="/shop/:id" component={ProductDetail} />
+          <Route path="/cart" component={Cart} />
+          <Route path="/wishlist" component={Wishlist} />
+          <Route path="/checkout" component={Checkout} />
+          <Route path="/account" component={Account} />
+          <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} />
+          <Route path="/orders/:id" component={OrderDetail} />
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
           <Route path="/resources" component={Resources} />
@@ -722,13 +746,15 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
-        <SmoothScrollProvider>
-          <ScrollProgress />
-          <Router />
-        </SmoothScrollProvider>
-      </WouterRouter>
-      <Toaster />
+      <AuthProvider>
+        <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
+          <SmoothScrollProvider>
+            <ScrollProgress />
+            <Router />
+          </SmoothScrollProvider>
+        </WouterRouter>
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
