@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrder, cancelOrder } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft, Package, CheckCircle2, Truck, XCircle, Clock } from 'lucide-react';
 
@@ -28,6 +29,7 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const { isLoggedIn } = useAuth();
+  const { formatPrice } = useCurrency();
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -162,11 +164,11 @@ export default function OrderDetail() {
                       {item.productName}
                     </div>
                     <div className="font-sans text-[12px] text-[#6b6b6b] mt-0.5">
-                      Qty: {item.quantity} × ₹{item.unitPrice.toLocaleString('en-IN')}
+                      Qty: {item.quantity} × {formatPrice(item.unitPrice)}
                     </div>
                   </div>
                   <span className="font-serif text-[14px] font-bold text-[#d4af37]">
-                    ₹{(item.unitPrice * item.quantity).toLocaleString('en-IN')}
+                    {formatPrice(item.unitPrice * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -216,7 +218,7 @@ export default function OrderDetail() {
                 <div className="flex justify-between">
                   <span className="text-[#4a4a4a]">Total</span>
                   <span className="font-bold text-[#1a1a18]">
-                    ₹{order.totalAmount.toLocaleString('en-IN')}
+                    {formatPrice(order.totalAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between">

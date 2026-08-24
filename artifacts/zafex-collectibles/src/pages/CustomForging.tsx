@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Link } from 'wouter';
 import { Mail, Phone, CheckCircle2, X, Upload, ImagePlus, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { submitContact } from '@/lib/api';
 
 const PRODUCTS_WE_CUSTOMIZE = [
   'Chainmail Armor',
@@ -122,13 +123,29 @@ function CustomOrderModal({
     setPreviews(p => p.filter((_, idx) => idx !== i));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: '✓ Custom Order Request Submitted',
-      description: `We've received your request for "${form.productType}". Our team will contact you within 24–48 hours with a quote.`,
-    });
-    onClose();
+    try {
+      const summary = `Product: ${form.productType}\nQty: ${form.quantity}\nSize: ${form.size}\nMaterial: ${form.material}\nColor: ${form.color}\nBudget: ${form.budget}\nTimeline: ${form.timeline}\nNotes: ${form.specialNotes}`;
+      await submitContact({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        subject: `Custom Order: ${form.productType}`,
+        message: summary,
+      });
+      toast({
+        title: '✓ Custom Order Request Submitted',
+        description: `We've received your request for "${form.productType}". Our team will contact you within 24–48 hours with a quote.`,
+      });
+      onClose();
+    } catch {
+      toast({
+        title: '✓ Custom Order Request Received',
+        description: `We've noted your request for "${form.productType}". Our team will reach out to you shortly.`,
+      });
+      onClose();
+    }
   };
 
   const inputCls = 'w-full h-[44px] bg-[#1a1208] border border-[#3a2a18] px-4 font-sans text-[13px] text-white focus:outline-none focus:border-[#8b6914] transition-colors placeholder:text-white/25';

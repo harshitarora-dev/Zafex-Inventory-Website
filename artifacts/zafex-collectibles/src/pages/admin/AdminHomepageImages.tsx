@@ -194,11 +194,11 @@ export default function AdminHomepageImages() {
 
   return (
     <AdminLayout>
-      <div className="p-10 max-w-[1400px]">
+      <div className="p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="font-serif text-[34px] text-[#1a1a18] tracking-tight">Homepage Images</h1>
-          <p className="text-[#6b6b6b] text-[15px] mt-1.5">
+        <div className="mb-6 sm:mb-10">
+          <h1 className="font-serif text-[26px] sm:text-[34px] text-[#1a1a18] tracking-tight">Homepage Images</h1>
+          <p className="text-[#6b6b6b] text-[13px] sm:text-[15px] mt-1">
             Click any image or drag & drop to replace it. Changes appear on the storefront immediately.
           </p>
         </div>
@@ -210,14 +210,14 @@ export default function AdminHomepageImages() {
         ) : error ? (
           <div className="text-red-500 text-[14px] py-8 text-center">{error}</div>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-8 sm:space-y-12">
             {SECTIONS.map((section) => (
               <div key={section.title}>
-                <div className="mb-5">
-                  <h2 className="font-serif text-[20px] text-[#1a1a18]">{section.title}</h2>
-                  <p className="text-[#8a8278] text-[13px] mt-0.5">{section.desc}</p>
+                <div className="mb-4 sm:mb-5">
+                  <h2 className="font-serif text-[18px] sm:text-[20px] text-[#1a1a18]">{section.title}</h2>
+                  <p className="text-[#8a8278] text-[12px] sm:text-[13px] mt-0.5">{section.desc}</p>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {section.keys.map((key) => {
                     const slot = slotMap[key];
                     if (!slot) return null;

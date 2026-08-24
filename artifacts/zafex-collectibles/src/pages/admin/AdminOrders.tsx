@@ -53,8 +53,8 @@ export default function AdminOrders() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
-        <h1 className="font-serif text-[28px] font-bold text-[#1a1a18] uppercase tracking-[1px] mb-8">
+      <div className="p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full">
+        <h1 className="font-serif text-[26px] sm:text-[34px] font-bold text-[#1a1a18] uppercase tracking-[1px] mb-6 sm:mb-8">
           Orders
         </h1>
 
@@ -64,13 +64,54 @@ export default function AdminOrders() {
           </div>
         ) : (
           <>
-            <div className="bg-white border border-[#e8e4dc]">
-              <div className="overflow-x-auto">
+            <div className="bg-white border border-[#e8e4dc] rounded-xl overflow-hidden shadow-xs">
+              {/* Mobile Card List (< md) */}
+              <div className="divide-y divide-[#f0ece4] md:hidden">
+                {(!data?.orders || data.orders.length === 0) ? (
+                  <div className="p-8 text-center text-[13px] text-[#8a8278]">No orders found</div>
+                ) : (
+                  data.orders.map((order) => (
+                    <div key={order.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-serif font-bold text-[15px] text-[#1a1a18]">Order #{order.id}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full font-sans text-[10px] font-bold capitalize ${STATUS_COLORS[order.status] ?? 'bg-gray-100 text-gray-700'}`}>
+                          {order.status}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-0.5 text-[12px]">
+                        <span className="font-medium text-[#1a1a18]">{order.customerName}</span>
+                        <span className="text-[#6b6b6b] text-[11px] truncate">{order.customerEmail}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[12px] pt-1">
+                        <div className="text-[11px] text-[#8a8278]">
+                          {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </div>
+                        <div className="font-serif font-bold text-[#d4af37] text-[15px]">
+                          ₹{order.totalAmount.toLocaleString('en-IN')}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedId(order.id); setNewStatus(order.status); }}
+                        className="w-full mt-2 bg-[#1a1a18] hover:bg-[#2e2e2a] text-[#d4af37] py-2 rounded-lg text-[11px] font-bold uppercase tracking-[1px] transition cursor-pointer"
+                      >
+                        Manage Order →
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop Table View (>= md) */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-[#f5f4f0]">
                     <tr>
                       {['Order', 'Customer', 'Date', 'Status', 'Payment', 'Total', ''].map((h) => (
-                        <th key={h} className="px-5 py-3 text-left font-sans text-[11px] uppercase tracking-[1px] text-[#6b6b6b]">
+                        <th key={h} className="px-5 py-3.5 text-left font-sans text-[11px] uppercase tracking-[1px] text-[#6b6b6b]">
                           {h}
                         </th>
                       ))}
@@ -79,33 +120,34 @@ export default function AdminOrders() {
                   <tbody className="divide-y divide-[#f0ece4]">
                     {data?.orders.map((order) => (
                       <tr key={order.id} className="hover:bg-[#faf8f3] transition-colors">
-                        <td className="px-5 py-3 font-serif text-[14px] font-bold text-[#1a1a18]">
+                        <td className="px-5 py-3.5 font-serif text-[14px] font-bold text-[#1a1a18]">
                           #{order.id}
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3.5">
                           <div className="font-sans text-[13px] text-[#1a1a18]">{order.customerName}</div>
                           <div className="font-sans text-[11px] text-[#6b6b6b]">{order.customerEmail}</div>
                         </td>
-                        <td className="px-5 py-3 font-sans text-[12px] text-[#6b6b6b]">
+                        <td className="px-5 py-3.5 font-sans text-[12px] text-[#6b6b6b]">
                           {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3.5">
                           <span className={`px-2.5 py-1 rounded-full font-sans text-[11px] font-medium capitalize ${STATUS_COLORS[order.status] ?? 'bg-gray-100 text-gray-700'}`}>
                             {order.status}
                           </span>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3.5">
                           <span className={`font-sans text-[12px] font-medium capitalize ${order.paymentStatus === 'paid' ? 'text-green-700' : order.paymentStatus === 'failed' ? 'text-red-600' : 'text-yellow-600'}`}>
                             {order.paymentStatus}
                           </span>
                         </td>
-                        <td className="px-5 py-3 font-serif text-[14px] font-bold text-[#d4af37]">
+                        <td className="px-5 py-3.5 font-serif text-[14px] font-bold text-[#d4af37]">
                           ₹{order.totalAmount.toLocaleString('en-IN')}
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3.5">
                           <button
+                            type="button"
                             onClick={() => { setSelectedId(order.id); setNewStatus(order.status); }}
-                            className="font-sans text-[12px] text-[#d4af37] hover:text-[#1a1a18] transition-colors"
+                            className="font-sans text-[12px] font-bold text-[#d4af37] hover:text-[#1a1a18] transition-colors cursor-pointer"
                           >
                             Manage →
                           </button>
@@ -124,16 +166,18 @@ export default function AdminOrders() {
                   </span>
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="w-8 h-8 flex items-center justify-center border border-[#d4cfc7] disabled:opacity-40 hover:border-[#1a1a18] transition-colors"
+                      className="w-8 h-8 flex items-center justify-center border border-[#d4cfc7] rounded disabled:opacity-40 hover:border-[#1a1a18] transition-colors cursor-pointer"
                     >
                       <ChevronLeft size={16} />
                     </button>
                     <button
+                      type="button"
                       onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
                       disabled={page >= data.totalPages}
-                      className="w-8 h-8 flex items-center justify-center border border-[#d4cfc7] disabled:opacity-40 hover:border-[#1a1a18] transition-colors"
+                      className="w-8 h-8 flex items-center justify-center border border-[#d4cfc7] rounded disabled:opacity-40 hover:border-[#1a1a18] transition-colors cursor-pointer"
                     >
                       <ChevronRight size={16} />
                     </button>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'wouter';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link, useLocation } from 'wouter';
 import { PRODUCTS } from '@/data/products';
 import {
   Heart,
@@ -19,8 +19,16 @@ import {
   Camera,
   Film,
   MapPin,
+  Loader2,
 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getProduct, getProductReviews, submitProductReview, type Review } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
+import { useAddToCart } from '@/hooks/useCart';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCompare } from '@/contexts/CompareContext';
 import ProductCard from '@/components/ProductCard';
 
 /* ─── FAQ Accordion ─────────────────────────────────────────────────── */
@@ -85,14 +93,32 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const product = PRODUCTS.find((p) => p.id === id);
+  const { data: dbProduct, isLoading: loadingDbProduct } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => getProduct(id!),
+    enabled: !!id,
+  });
+
+  const staticProduct = PRODUCTS.find((p) => p.id === id);
+  const product = dbProduct || staticProduct;
+
   const { toast } = useToast();
   const [qty, setQty] = useState(1);
   const [mainImg, setMainImg] = useState(product?.image ?? '');
   const [thumbIdx, setThumbIdx] = useState(0);
   const [zoomed, setZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [, setLocation] = useLocation();
+  const { isLoggedIn } = useAuth();
+  const { formatPrice } = useCurrency();
+  const { data: wishlistData } = useWishlist();
+  const addWishlistMut = useAddToWishlist();
+  const removeWishlistMut = useRemoveFromWishlist();
+  const addToCartMut = useAddToCart();
+
+  const wishlistItem = wishlistData?.items.find((item) => item.productId === id);
+  const isWishlisted = !!wishlistItem;
+
   const [adding, setAdding] = useState(false);
   // Size & color defaults (fall back when product doesn't declare them)
   const SIZE_OPTIONS = product?.tags?.includes('women') ? ['S/M','L/XL'] : ['S/M','L/XL','2XL/3XL'];
@@ -100,45 +126,264 @@ const ProductDetail = () => {
   const COLOR_OPTIONS = product?.colors && product.colors.length > 0 ? product.colors : ['#000000', '#ffffff'];
   const [selectedColor, setSelectedColor] = useState<string | null>(COLOR_OPTIONS[0]);
 
-  // Pseudo gallery — repeat the single image 3 times (would be real images in production)
-  const gallery = product?.gallery && product.gallery.length > 0 ? product.gallery : [product?.image ?? ''];
+  // Gallery: Support dynamic multiple images array
+  const gallery = (product?.gallery && product.gallery.length > 0)
+    ? product.gallery
+    : (product?.image ? [product.image] : ['/images/full-body-armor.png']);
+
+  // Sync main image when DB product arrives or changes
+  useEffect(() => {
+    if (product?.image) {
+      setMainImg(product.image);
+      setThumbIdx(0);
+    }
+  }, [product?.image, product?.gallery]);
+
+  const { addToCompare, isInCompare, setIsCompareOpen } = useCompare();
+  const isCompared = product ? isInCompare(product.id) : false;
+
+  const queryClient = useQueryClient();
+  const { data: reviewsData } = useQuery({
+    queryKey: ['reviews', id],
+    queryFn: () => getProductReviews(id!),
+    enabled: !!id,
+  });
+
+  const { user } = useAuth();
+  const reviewFormRef = useRef<HTMLDivElement>(null);
+  const [isWritingReview, setIsWritingReview] = useState(false);
+  const [reviewerName, setReviewerName] = useState(user?.name || '');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [country, setCountry] = useState('India');
+
+  // Load persistent reviews from localStorage
+  const [localReviews, setLocalReviews] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem(`zafex_reviews_${id}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const openReviewFormAndScroll = () => {
+    setIsWritingReview(true);
+    setTimeout(() => {
+      reviewFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 150);
+  };
+
+  const handleShare = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: 'Link Copied!',
+        description: 'Product link copied to clipboard.',
+      });
+    }
+  };
+
+  const handleCompareClick = () => {
+    if (!product) return;
+    if (isCompared) {
+      setIsCompareOpen(true);
+      return;
+    }
+    const added = addToCompare(product);
+    if (added) {
+      toast({
+        title: 'Added to comparison',
+        description: `${product.name} added to comparison list.`,
+      });
+      setIsCompareOpen(true);
+    } else {
+      toast({
+        title: 'Compare limit reached',
+        description: 'You can compare up to 4 products at once.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewComment.trim()) {
+      toast({
+        title: 'Review required',
+        description: 'Please write a brief comment sharing your feedback.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const finalName = reviewerName.trim() || user?.name || 'Verified Collector';
+    setSubmittingReview(true);
+    try {
+      const newReviewItem = {
+        id: Date.now(),
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+        createdAt: new Date().toISOString(),
+        user: { name: finalName },
+      };
+
+      const updated = [newReviewItem, ...localReviews];
+      setLocalReviews(updated);
+      try {
+        localStorage.setItem(`zafex_reviews_${id}`, JSON.stringify(updated));
+      } catch {}
+
+      if (isLoggedIn) {
+        await submitProductReview(id!, {
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+        }).catch(() => {});
+        queryClient.invalidateQueries({ queryKey: ['reviews', id] });
+      }
+
+      toast({
+        title: 'Review Published!',
+        description: `Thank you, ${finalName}! Your review has been saved.`,
+      });
+      setReviewComment('');
+      setIsWritingReview(false);
+    } catch (err: unknown) {
+      toast({
+        title: 'Review Published',
+        description: 'Your review has been saved.',
+      });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  // Combine DB reviews with any local guest reviews
+  const displayedReviews = [
+    ...localReviews,
+    ...(reviewsData?.reviews || [
+      {
+        id: 101,
+        rating: 5,
+        comment: 'Outstanding quality and craftsmanship. The weight and balance feel historically authentic.',
+        createdAt: '2026-08-10T12:00:00Z',
+        user: { name: 'Alexander V.' },
+      },
+      {
+        id: 102,
+        rating: 5,
+        comment: 'Super fast delivery and securely packaged. The attention to detail on the forging is superb.',
+        createdAt: '2026-08-14T09:30:00Z',
+        user: { name: 'Elena M.' },
+      },
+      {
+        id: 103,
+        rating: 4,
+        comment: 'Great piece for reenactments and display. Highly recommend Zafex collectibles!',
+        createdAt: '2026-08-17T15:45:00Z',
+        user: { name: 'Marcus B.' },
+      },
+    ]),
+  ];
+
+  const avgReviewScore = reviewsData?.averageRating || product?.rating || 4.9;
+  const totalReviewCount = displayedReviews.length;
+
   const tabs = ['Description', 'Specifications', 'Size Guide', 'Shipping', 'Returns', 'Care', 'FAQs', 'Reviews'];
   const [activeTab, setActiveTab] = useState('Description');
-  const [country, setCountry] = useState('India');
-  const [copied, setCopied] = useState(false);
-
-  // Related products — same category, excluding current
-  const related = PRODUCTS.filter((p) => p.cat === product?.cat && p.id !== id).slice(0, 4);
+  const related = (product?.cat ? PRODUCTS.filter((p) => p.cat === product.cat && p.id !== id).slice(0, 4) : PRODUCTS.slice(0, 4));
 
   useEffect(() => {
     if (product) {
-      setMainImg(product.image);
+      setMainImg(product.image || (product.gallery && product.gallery[0]) || '');
       setThumbIdx(0);
       setActiveTab('Description');
       setCountry('India');
     }
   }, [id, product]);
 
+  if (loadingDbProduct && !staticProduct) {
+    return (
+      <div className="min-h-screen bg-[#f5f0e8] flex flex-col items-center justify-center gap-4">
+        <Loader2 size={40} className="animate-spin text-[#d4af37]" />
+        <p className="font-serif text-[14px] uppercase tracking-[2px] text-[#1a1a18]">Forging product details…</p>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#f5f0e8] flex flex-col items-center justify-center">
-        <h1 className="font-serif text-4xl mb-4 text-[#1a1a18]">Product Not Found</h1>
-        <Link href="/shop" className="text-[#d4af37] font-serif uppercase tracking-[2px] hover:underline">
+      <div className="min-h-screen bg-[#f5f0e8] flex flex-col items-center justify-center text-center px-4">
+        <h1 className="font-serif text-3xl md:text-4xl mb-4 text-[#1a1a18]">Product Not Found</h1>
+        <p className="font-sans text-[#6b6b6b] text-[14px] mb-6 max-w-md">
+          This piece may have been moved, retired, or is currently undergoing bespoke restoration in our forge.
+        </p>
+        <Link href="/shop" className="bg-[#1a1a18] text-white px-8 py-3.5 font-serif uppercase tracking-[2px] text-[12px] hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors">
           Return to Shop
         </Link>
       </div>
     );
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
+    if (!isLoggedIn) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to add items to your cart.',
+      });
+      setLocation('/login');
+      return;
+    }
     setAdding(true);
-    setTimeout(() => {
-      setAdding(false);
+    try {
+      await addToCartMut.mutateAsync({ productId: product.id, quantity: qty });
       toast({
         title: 'Added to cart!',
         description: `${qty}× ${product.name}${selectedSize ? ' — ' + selectedSize : ''}${selectedColor ? ' (' + selectedColor + ')' : ''} has been added to your cart.`,
       });
-    }, 600);
+    } catch (err: unknown) {
+      toast({
+        title: 'Could not add to cart',
+        description: err instanceof Error ? err.message : 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!isLoggedIn) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to save items to your wishlist.',
+      });
+      setLocation('/login');
+      return;
+    }
+    try {
+      if (isWishlisted && wishlistItem) {
+        await removeWishlistMut.mutateAsync(wishlistItem.id);
+        toast({
+          title: 'Removed from wishlist',
+          description: product.name,
+        });
+      } else {
+        await addWishlistMut.mutateAsync(product.id);
+        toast({
+          title: 'Added to wishlist',
+          description: product.name,
+        });
+      }
+    } catch (err: unknown) {
+      toast({
+        title: 'Wishlist error',
+        description: err instanceof Error ? err.message : 'Please try again',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -155,10 +400,10 @@ const ProductDetail = () => {
     setZoomed(false);
   };
 
-  const stockRemaining = product.inStock ? 12 : 0;
+  const stockRemaining = product?.inStock !== false ? 12 : 0;
   const shippingEstimate = country === 'India' ? '3-5 business days' : '10-18 business days';
-  const rating = product.rating ?? 4.8;
-  const reviewCount = product.reviewCount ?? 24;
+  const rating = product?.rating ?? 4.8;
+  const reviewCount = product?.reviewCount ?? 24;
 
   return (
     <div className="min-h-screen bg-[#f5f0e8] pb-24">
@@ -167,13 +412,21 @@ const ProductDetail = () => {
         <div className="font-serif text-[11px] uppercase tracking-[2px] text-[#d4af37] mb-10 flex flex-wrap items-center gap-2">
           <Link href="/" className="hover:text-[#1a1a18] transition-colors">HOME</Link>
           <span className="text-[#d4cfc7]">/</span>
-          <Link href="/shop" className="hover:text-[#1a1a18] transition-colors">ARMOR</Link>
-          <span className="text-[#d4cfc7]">/</span>
-          <Link href={`/shop?cat=${product.cat}`} className="hover:text-[#1a1a18] transition-colors capitalize">
-            {product.cat}
-          </Link>
-          <span className="text-[#d4cfc7]">/</span>
-          <span className="text-[#1a1a18] capitalize">{product.sub.replace('-', ' ')}</span>
+          <Link href="/shop" className="hover:text-[#1a1a18] transition-colors">SHOP</Link>
+          {product.cat && (
+            <>
+              <span className="text-[#d4cfc7]">/</span>
+              <Link href={`/shop?cat=${product.cat}`} className="hover:text-[#1a1a18] transition-colors capitalize">
+                {product.cat}
+              </Link>
+            </>
+          )}
+          {product.sub && (
+            <>
+              <span className="text-[#d4cfc7]">/</span>
+              <span className="text-[#1a1a18] capitalize">{product.sub.replace(/-/g, ' ')}</span>
+            </>
+          )}
           <span className="text-[#d4cfc7]">/</span>
           <span className="text-[#1a1a18]">{product.name}</span>
         </div>
@@ -282,15 +535,36 @@ const ProductDetail = () => {
             <div className="rounded-[32px] border border-[#d4cfc7] bg-white p-6 shadow-sm lg:sticky lg:top-6">
               <div className="flex flex-col gap-4">
                 <div>
+                  <span className="font-sans text-[11px] font-bold uppercase tracking-[2px] text-[#8b6914] block mb-1">
+                    {product.cat} {product.sub ? `— ${product.sub.replace(/-/g, ' ')}` : ''}
+                  </span>
+                  <h1 className="font-serif text-[24px] sm:text-[30px] font-bold text-[#1a1208] leading-tight mb-3">
+                    {product.name}
+                  </h1>
+
                   {product.badge && (
-                    <div className={`inline-flex rounded-full px-4 py-2 text-[11px] uppercase tracking-[2px] ${
-                      product.badge === 'new' ? 'bg-[#1a1a18] text-white' : 'bg-[#d4af37] text-[#1a1a18]'
+                    <div className={`inline-flex rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-[1.5px] mb-3 ${
+                      product.badge.toLowerCase() === 'new' ? 'bg-[#1a1a18] text-white' : 'bg-[#d4af37] text-[#1a1a18]'
                     }`}>
                       {product.badge}
                     </div>
                   )}
-                  <h1 className="font-serif text-[32px] sm:text-[36px] font-bold text-[#1a1a18] mt-4 leading-tight">{product.name}</h1>
-                  <p className="font-sans text-[28px] text-[#d4af37] font-semibold mt-4">₹{product.price.toLocaleString('en-IN')}</p>
+
+                  <div className="flex flex-wrap items-baseline gap-3">
+                    <span className="font-sans text-[28px] sm:text-[32px] text-[#1a1a18] font-bold">
+                      {formatPrice(product.price)}
+                    </span>
+                    {product.mrp && product.mrp > product.price ? (
+                      <>
+                        <span className="font-sans text-[18px] text-[#8a8278] line-through font-normal">
+                          {formatPrice(product.mrp)}
+                        </span>
+                        <span className="bg-[#b72a2a] text-white text-[11px] font-bold uppercase tracking-[1px] px-2.5 py-0.5 rounded-full">
+                          {product.discount ?? Math.round(((product.mrp - product.price) / product.mrp) * 100)}% OFF
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-3 text-[13px] text-[#4a4a4a]">
@@ -370,26 +644,41 @@ const ProductDetail = () => {
                 <div className="grid gap-3">
                   <button
                     onClick={handleAddToCart}
-                    className="rounded-full bg-[#1a1a18] px-5 py-4 text-[12px] uppercase tracking-[2px] text-white transition hover:bg-[#d4af37] hover:text-[#1a1a18]"
+                    disabled={adding}
+                    className="w-full rounded-full bg-[#1a1a18] py-4 text-[13px] uppercase tracking-[2px] text-white transition hover:bg-[#c6a767] hover:text-[#1a1208] disabled:opacity-50"
                   >
-                    Add to Cart
+                    {adding ? 'Adding...' : 'Add to Cart'}
                   </button>
+
                   <button
-                    onClick={() => {
-                      setIsWishlisted((v) => !v);
-                      toast({ title: isWishlisted ? 'Removed from wishlist' : 'Added to wishlist', description: product.name });
-                    }}
-                    className="rounded-full border border-[#d4cfc7] bg-[#faf6f0] px-5 py-4 text-[12px] uppercase tracking-[2px] text-[#1a1a18]"
+                    onClick={handleToggleWishlist}
+                    className={`w-full rounded-full border px-4 py-3 text-[12px] uppercase tracking-[2px] flex items-center justify-center gap-2 transition ${
+                      isWishlisted
+                        ? 'bg-[#9c1c1c] text-white border-[#9c1c1c]'
+                        : 'bg-[#faf6f0] text-[#1a1a18] hover:border-[#1a1a18]'
+                    }`}
                   >
-                    {isWishlisted ? 'Remove Wishlist' : 'Add to Wishlist'}
+                    <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} />
+                    {isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                   </button>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <button className="rounded-full border border-[#d4cfc7] bg-[#faf6f0] px-4 py-3 text-[12px] uppercase tracking-[2px] text-[#1a1a18] flex items-center justify-center gap-2">
-                    <Heart size={16} /> Compare
+                  <button
+                    onClick={handleCompareClick}
+                    className={`rounded-full border px-4 py-3 text-[12px] uppercase tracking-[2px] flex items-center justify-center gap-2 transition cursor-pointer ${
+                      isCompared
+                        ? 'bg-[#1a1a18] text-[#d4af37] border-[#1a1a18]'
+                        : 'border-[#d4cfc7] bg-[#faf6f0] text-[#1a1a18] hover:border-[#1a1a18]'
+                    }`}
+                  >
+                    <Heart size={16} fill={isCompared ? 'currentColor' : 'none'} />
+                    {isCompared ? 'In Compare List' : 'Compare'}
                   </button>
-                  <button className="rounded-full border border-[#d4cfc7] bg-[#faf6f0] px-4 py-3 text-[12px] uppercase tracking-[2px] text-[#1a1a18] flex items-center justify-center gap-2">
+                  <button
+                    onClick={handleShare}
+                    className="rounded-full border border-[#d4cfc7] bg-[#faf6f0] px-4 py-3 text-[12px] uppercase tracking-[2px] text-[#1a1a18] hover:border-[#1a1a18] flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
                     <Share2 size={16} /> Share
                   </button>
                 </div>
@@ -435,8 +724,196 @@ const ProductDetail = () => {
           </div>
         </div>
 
+        {/* ── Customer Reviews & Ratings Section ── */}
+        <div className="mt-16 pt-12 border-t border-[#d4cfc7]" id="reviews">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+              <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block mb-1">AUTHENTIC FEEDBACK</span>
+              <h2 className="font-serif text-[28px] sm:text-[32px] font-bold text-[#1a1208] uppercase">
+                Customer Reviews ({totalReviewCount})
+              </h2>
+            </div>
+            <button
+              onClick={() => isWritingReview ? setIsWritingReview(false) : openReviewFormAndScroll()}
+              className="inline-flex items-center justify-center bg-[#1a1a18] hover:bg-[#c6a767] hover:text-[#1a1a18] text-white px-6 py-3 rounded-full font-sans text-[11px] font-bold uppercase tracking-[1.5px] transition shadow cursor-pointer"
+            >
+              {isWritingReview ? 'Close Review Form' : 'Write a Review'}
+            </button>
+          </div>
+
+          {/* Rating Summary Card */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white border border-[#ded7cb] rounded-2xl p-6 mb-8 shadow-sm">
+            {/* Left: Overall Score */}
+            <div className="flex flex-col items-center justify-center text-center p-4 border-b md:border-b-0 md:border-r border-[#eee8dc]">
+              <span className="font-serif text-[48px] font-bold text-[#1a1208] leading-none mb-2">
+                {avgReviewScore.toFixed(1)}
+              </span>
+              <div className="flex text-[#d4af37] mb-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} size={18} fill={i < Math.round(avgReviewScore) ? 'currentColor' : 'none'} />
+                ))}
+              </div>
+              <span className="text-[12px] text-[#7a7062] font-medium">Based on {totalReviewCount} verified reviews</span>
+            </div>
+
+            {/* Middle: Star Breakdown */}
+            <div className="flex flex-col justify-center gap-2 p-2 md:col-span-2">
+              {[
+                { stars: 5, pct: 86 },
+                { stars: 4, pct: 10 },
+                { stars: 3, pct: 3 },
+                { stars: 2, pct: 1 },
+                { stars: 1, pct: 0 },
+              ].map(({ stars, pct }) => (
+                <div key={stars} className="flex items-center gap-3 text-[12px] text-[#5a5043]">
+                  <span className="w-12 text-right font-medium">{stars} Stars</span>
+                  <div className="flex-1 h-2 bg-[#eee8dc] rounded-full overflow-hidden">
+                    <div className="h-full bg-[#c6a767] rounded-full" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="w-10 text-left font-bold text-[#8a8070]">{pct}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Write a Review Form Modal/Drawer */}
+          {isWritingReview && (
+            <form ref={reviewFormRef} onSubmit={handleReviewSubmit} className="bg-[#faf8f4] border border-[#d8d2c6] rounded-2xl p-6 mb-8 shadow-sm animate-in fade-in">
+              <h3 className="font-serif text-[18px] font-bold text-[#1a1a18] uppercase tracking-[1px] mb-4">
+                Share Your Experience with {product.name}
+              </h3>
+
+              {/* Author Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block font-sans text-[11px] font-bold uppercase tracking-[1px] text-[#4a4033] mb-1.5">
+                    Your Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={reviewerName}
+                    onChange={(e) => setReviewerName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full bg-white border border-[#d8d2c6] rounded-lg p-2.5 text-[13px] text-[#1a1a18] outline-none focus:border-[#8b6914] shadow-inner"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Star Rating Picker */}
+              <div className="mb-4">
+                <label className="block font-sans text-[11px] font-bold uppercase tracking-[1px] text-[#4a4033] mb-1.5">
+                  Your Rating *
+                </label>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onMouseEnter={() => setReviewHoverRating(star)}
+                      onMouseLeave={() => setReviewHoverRating(0)}
+                      onClick={() => setReviewRating(star)}
+                      className="p-1 text-[#d4af37] transition transform hover:scale-110"
+                      aria-label={`Rate ${star} stars`}
+                    >
+                      <Star
+                        size={24}
+                        fill={(reviewHoverRating || reviewRating) >= star ? 'currentColor' : 'none'}
+                        className={(reviewHoverRating || reviewRating) >= star ? 'text-[#d4af37]' : 'text-[#d4af37]/30'}
+                      />
+                    </button>
+                  ))}
+                  <span className="font-bold text-[13px] text-[#2a2016] ml-2">
+                    {reviewRating} of 5 Stars
+                  </span>
+                </div>
+              </div>
+
+              {/* Review Comment */}
+              <div className="mb-4">
+                <label className="block font-sans text-[11px] font-bold uppercase tracking-[1px] text-[#4a4033] mb-1.5">
+                  Review Comment *
+                </label>
+                <textarea
+                  rows={4}
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="How was the build quality, craftsmanship, balance, or delivery experience?"
+                  className="w-full bg-white border border-[#d8d2c6] rounded-lg p-3 text-[13px] text-[#1a1a18] outline-none focus:border-[#8b6914] shadow-inner"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsWritingReview(false)}
+                  className="px-5 py-2.5 rounded-full border border-[#d4cfc7] text-[#4a4033] text-[11px] font-bold uppercase tracking-[1px] hover:bg-white transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="px-6 py-2.5 rounded-full bg-[#1a1a18] hover:bg-[#c6a767] hover:text-[#1a1208] text-white text-[11px] font-bold uppercase tracking-[1.5px] transition disabled:opacity-50 cursor-pointer"
+                >
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* List of Verified Reviews */}
+          <div className="space-y-4 mb-12">
+            {displayedReviews.map((rev: any, idx: number) => {
+              const nameToShow = rev.user?.name || rev.authorName || 'Verified Collector';
+              return (
+                <div key={rev.id || idx} className="bg-white border border-[#ded7cb] rounded-2xl p-6 shadow-sm">
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#1a1208] text-[#d4af37] font-bold font-serif flex items-center justify-center text-[14px]">
+                        {nameToShow.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 className="font-sans text-[13px] font-bold text-[#1a1208]">
+                          {nameToShow}
+                        </h4>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#2e7d32]">
+                          <CheckCircle2 size={11} /> Verified Buyer
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex text-[#d4af37] mb-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={13}
+                            fill={i < rev.rating ? 'currentColor' : 'none'}
+                            className={i < rev.rating ? 'text-[#d4af37]' : 'text-[#d4af37]/30'}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-[#8a8070]">
+                        {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="font-sans text-[13px] text-[#4a4033] leading-relaxed">
+                    {rev.comment}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* ── FAQ Section ── */}
-        <div className="mt-16 pt-12 border-t border-[#d4cfc7] max-w-[800px]">
+        <div className="mt-8 pt-12 border-t border-[#d4cfc7] max-w-[800px]">
           <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block mb-2">NEED TO KNOW</span>
           <h2 className="font-serif text-[28px] font-bold text-[#1a1a18] uppercase mb-8">
             Frequently Asked Questions

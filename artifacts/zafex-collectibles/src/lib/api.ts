@@ -2,13 +2,38 @@
 
 const BASE = '/api';
 
-async function apiFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { credentials: 'include', ...init });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as { error?: string };
-    throw new Error(body.error ?? `HTTP ${res.status}`);
+function formatFriendlyError(errMessage: string): string {
+  if (!errMessage) return 'An unexpected error occurred. Please try again.';
+  if (errMessage.toLowerCase().includes('invalid email or password') || errMessage.toLowerCase().includes('incorrect email')) {
+    return 'Incorrect email or password. Please verify your credentials or click "Create one" below to register.';
   }
-  return res.json() as Promise<T>;
+  if (errMessage.includes('Unexpected end of form') || errMessage.includes('multipart')) {
+    return 'Image processing notice: Please try selecting the image again.';
+  }
+  if (errMessage.includes('Failed to fetch') || errMessage.includes('NetworkError') || errMessage.includes('Load failed')) {
+    return 'Unable to connect to the server. Please check your internet connection.';
+  }
+  if (errMessage.includes('500') || errMessage.includes('Internal Server Error')) {
+    return 'We encountered a momentary issue processing your request. Please try again in a few seconds.';
+  }
+  return errMessage;
+}
+
+async function apiFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
+  try {
+    const res = await fetch(`${BASE}${path}`, { credentials: 'include', ...init });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({})) as { error?: string };
+      const rawMsg = body.error ?? `Request failed (${res.status})`;
+      throw new Error(formatFriendlyError(rawMsg));
+    }
+    return res.json() as Promise<T>;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      throw new Error(formatFriendlyError(err.message));
+    }
+    throw new Error('Something went wrong. Please try again.');
+  }
 }
 
 function json(body: unknown): RequestInit {
@@ -45,6 +70,8 @@ export interface Product {
   cat: string;
   sub: string;
   price: number;
+  mrp?: number | null;
+  discount?: number | null;
   badge: string | null;
   image: string;
   desc: string | null;
@@ -275,8 +302,6 @@ export function removeFromWishlist(id: number): Promise<{ ok: true }> {
   return apiFetch(`/wishlist/${id}`, { method: 'DELETE' });
 }
 
-/* ── Orders ─────────────────────────────────────────────────────────── */
-
 export interface CheckoutBody {
   shippingAddress: string;
   shippingCity: string;
@@ -285,11 +310,12 @@ export interface CheckoutBody {
   shippingCountry: string;
   phone: string;
   notes?: string;
+  paymentMethod?: 'razorpay' | 'cod';
 }
 
 export function checkout(
   body: CheckoutBody,
-): Promise<{ orderId: number; order: Order }> {
+): Promise<{ orderId: number; order: Order; subtotal: number; shippingCost: number }> {
   return apiFetch('/orders/checkout', json(body));
 }
 
@@ -437,3 +463,17 @@ export function getAdminCustomers(): Promise<{ users: User[] }> {
 export function getAdminContacts(): Promise<{ contacts: ContactMessage[] }> {
   return apiFetch('/admin/contacts');
 }
+
+/* ── Reviews ─────────────────────────────────────────────────────────── */
+
+export function getProductReviews(productId: string): Promise<ReviewsResponse> {
+  return apiFetch(`/products/${productId}/reviews`);
+}
+
+export function submitProductReview(
+  productId: string,
+  body: { rating: number; comment?: string },
+): Promise<{ review: Review }> {
+  return apiFetch(`/products/${productId}/reviews`, json(body));
+}
+

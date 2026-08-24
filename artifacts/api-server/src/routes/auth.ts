@@ -4,15 +4,17 @@ import { db, usersTable } from "@workspace/db";
 import { eq, and, ne } from "drizzle-orm";
 import { requireUser } from "../middlewares/userAuth";
 import rateLimit from "express-rate-limit";
+import { logger } from "../lib/logger";
 
 const router = Router();
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = 10;
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
 });
 
 function safeUser(user: typeof usersTable.$inferSelect) {
@@ -29,8 +31,8 @@ router.post("/auth/register", authLimiter, async (req, res) => {
       res.status(400).json({ error: "Name, email, and password are required" });
       return;
     }
-    if (password.length < 8) {
-      res.status(400).json({ error: "Password must be at least 8 characters" });
+    if (password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters" });
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -59,20 +61,25 @@ router.post("/auth/register", authLimiter, async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+    const [result] = await db.insert(usersTable).values({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone?.trim() || null,
+      password: hashed,
+    });
+
     const [user] = await db
-      .insert(usersTable)
-      .values({
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        phone: phone?.trim() || null,
-        password: hashed,
-      })
-      .returning();
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, result.insertId));
 
     req.session.userId = user.id;
-    res.status(201).json({ user: safeUser(user) });
-  } catch {
-    res.status(500).json({ error: "Registration failed" });
+    req.session.save(() => {
+      res.status(201).json({ user: safeUser(user) });
+    });
+  } catch (err: unknown) {
+    logger.error({ err }, "Registration error");
+    res.status(500).json({ error: "Registration failed. " + (err instanceof Error ? err.message : "") });
   }
 });
 
@@ -105,9 +112,12 @@ router.post("/auth/login", authLimiter, async (req, res) => {
       req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
     }
 
-    res.json({ user: safeUser(user) });
-  } catch {
-    res.status(500).json({ error: "Login failed" });
+    req.session.save(() => {
+      res.json({ user: safeUser(user) });
+    });
+  } catch (err: unknown) {
+    logger.error({ err }, "Login error");
+    res.status(500).json({ error: "Login failed. " + (err instanceof Error ? err.message : "") });
   }
 });
 
@@ -120,19 +130,23 @@ router.post("/auth/logout", (req, res) => {
 });
 
 /** GET /api/auth/me */
-router.get("/auth/me", requireUser, async (req, res) => {
+router.get("/auth/me", async (req, res) => {
   try {
+    if (!req.session?.userId) {
+      res.status(401).json({ error: "Not logged in" });
+      return;
+    }
     const [user] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.id, req.session.userId!));
+      .where(eq(usersTable.id, req.session.userId));
     if (!user) {
       res.status(401).json({ error: "Session invalid" });
       return;
     }
     res.json({ user: safeUser(user) });
   } catch {
-    res.status(500).json({ error: "Failed to fetch profile" });
+    res.status(401).json({ error: "Not logged in" });
   }
 });
 
@@ -167,7 +181,7 @@ router.put("/auth/profile", requireUser, async (req, res) => {
       }
     }
 
-    const [updated] = await db
+    await db
       .update(usersTable)
       .set({
         name: name.trim(),
@@ -176,8 +190,12 @@ router.put("/auth/profile", requireUser, async (req, res) => {
         avatar: avatar?.trim() || null,
         updatedAt: new Date(),
       })
-      .where(eq(usersTable.id, userId))
-      .returning();
+      .where(eq(usersTable.id, userId));
+
+    const [updated] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
 
     res.json({ user: safeUser(updated) });
   } catch {

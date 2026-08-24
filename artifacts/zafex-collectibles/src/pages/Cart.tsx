@@ -3,10 +3,12 @@ import { Link, useLocation } from 'wouter';
 import { Trash2, ShoppingBag, Minus, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CartPage() {
   const { isLoggedIn } = useAuth();
+  const { formatPrice } = useCurrency();
   const [, navigate] = useLocation();
   const { data, isLoading } = useCart();
   const updateItem = useUpdateCartItem();
@@ -74,7 +76,7 @@ export default function CartPage() {
                   {item.product?.name}
                 </Link>
                 <p className="font-sans text-[14px] text-[#d4af37] font-semibold mt-1">
-                  ₹{item.product?.price.toLocaleString('en-IN')}
+                  {formatPrice(item.product?.price ?? 0)}
                 </p>
 
                 <div className="flex items-center justify-between mt-3">
@@ -102,7 +104,7 @@ export default function CartPage() {
 
                   <div className="flex items-center gap-4">
                     <span className="font-serif text-[15px] font-bold text-[#1a1a18]">
-                      ₹{((item.product?.price ?? 0) * item.quantity).toLocaleString('en-IN')}
+                      {formatPrice((item.product?.price ?? 0) * item.quantity)}
                     </span>
                     <button
                       onClick={() => {
@@ -129,22 +131,22 @@ export default function CartPage() {
             <div className="flex flex-col gap-3 mb-6">
               <div className="flex justify-between font-sans text-[14px]">
                 <span className="text-[#4a4a4a]">Subtotal</span>
-                <span className="text-[#1a1a18] font-medium">₹{subtotal.toLocaleString('en-IN')}</span>
+                <span className="text-[#1a1a18] font-medium">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between font-sans text-[14px]">
                 <span className="text-[#4a4a4a]">Shipping</span>
                 <span className={`font-medium ${shipping === 0 ? 'text-green-700' : 'text-[#1a1a18]'}`}>
-                  {shipping === 0 ? 'Free' : `₹${shipping.toLocaleString('en-IN')}`}
+                  {shipping === 0 ? 'Free' : formatPrice(shipping)}
                 </span>
               </div>
               {subtotal < 5000 && (
                 <p className="font-sans text-[12px] text-[#6b6b6b]">
-                  Add ₹{(5000 - subtotal).toLocaleString('en-IN')} more for free shipping
+                  Add {formatPrice(5000 - subtotal)} more for free shipping
                 </p>
               )}
               <div className="border-t border-[#d4cfc7] pt-3 flex justify-between">
                 <span className="font-serif text-[15px] font-bold text-[#1a1a18]">Total</span>
-                <span className="font-serif text-[15px] font-bold text-[#d4af37]">₹{total.toLocaleString('en-IN')}</span>
+                <span className="font-serif text-[15px] font-bold text-[#d4af37]">{formatPrice(total)}</span>
               </div>
             </div>
 

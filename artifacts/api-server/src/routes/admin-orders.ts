@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, ordersTable, orderItemsTable, orderStatusHistoryTable, usersTable, contactsTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { requireAdmin } from "../middlewares/adminAuth";
 
 const router = Router();
@@ -22,11 +22,11 @@ router.get("/admin/orders", requireAdmin, async (req, res) => {
       .offset(offset);
 
     const [{ total }] = await db
-      .select({ total: sql<number>`cast(count(*) as int)` })
+      .select({ total: count() })
       .from(ordersTable);
 
-    res.json({ orders, total, page, limit, totalPages: Math.ceil(total / limit) });
-  } catch {
+    res.json({ orders, total, page, limit, totalPages: Math.ceil(total / limit) || 1 });
+  } catch (err) {
     res.status(500).json({ error: "Failed to fetch orders" });
   }
 });

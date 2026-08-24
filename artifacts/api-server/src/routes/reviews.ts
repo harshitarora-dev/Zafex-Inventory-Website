@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, reviewsTable, usersTable, productsTable } from "@workspace/db";
-import { eq, and, avg, count } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { requireUser } from "../middlewares/userAuth";
 
 const router = Router();
@@ -69,22 +69,26 @@ router.post("/products/:productId/reviews", requireUser, async (req, res) => {
       return;
     }
 
-    const [review] = await db
+    const [result] = await db
       .insert(reviewsTable)
       .values({
         userId,
         productId,
         rating: Number(rating),
         comment: comment?.trim() || null,
-      })
-      .returning();
+      });
+
+    const [review] = await db
+      .select()
+      .from(reviewsTable)
+      .where(eq(reviewsTable.id, result.insertId));
 
     const [user] = await db
       .select({ name: usersTable.name })
       .from(usersTable)
       .where(eq(usersTable.id, userId));
 
-    res.status(201).json({ review: { ...review, user: { name: user.name } } });
+    res.status(201).json({ review: { ...review, user: { name: user?.name || "User" } } });
   } catch {
     res.status(500).json({ error: "Failed to create review" });
   }
@@ -111,22 +115,26 @@ router.put("/reviews/:id", requireUser, async (req, res) => {
       return;
     }
 
-    const [updated] = await db
+    await db
       .update(reviewsTable)
       .set({
         ...(rating ? { rating: Number(rating) } : {}),
         ...(comment !== undefined ? { comment: comment.trim() || null } : {}),
         updatedAt: new Date(),
       })
-      .where(eq(reviewsTable.id, id))
-      .returning();
+      .where(eq(reviewsTable.id, id));
+
+    const [updated] = await db
+      .select()
+      .from(reviewsTable)
+      .where(eq(reviewsTable.id, id));
 
     const [user] = await db
       .select({ name: usersTable.name })
       .from(usersTable)
       .where(eq(usersTable.id, userId));
 
-    res.json({ review: { ...updated, user: { name: user.name } } });
+    res.json({ review: { ...updated, user: { name: user?.name || "User" } } });
   } catch {
     res.status(500).json({ error: "Failed to update review" });
   }

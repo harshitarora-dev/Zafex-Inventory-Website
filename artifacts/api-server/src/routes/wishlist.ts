@@ -33,10 +33,37 @@ router.post("/wishlist", requireUser, async (req, res) => {
       return;
     }
 
-    const [product] = await db
+    let [product] = await db
       .select()
       .from(productsTable)
       .where(eq(productsTable.id, productId));
+
+    if (!product) {
+      const { PRODUCTS } = await import("../data/products");
+      const staticP = PRODUCTS.find((p) => p.id === productId);
+      if (staticP) {
+        await db.insert(productsTable).values({
+          id: staticP.id,
+          name: staticP.name,
+          cat: staticP.cat,
+          sub: staticP.sub,
+          price: staticP.price,
+          mrp: (staticP as any).mrp ?? null,
+          discount: (staticP as any).discount ?? null,
+          badge: staticP.badge ?? null,
+          image: staticP.image,
+          gallery: (staticP as any).gallery ?? [staticP.image],
+          desc: staticP.desc ?? null,
+          tags: staticP.tags ?? null,
+          inStock: staticP.inStock ?? true,
+        });
+        [product] = await db
+          .select()
+          .from(productsTable)
+          .where(eq(productsTable.id, productId));
+      }
+    }
+
     if (!product) {
       res.status(404).json({ error: "Product not found" });
       return;
@@ -51,10 +78,16 @@ router.post("/wishlist", requireUser, async (req, res) => {
       return;
     }
 
+    const [result] = await db.insert(wishlistTable).values({
+      userId,
+      productId,
+    });
+
     const [item] = await db
-      .insert(wishlistTable)
-      .values({ userId, productId })
-      .returning();
+      .select()
+      .from(wishlistTable)
+      .where(eq(wishlistTable.id, result.insertId));
+
     res.status(201).json({ item: { ...item, product } });
   } catch {
     res.status(500).json({ error: "Failed to add to wishlist" });

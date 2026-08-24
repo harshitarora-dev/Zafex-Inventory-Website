@@ -20,6 +20,7 @@ router.post("/orders/checkout", requireUser, async (req, res) => {
       shippingCountry = "India",
       phone,
       notes,
+      paymentMethod = "razorpay",
     } = req.body as Record<string, string | undefined>;
 
     if (!shippingAddress?.trim() || !shippingCity?.trim() || !shippingState?.trim() || !shippingPincode?.trim() || !phone?.trim()) {
@@ -27,7 +28,7 @@ router.post("/orders/checkout", requireUser, async (req, res) => {
       return;
     }
 
-    // Get cart
+    // Get user's cart items
     const cartRows = await db
       .select()
       .from(cartTable)
@@ -43,15 +44,20 @@ router.post("/orders/checkout", requireUser, async (req, res) => {
     const shippingCost = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
     const totalAmount = subtotal + shippingCost;
 
-    // Get user info for customer fields
+    // Get user details
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
 
-    const [order] = await db
+    const isCod = paymentMethod === "cod";
+    const initialStatus = isCod ? "confirmed" : "pending";
+    const initialPaymentStatus = "pending";
+
+    // Insert order into MySQL
+    const [orderResult] = await db
       .insert(ordersTable)
       .values({
         userId,
-        customerName: user.name,
-        customerEmail: user.email,
+        customerName: user ? user.name : "Guest",
+        customerEmail: user ? user.email : "",
         customerPhone: phone.trim(),
         shippingAddress: shippingAddress.trim(),
         shippingCity: shippingCity.trim(),
@@ -59,34 +65,44 @@ router.post("/orders/checkout", requireUser, async (req, res) => {
         shippingPincode: shippingPincode.trim(),
         shippingCountry: shippingCountry.trim() || "India",
         totalAmount,
+        subtotal,
+        shippingCost,
         notes: notes?.trim() || null,
-        status: "pending",
-        paymentStatus: "pending",
-      })
-      .returning();
+        status: initialStatus,
+        paymentStatus: initialPaymentStatus,
+        paymentMethod: isCod ? "cod" : "razorpay",
+      });
+
+    const orderId = orderResult.insertId;
 
     // Insert order items
-    await db.insert(orderItemsTable).values(
-      cartRows.map(({ cart, products }) => ({
-        orderId: order.id,
+    for (const { cart, products } of cartRows) {
+      await db.insert(orderItemsTable).values({
+        orderId,
         productId: products.id,
         productName: products.name,
         unitPrice: products.price,
         quantity: cart.quantity,
-      })),
-    );
+      });
+    }
 
     // Insert initial status history
     await db.insert(orderStatusHistoryTable).values({
-      orderId: order.id,
-      status: "pending",
-      note: "Order placed",
+      orderId,
+      status: initialStatus,
+      note: isCod ? "Order placed with Cash on Delivery (COD)" : "Order placed, awaiting payment",
     });
 
-    // Clear cart
+    // Clear user cart
     await db.delete(cartTable).where(eq(cartTable.userId, userId));
 
-    res.status(201).json({ orderId: order.id, order, subtotal, shippingCost });
+    // Fetch newly created order object
+    const [order] = await db
+      .select()
+      .from(ordersTable)
+      .where(eq(ordersTable.id, orderId));
+
+    res.status(201).json({ orderId, order, subtotal, shippingCost });
   } catch (err) {
     res.status(500).json({ error: "Checkout failed" });
   }

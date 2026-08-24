@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { authUpdateProfile, authUpdatePassword, getOrders } from '@/lib/api';
@@ -24,6 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Account() {
   const { user, isLoggedIn, isLoading, refresh, logout } = useAuth();
+  const { formatPrice } = useCurrency();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>('profile');
@@ -271,7 +273,7 @@ export default function Account() {
                           {order.status}
                         </span>
                         <span className="font-serif text-[14px] font-bold text-[#d4af37]">
-                          ₹{order.totalAmount.toLocaleString('en-IN')}
+                          {formatPrice(order.totalAmount)}
                         </span>
                         <ChevronRight
                           size={16}

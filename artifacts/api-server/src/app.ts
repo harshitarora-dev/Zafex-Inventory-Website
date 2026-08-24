@@ -3,11 +3,14 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import path from "node:path";
+import fs from "node:fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { errorHandler } from "./middlewares/errorHandler";
 
 // Ensure session type augmentation is loaded
-import "./types/session.d.ts";
+import type {} from "./types/session.d.ts";
 
 const app: Express = express();
 
@@ -27,31 +30,72 @@ app.use(
   }),
 );
 
+const allowedOrigins = [
+  "https://zafexcollectibles.com",
+  "https://www.zafexcollectibles.com",
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://localhost:3000",
+  "http://localhost:8080",
+];
+
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive for easy Hostinger deployment
+    },
     credentials: true,
   }),
 );
 
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.text({ type: "*/*", limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// Serve static images directory from all possible locations
+const staticImageDirs = [
+  path.resolve(process.cwd(), "..", "public_html", "images"),
+  "/home/u933632718/domains/zafexcollectibles.com/public_html/images",
+  path.resolve(process.cwd(), "public", "images"),
+  path.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images"),
+];
+for (const dir of staticImageDirs) {
+  try { fs.mkdirSync(dir, { recursive: true }); } catch {}
+  app.use("/images", express.static(dir));
+}
+
+const localPublicDir = path.resolve(process.cwd(), "public");
+try {
+  fs.mkdirSync(localPublicDir, { recursive: true });
+} catch {}
+app.use(express.static(localPublicDir));
+
+const isProd = process.env.NODE_ENV === "production";
 
 app.use(
   session({
-    secret: process.env["SESSION_SECRET"] ?? "dev-fallback-secret-change-me",
+    secret: process.env["SESSION_SECRET"] ?? "zafex-super-secret-session-key-2026",
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // set true behind HTTPS proxy in production
+      secure: isProd && process.env["COOKIE_SECURE"] === "true", // set to true if HTTPS on Hostinger
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   }),
 );
 
+// Mount API routes
 app.use("/api", router);
+
+// Error Handler
+app.use(errorHandler);
 
 export default app;

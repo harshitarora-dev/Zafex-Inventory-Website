@@ -20,7 +20,7 @@ router.get("/cart", requireUser, async (req, res) => {
     const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
     res.json({ items, subtotal, itemCount });
-  } catch {
+  } catch (err) {
     res.status(500).json({ error: "Failed to fetch cart" });
   }
 });
@@ -36,10 +36,37 @@ router.post("/cart", requireUser, async (req, res) => {
       return;
     }
 
-    const [product] = await db
+    let [product] = await db
       .select()
       .from(productsTable)
       .where(eq(productsTable.id, productId));
+
+    if (!product) {
+      const { PRODUCTS } = await import("../data/products");
+      const staticP = PRODUCTS.find((p) => p.id === productId);
+      if (staticP) {
+        await db.insert(productsTable).values({
+          id: staticP.id,
+          name: staticP.name,
+          cat: staticP.cat,
+          sub: staticP.sub,
+          price: staticP.price,
+          mrp: (staticP as any).mrp ?? null,
+          discount: (staticP as any).discount ?? null,
+          badge: staticP.badge ?? null,
+          image: staticP.image,
+          gallery: (staticP as any).gallery ?? [staticP.image],
+          desc: staticP.desc ?? null,
+          tags: staticP.tags ?? null,
+          inStock: staticP.inStock ?? true,
+        });
+        [product] = await db
+          .select()
+          .from(productsTable)
+          .where(eq(productsTable.id, productId));
+      }
+    }
+
     if (!product) {
       res.status(404).json({ error: "Product not found" });
       return;
@@ -51,20 +78,35 @@ router.post("/cart", requireUser, async (req, res) => {
       .where(and(eq(cartTable.userId, userId), eq(cartTable.productId, productId)));
 
     if (existing) {
-      const [updated] = await db
+      await db
         .update(cartTable)
-        .set({ quantity: existing.quantity + Number(quantity) })
-        .where(eq(cartTable.id, existing.id))
-        .returning();
+        .set({
+          quantity: existing.quantity + Number(quantity),
+          updatedAt: new Date(),
+        })
+        .where(eq(cartTable.id, existing.id));
+
+      const [updated] = await db
+        .select()
+        .from(cartTable)
+        .where(eq(cartTable.id, existing.id));
+
       res.json({ item: { ...updated, product } });
     } else {
+      const [result] = await db.insert(cartTable).values({
+        userId,
+        productId,
+        quantity: Number(quantity),
+      });
+
       const [item] = await db
-        .insert(cartTable)
-        .values({ userId, productId, quantity: Number(quantity) })
-        .returning();
+        .select()
+        .from(cartTable)
+        .where(eq(cartTable.id, result.insertId));
+
       res.status(201).json({ item: { ...item, product } });
     }
-  } catch {
+  } catch (err) {
     res.status(500).json({ error: "Failed to add to cart" });
   }
 });
@@ -90,11 +132,18 @@ router.put("/cart/:id", requireUser, async (req, res) => {
       return;
     }
 
-    const [updated] = await db
+    await db
       .update(cartTable)
-      .set({ quantity: Number(quantity) })
-      .where(eq(cartTable.id, id))
-      .returning();
+      .set({
+        quantity: Number(quantity),
+        updatedAt: new Date(),
+      })
+      .where(eq(cartTable.id, id));
+
+    const [updated] = await db
+      .select()
+      .from(cartTable)
+      .where(eq(cartTable.id, id));
 
     const [product] = await db
       .select()

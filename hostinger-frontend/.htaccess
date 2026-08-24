@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Route all /api requests to api/index.php
+  RewriteRule ^api/(.*)$ api/index.php [L,QSA]
+  RewriteRule ^api$ api/index.php [L,QSA]
+
+  # 2. Prevent /api from ever falling through to index.html
+  RewriteCond %{REQUEST_URI} ^/api [NC]
+  RewriteRule ^ - [L]
+
+  # 3. Frontend React SPA routes fallback
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+</IfModule>

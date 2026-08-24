@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { createHmac } from "node:crypto";
+import Razorpay from "razorpay";
 import { db, ordersTable, orderStatusHistoryTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { requireUser } from "../middlewares/userAuth";
@@ -10,9 +11,11 @@ function getRazorpay() {
   const keyId = process.env["RAZORPAY_KEY_ID"];
   const keySecret = process.env["RAZORPAY_KEY_SECRET"];
   if (!keyId || !keySecret) return null;
-  // Dynamic import to avoid crash when package not configured
-  const Razorpay = require("razorpay");
-  return { client: new Razorpay({ key_id: keyId, key_secret: keySecret }), keyId, keySecret };
+  return {
+    client: new Razorpay({ key_id: keyId, key_secret: keySecret }),
+    keyId,
+    keySecret,
+  };
 }
 
 /** POST /api/payment/create-order */
@@ -43,7 +46,7 @@ router.post("/payment/create-order", requireUser, async (req, res) => {
 
     const rzp = getRazorpay();
     if (!rzp) {
-      res.status(503).json({ error: "Payment gateway is not configured. Contact support." });
+      res.status(503).json({ error: "Payment gateway is not configured. Contact support or use COD." });
       return;
     }
 
@@ -64,7 +67,7 @@ router.post("/payment/create-order", requireUser, async (req, res) => {
       currency: rzpOrder.currency,
       key: rzp.keyId,
     });
-  } catch {
+  } catch (err) {
     res.status(500).json({ error: "Failed to create payment order" });
   }
 });
@@ -130,7 +133,7 @@ router.post("/payment/verify", requireUser, async (req, res) => {
     await db.insert(orderStatusHistoryTable).values({
       orderId: Number(orderId),
       status: "confirmed",
-      note: "Payment received",
+      note: "Payment received via Razorpay",
     });
 
     res.json({ success: true });

@@ -10,6 +10,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ScrollProgress } from '@/components/ScrollProgress';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
+import { CompareProvider } from '@/contexts/CompareContext';
+import { CompareModal } from '@/components/CompareModal';
+import { CompareDock } from '@/components/CompareDock';
 
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -747,13 +751,19 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
-          <SmoothScrollProvider>
-            <ScrollProgress />
-            <Router />
-          </SmoothScrollProvider>
-        </WouterRouter>
-        <Toaster />
+        <CurrencyProvider>
+          <CompareProvider>
+            <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
+              <SmoothScrollProvider>
+                <ScrollProgress />
+                <Router />
+                <CompareModal />
+                <CompareDock />
+              </SmoothScrollProvider>
+            </WouterRouter>
+            <Toaster />
+          </CompareProvider>
+        </CurrencyProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

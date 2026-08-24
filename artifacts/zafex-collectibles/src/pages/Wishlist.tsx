@@ -4,10 +4,12 @@ import { Heart, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useAddToCart } from '@/hooks/useCart';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useToast } from '@/hooks/use-toast';
 
 export default function WishlistPage() {
   const { isLoggedIn } = useAuth();
+  const { formatPrice } = useCurrency();
   const { data, isLoading } = useWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
   const addToCart = useAddToCart();
@@ -80,7 +82,7 @@ export default function WishlistPage() {
                     </h3>
                   </Link>
                   <p className="font-sans text-[15px] text-[#d4af37] font-semibold mb-3">
-                    ₹{item.product?.price.toLocaleString('en-IN')}
+                    {formatPrice(item.product?.price ?? 0)}
                   </p>
                   <button
                     onClick={async () => {

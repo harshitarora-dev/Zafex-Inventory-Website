@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, ordersTable, usersTable, productsTable } from "@workspace/db";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, desc, count, sum } from "drizzle-orm";
 import { requireAdmin } from "../middlewares/adminAuth";
 
 const router = Router();
@@ -9,20 +9,20 @@ const router = Router();
 router.get("/admin/dashboard", requireAdmin, async (_req, res) => {
   try {
     const [{ totalUsers }] = await db
-      .select({ totalUsers: sql<number>`cast(count(*) as int)` })
+      .select({ totalUsers: count() })
       .from(usersTable);
 
     const [{ totalOrders }] = await db
-      .select({ totalOrders: sql<number>`cast(count(*) as int)` })
+      .select({ totalOrders: count() })
       .from(ordersTable);
 
-    const [{ revenue }] = await db
-      .select({ revenue: sql<number>`coalesce(cast(sum(total_amount) as int), 0)` })
+    const [revenueRes] = await db
+      .select({ revenue: sum(ordersTable.totalAmount) })
       .from(ordersTable)
       .where(eq(ordersTable.paymentStatus, "paid"));
 
     const [{ pendingOrders }] = await db
-      .select({ pendingOrders: sql<number>`cast(count(*) as int)` })
+      .select({ pendingOrders: count() })
       .from(ordersTable)
       .where(eq(ordersTable.status, "pending"));
 
@@ -38,14 +38,14 @@ router.get("/admin/dashboard", requireAdmin, async (_req, res) => {
       .limit(10);
 
     res.json({
-      totalUsers,
-      totalOrders,
-      revenue,
-      pendingOrders,
+      totalUsers: Number(totalUsers || 0),
+      totalOrders: Number(totalOrders || 0),
+      revenue: Number(revenueRes?.revenue || 0),
+      pendingOrders: Number(pendingOrders || 0),
       lowStockProducts,
       recentOrders,
     });
-  } catch {
+  } catch (err) {
     res.status(500).json({ error: "Failed to fetch dashboard stats" });
   }
 });

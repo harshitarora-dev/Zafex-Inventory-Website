@@ -12,13 +12,17 @@ const Footer = () => {
           {/* Col 1 - Brand */}
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-[40px] h-[40px] bg-[#d4af37] flex items-center justify-center text-[#1a1208] font-serif font-bold text-xl">
-                ZC
-              </div>
+              <img
+                src="/logo.png"
+                alt="Zafex Collectibles"
+                className="w-[42px] h-[42px] object-contain rounded bg-white p-1"
+              />
               <div className="flex flex-col">
-                <span className="font-serif font-semibold text-[14px] leading-tight uppercase text-white">ZafEx COLLECTIBLES</span>
+                <span className="font-serif font-semibold text-[14px] leading-tight uppercase text-white">
+                  <span className="text-[#ff7a00]">ZAF</span><span>EX</span> COLLECTIBLES
+                </span>
                 <span className="font-serif text-[10px] text-white/70 tracking-[1px] uppercase">
-                  BRAND: ZAFS
+                  HISTORICAL & MEDIEVAL CRAFT
                 </span>
               </div>
             </div>

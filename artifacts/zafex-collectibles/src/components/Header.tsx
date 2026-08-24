@@ -7,10 +7,16 @@ import {
   Search,
   ShoppingCart,
   UserRound,
+  Scale,
   X,
 } from 'lucide-react';
 import { NAV_CATEGORIES, type NavCategory } from '@/data/categories';
 import { useCartItemCount } from '@/hooks/useCart';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useCurrency, CURRENCIES, type CurrencyCode } from '@/contexts/CurrencyContext';
+import { useCompare } from '@/contexts/CompareContext';
+
+import { PRODUCTS } from '@/data/products';
 
 const shopGroups = [
   { title: 'CHAINMAIL ARMOR', slugs: ['chainmail-armor'] },
@@ -166,7 +172,21 @@ function CollectionsMegaMenu({ open }: { open: boolean }) {
   );
 }
 
-function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+function MobileDrawer({
+  open,
+  onClose,
+  wishlistCount,
+  cartCount,
+  compareCount,
+  onOpenCompare,
+}: {
+  open: boolean;
+  onClose: () => void;
+  wishlistCount: number;
+  cartCount: number;
+  compareCount: number;
+  onOpenCompare: () => void;
+}) {
   const [shopExpanded, setShopExpanded] = useState(false);
   const [collectionsExpanded, setCollectionsExpanded] = useState(false);
   if (!open) return null;
@@ -217,14 +237,46 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
             ['/cat/about-us', 'About Us'],
             ['/resources', 'Resources'],
             ['/contact', 'Contact Us'],
-            ['/wishlist', 'My Wishlist'],
-            ['/account', 'My Account'],
-            ['/cart', 'My Cart'],
           ].map(([href, label]) => (
             <Link key={href} href={href} onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
               {label}
             </Link>
           ))}
+
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenCompare();
+            }}
+            className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px] text-left w-full cursor-pointer text-[#211b14]"
+          >
+            <span>Compare Products</span>
+            {compareCount > 0 && (
+              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#1a1208] text-[#d4af37] px-1 text-[9px] font-bold">
+                {compareCount}
+              </span>
+            )}
+          </button>
+          <Link href="/wishlist" onClick={onClose} className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+            <span>My Wishlist</span>
+            {wishlistCount > 0 && (
+              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#a91f22] px-1 text-[9px] text-white font-bold">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
+          <Link href="/account" onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+            My Account
+          </Link>
+          <Link href="/cart" onClick={onClose} className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+            <span>My Cart</span>
+            {cartCount > 0 && (
+              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#c6a767] px-1 text-[9px] text-[#211b14] font-bold">
+                {cartCount}
+              </span>
+            )}
+          </Link>
         </nav>
       </div>
     </div>
@@ -237,14 +289,69 @@ const Header = () => {
   const [shopOpen, setShopOpen] = useState(false);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const { currencyCode, setCurrency, formatPrice } = useCurrency();
   const cartCount = useCartItemCount();
+  const { data: wishlistData } = useWishlist();
+  const wishlistCount = wishlistData?.items?.length ?? 0;
+  const { compareItems, setIsCompareOpen } = useCompare();
+  const compareCount = compareItems.length;
   const shopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const collectionsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery.trim());
+    }, 200);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Compute live product suggestions
+  const matchingProducts = React.useMemo(() => {
+    if (!debouncedQuery || debouncedQuery.length < 2) return [];
+    const q = debouncedQuery.toLowerCase();
+    return PRODUCTS.filter((p) => {
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.cat.toLowerCase().includes(q) ||
+        p.sub.toLowerCase().includes(q) ||
+        (p.tags ?? []).some((t) => t.toLowerCase().includes(q))
+      );
+    }).slice(0, 5);
+  }, [debouncedQuery]);
+
+  // Compute live category suggestions
+  const matchingCategories = React.useMemo(() => {
+    if (!debouncedQuery || debouncedQuery.length < 2) return [];
+    const q = debouncedQuery.toLowerCase();
+    return NAV_CATEGORIES.flatMap((c) =>
+      c.subs.filter((s) => s.label.toLowerCase().includes(q) || s.slug.includes(q)).map((s) => ({
+        ...s,
+        parentCat: c.slug,
+        parentLabel: c.label,
+      }))
+    ).slice(0, 3);
+  }, [debouncedQuery]);
+
+  // Close search suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     setShopOpen(false);
     setCollectionsOpen(false);
     setMobileOpen(false);
+    setIsSearchOpen(false);
   }, [location]);
 
   const openShop = () => {
@@ -266,6 +373,7 @@ const Header = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setIsSearchOpen(false);
       navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
@@ -279,46 +387,210 @@ const Header = () => {
   ];
   const [annIndex, setAnnIndex] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setAnnIndex((i) => (i + 1) % ANNOUNCEMENTS.length), 3000);
+    const t = setInterval(() => setAnnIndex((i) => (i + 1) % ANNOUNCEMENTS.length), 6000);
     return () => clearInterval(t);
   }, [ANNOUNCEMENTS.length]);
 
   return (
     <>
-      <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <MobileDrawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        wishlistCount={wishlistCount}
+        cartCount={cartCount}
+        compareCount={compareCount}
+        onOpenCompare={() => setIsCompareOpen(true)}
+      />
       <header className="sticky top-0 z-50 w-full">
-        <div className="flex h-[40px] items-center justify-center bg-[#a91f22] text-white">
-          <div className="w-full text-center font-sans text-[11px] font-semibold uppercase tracking-[2px]">
+        {/* Top Announcement Bar with Live Auto-Detected Currency Selector */}
+        <div className="relative flex h-[40px] items-center justify-between bg-[#a91f22] px-4 text-white sm:px-10 lg:px-16">
+          <div className="hidden text-[11px] font-medium tracking-[1px] md:block text-[#fbd2d3]">
+            Worldwide Shipping Available
+          </div>
+          <div className="flex-1 text-center font-sans text-[11px] font-semibold uppercase tracking-[2px]">
             <span role="status" aria-live="polite" className="inline-block">{ANNOUNCEMENTS[annIndex]}</span>
           </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={currencyCode}
+              onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+              aria-label="Select Currency"
+              className="bg-black/35 hover:bg-black/50 text-white text-[11px] font-bold uppercase tracking-[1px] px-2.5 py-1 rounded border border-white/30 transition cursor-pointer outline-none shadow-sm"
+            >
+              {Object.values(CURRENCIES).map((c) => (
+                <option key={c.code} value={c.code} className="bg-[#171713] text-white">
+                  {c.flag} {c.code} ({c.symbol})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="flex min-h-[82px] items-center justify-between gap-5 border-b border-[#ded8cd] bg-[#f4f0e8] px-5 py-3 sm:px-10 lg:px-16">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5">
-            <div className="flex h-[48px] w-[25px] items-center justify-center border-x-2 border-[#32291d] text-[29px] text-[#32291d]">†</div>
+        <div className="flex min-h-[84px] items-center justify-between gap-5 border-b border-[#ded8cd] bg-[#f4f0e8] px-5 py-3 sm:px-10 lg:px-16">
+          <Link href="/" className="flex shrink-0 items-center gap-3.5 group">
+            <img
+              src="/logo.png"
+              alt="Zafex Collectibles"
+              className="h-[50px] sm:h-[60px] w-auto object-contain mix-blend-multiply transition-transform group-hover:scale-105"
+            />
             <div>
-              <div className="font-serif text-[24px] font-semibold leading-none tracking-[3px] text-[#211b14] sm:text-[30px]">
-                <span className="text-[#ff7a00]">Zaf</span><span className="text-[#000000]">Ex</span>
+              <div className="font-serif text-[24px] font-semibold leading-none tracking-[2.5px] text-[#211b14] sm:text-[30px]">
+                <span className="text-[#ff7a00]">ZAF</span><span className="text-[#1a1a18]">EX</span>
               </div>
-              <div className="mt-1 font-serif text-[10px] font-semibold tracking-[3px] text-[#211b14]">COLLECTIBLES</div>
+              <div className="mt-1 font-serif text-[9px] sm:text-[10px] font-bold tracking-[2.5px] text-[#7a6f60] uppercase">
+                COLLECTIBLES
+              </div>
             </div>
           </Link>
 
-          <form onSubmit={handleSearch} className="hidden h-[34px] max-w-[310px] flex-1 items-center border border-[#d7d0c4] bg-[#faf8f3] px-3 lg:flex">
-            <input
-              aria-label="Search products"
-              placeholder="Search for products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="min-w-0 flex-1 bg-transparent font-sans text-[11px] outline-none placeholder:text-[#a39b8e]"
-            />
-            <button type="submit" aria-label="Submit search">
-              <Search size={18} strokeWidth={1.5} className="text-[#4b453d] hover:text-[#8b6914] transition-colors" />
-            </button>
-          </form>
+          {/* Desktop Search Bar with Live Debounced Auto-Complete Suggestions */}
+          <div ref={searchRef} className="relative hidden max-w-[340px] flex-1 lg:block">
+            <form
+              onSubmit={handleSearch}
+              className="flex h-[38px] w-full items-center rounded border border-[#d7d0c4] bg-[#faf8f3] px-3 transition-colors focus-within:border-[#c6a767] focus-within:ring-1 focus-within:ring-[#c6a767]/30"
+            >
+              <input
+                aria-label="Search products"
+                placeholder="Search products (e.g. belt, helmet, sword)..."
+                value={searchQuery}
+                onFocus={() => setIsSearchOpen(true)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setIsSearchOpen(false);
+                }}
+                className="min-w-0 flex-1 bg-transparent font-sans text-[12px] text-[#211b14] outline-none placeholder:text-[#a39b8e]"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setIsSearchOpen(false);
+                  }}
+                  className="mr-1.5 text-[#a39b8e] hover:text-[#211b14] cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <button type="submit" aria-label="Submit search" className="cursor-pointer">
+                <Search size={17} strokeWidth={1.75} className="text-[#4b453d] hover:text-[#8b6914] transition-colors" />
+              </button>
+            </form>
+
+            {/* Suggestions Dropdown */}
+            {isSearchOpen && debouncedQuery.length >= 2 && (
+              <div className="absolute left-0 right-0 top-full z-[100] mt-1 overflow-hidden rounded-lg border border-[#e2ddd8] bg-white shadow-2xl">
+                {/* Categories */}
+                {matchingCategories.length > 0 && (
+                  <div className="border-b border-[#f0ece7] bg-[#faf8f5] px-3 py-2">
+                    <div className="text-[10px] font-bold uppercase tracking-[1px] text-[#8a8278] mb-1.5">
+                      Suggested Categories
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {matchingCategories.map((c) => (
+                        <Link
+                          key={c.slug}
+                          href={`/cat/${c.parentCat}/${c.slug}`}
+                          onClick={() => setIsSearchOpen(false)}
+                          className="inline-flex items-center gap-1 rounded bg-white px-2 py-1 text-[11px] font-medium text-[#1a1a18] border border-[#e8e4de] hover:border-[#c6a767] hover:text-[#8b6914] transition-colors"
+                        >
+                          <span>{c.label}</span>
+                          <span className="text-[9px] text-[#8a8278]">({c.parentLabel})</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Matching Products */}
+                <div className="max-h-[320px] overflow-y-auto p-1.5">
+                  {matchingProducts.length > 0 ? (
+                    <>
+                      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-[1px] text-[#8a8278]">
+                        Products ({matchingProducts.length})
+                      </div>
+                      {matchingProducts.map((p) => (
+                        <Link
+                          key={p.id}
+                          href={`/shop/${p.id}`}
+                          onClick={() => setIsSearchOpen(false)}
+                          className="flex items-center gap-3 rounded-md p-2 hover:bg-[#faf8f5] transition-colors group"
+                        >
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            className="h-10 w-10 shrink-0 rounded object-cover border border-[#eee]"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[12px] font-medium text-[#1a1a18] group-hover:text-[#8b6914] transition-colors">
+                              {p.name}
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] mt-0.5">
+                              <span className="font-bold text-[#1a1a18]">
+                                {formatPrice(p.price)}
+                              </span>
+                              {p.mrp && p.mrp > p.price && (
+                                <span className="line-through text-[#8a8278] text-[10px]">
+                                  {formatPrice(p.mrp)}
+                                </span>
+                              )}
+                              {p.discount && p.discount > 0 && (
+                                <span className="text-[10px] font-bold text-green-700 bg-green-50 px-1 rounded">
+                                  {p.discount}% OFF
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="py-6 px-4 text-center">
+                      <p className="text-[12px] font-medium text-[#1a1a18]">No products found for "{searchQuery}"</p>
+                      <p className="text-[11px] text-[#8a8278] mt-1">Try searching for: helmet, armor, sword, belt</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* View all results button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    handleSearch(e);
+                    setIsSearchOpen(false);
+                  }}
+                  className="block w-full border-t border-[#f0ece7] bg-[#f5f1eb] py-2.5 text-center font-sans text-[11px] font-bold uppercase tracking-[1px] text-[#211b14] hover:bg-[#c6a767] hover:text-white transition-colors cursor-pointer"
+                >
+                  View all results for "{searchQuery}" →
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-5 text-[#2a241c]">
-            <Link href="/wishlist" aria-label="Wishlist" className="hidden flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914] sm:flex">
+            <button
+              type="button"
+              onClick={() => setIsCompareOpen(true)}
+              aria-label="Compare Products"
+              className="relative hidden flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914] sm:flex cursor-pointer"
+            >
+              <Scale size={20} strokeWidth={1.4} />
+              <span>Compare</span>
+              {compareCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#1a1208] text-[8px] text-[#d4af37] font-bold animate-in fade-in zoom-in border border-[#d4af37]/40">
+                  {compareCount}
+                </span>
+              )}
+            </button>
+            <Link href="/wishlist" aria-label="Wishlist" className="relative hidden flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914] sm:flex">
               <Heart size={20} strokeWidth={1.4} />
               <span>Wishlist</span>
+              {wishlistCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#a91f22] text-[8px] text-white font-bold animate-in fade-in zoom-in">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
             <Link href="/account" aria-label="Account" className="hidden flex-col items-center gap-1 text-[8px] uppercase tracking-[1px] transition-colors hover:text-[#8b6914] sm:flex">
               <UserRound size={20} strokeWidth={1.4} />

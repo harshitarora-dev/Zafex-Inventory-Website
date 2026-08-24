@@ -1,8 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Link } from 'wouter';
-import { Award, Camera, CheckCircle2, ChevronLeft, ChevronRight, Globe, Lock, PlayCircle, RefreshCcw, ShieldCheck, Sparkles, Star, Truck, Video } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
+import { Award, Camera, CheckCircle2, ChevronLeft, ChevronRight, Globe, Lock, PlayCircle, RefreshCcw, ShieldCheck, Sparkles, Star, Truck, Video, Check, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
+import { useAddToCart } from '@/hooks/useCart';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 const heroImage = '/images/hp-hero-1.png';
@@ -301,6 +305,40 @@ const Home = () => {
   const scrollingArrivals = [...newArrivals, ...newArrivals];
   const [heroIndex, setHeroIndex] = useState(0);
   const heroImages = [heroImage, heroImageTwo];
+
+  const { isLoggedIn } = useAuth();
+  const [, setLocation] = useLocation();
+  const addToCartMut = useAddToCart();
+  const { toast } = useToast();
+  const { formatPrice } = useCurrency();
+  const [addingId, setAddingId] = useState<string | null>(null);
+
+  const handleAddLookbookItem = async (item: { id: string; name: string }) => {
+    if (!isLoggedIn) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to add items to your cart.',
+      });
+      setLocation('/login');
+      return;
+    }
+    setAddingId(item.id);
+    try {
+      await addToCartMut.mutateAsync({ productId: item.id, quantity: 1 });
+      toast({
+        title: 'Added to Cart!',
+        description: `${item.name} has been added to your cart.`,
+      });
+    } catch (err: unknown) {
+      toast({
+        title: 'Could not add to cart',
+        description: err instanceof Error ? err.message : 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setTimeout(() => setAddingId(null), 1200);
+    }
+  };
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -698,26 +736,44 @@ const Home = () => {
 
                 <div className="flex flex-col gap-3">
                   {[
-                    { name: 'Gothic Steel Breastplate',    price: 18500, img: '/images/hp-stl-1.png', link: '/shop/bp-1' },
-                    { name: "Knight's Great Helm",         price: 9800,  img: '/images/hp-stl-2.png', link: '/shop/hm-2' },
-                    { name: 'Steel Pauldrons – Crusader',  price: 8500,  img: '/images/hp-stl-3.png', link: '/shop/bp-1' },
-                    { name: 'Leather Sword Belt',          price: 1800,  img: '/images/hp-stl-4.png', link: '/shop/ac-4' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-4 bg-white p-2 group hover:shadow-md transition-shadow">
-                      <img src={item.img} alt={item.name} className="w-16 h-16 object-cover bg-[#ede9e3] flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <Link href={item.link} className="font-serif text-[13px] text-[#1a1a18] font-bold block mb-1 group-hover:text-[#d4af37] transition-colors truncate">
-                          {item.name}
-                        </Link>
-                        <span className="font-sans text-[12px] text-[#d4af37] font-semibold">
-                          ₹{item.price.toLocaleString('en-IN')}
-                        </span>
+                    { id: 'pa-1', name: 'Gothic Fluted Steel Breastplate',    price: 20000, img: '/images/breastplates.png', link: '/shop/pa-1' },
+                    { id: 'hm-6', name: "Great Helmet – Heavy Metal Helm",   price: 13800, img: '/images/norman-helmet.png', link: '/shop/hm-6' },
+                    { id: 'hm-3', name: 'Viking Spectacle Helmet – Steel',    price: 11200, img: '/images/viking-helmet.png', link: '/shop/hm-3' },
+                    { id: 'ac-1', name: 'Leather Sword Belt – Classic',       price: 2200,  img: '/images/leather-belt.png', link: '/shop/ac-1' },
+                  ].map((item, i) => {
+                    const isAdding = addingId === item.id;
+                    return (
+                      <div key={i} className="flex items-center gap-4 bg-white p-2 group hover:shadow-md transition-shadow">
+                        <img src={item.img} alt={item.name} className="w-16 h-16 object-cover bg-[#ede9e3] flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <Link href={item.link} className="font-serif text-[13px] text-[#1a1a18] font-bold block mb-1 group-hover:text-[#d4af37] transition-colors truncate">
+                            {item.name}
+                          </Link>
+                          <span className="font-sans text-[12px] text-[#d4af37] font-semibold">
+                            ₹{item.price.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddLookbookItem(item)}
+                          disabled={isAdding}
+                          className={`flex-shrink-0 font-serif text-[10px] uppercase tracking-[1px] px-3.5 py-2 transition-all cursor-pointer flex items-center gap-1 ${
+                            isAdding
+                              ? 'bg-emerald-700 text-white'
+                              : 'bg-[#1a1a18] text-white hover:bg-[#d4af37] hover:text-[#1a1208]'
+                          }`}
+                        >
+                          {isAdding ? (
+                            <>
+                              <Check size={11} strokeWidth={2.5} /> Added
+                            </>
+                          ) : (
+                            '+ ADD'
+                          )}
+                        </button>
                       </div>
-                      <button className="flex-shrink-0 bg-[#1a1a18] text-white font-serif text-[10px] uppercase tracking-[1px] px-3 py-2 hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors">
-                        + ADD
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

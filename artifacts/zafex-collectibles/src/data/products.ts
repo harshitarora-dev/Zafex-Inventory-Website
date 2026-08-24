@@ -8,6 +8,8 @@ export type Product = {
   collection?: string;
   category?: string;
   price: number;
+  mrp?: number;
+  discount?: number;
   priceRange?: [number, number]; // min–max when eBay shows a range
   badge?: string;
   image: string;

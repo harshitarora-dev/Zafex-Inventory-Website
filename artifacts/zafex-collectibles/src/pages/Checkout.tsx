@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, CreditCard, Banknote, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/hooks/useCart';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { checkout, createPaymentOrder, verifyPayment } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ const labelCls =
 
 export default function Checkout() {
   const { isLoggedIn, user } = useAuth();
+  const { formatPrice, currentCurrency } = useCurrency();
   const [, navigate] = useLocation();
   const { data: cartData } = useCart();
   const { toast } = useToast();
@@ -34,6 +36,7 @@ export default function Checkout() {
     phone: user?.phone ?? '',
     notes: '',
   });
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
   const [loading, setLoading] = useState(false);
 
   const update = (field: string, value: string) =>
@@ -88,13 +91,24 @@ export default function Checkout() {
         shippingCountry: form.shippingCountry,
         phone: form.phone || user?.phone || '',
         notes: form.notes,
+        paymentMethod,
       });
       const orderId = result.orderId;
 
       // Invalidate cart immediately (it's cleared server-side after checkout)
       queryClient.invalidateQueries({ queryKey: ['cart'] });
 
-      // Try Razorpay payment if available
+      // If Cash on Delivery was selected
+      if (paymentMethod === 'cod') {
+        toast({
+          title: 'Order placed successfully!',
+          description: `Order #${orderId} has been confirmed with Cash on Delivery.`,
+        });
+        navigate(`/orders/${orderId}`);
+        return;
+      }
+
+      // Online Razorpay payment flow
       try {
         const paymentOrder = await createPaymentOrder({ orderId });
         if (paymentOrder.razorpayOrderId && typeof window.Razorpay !== 'undefined') {
@@ -136,7 +150,7 @@ export default function Checkout() {
         } else {
           toast({
             title: 'Order placed!',
-            description: `Order #${orderId} placed. Payment pending.`,
+            description: `Order #${orderId} placed. Complete payment anytime from your orders.`,
           });
         }
       } catch (payErr) {
@@ -149,7 +163,7 @@ export default function Checkout() {
         } else {
           toast({
             title: 'Order saved',
-            description: `Order #${orderId} placed. You can pay later from your orders.`,
+            description: `Order #${orderId} placed. You can complete payment later.`,
           });
         }
       }
@@ -175,11 +189,12 @@ export default function Checkout() {
         onSubmit={placeOrder}
         className="max-w-[1100px] mx-auto px-5 py-12 flex flex-col lg:flex-row gap-10"
       >
-        {/* Shipping Form */}
-        <div className="flex-1">
-          <div className="bg-white border border-[#d4cfc7] p-6">
-            <h2 className="font-serif text-[20px] font-bold text-[#1a1a18] uppercase mb-6">
-              Shipping Information
+        {/* Left Column: Shipping & Payment Method */}
+        <div className="flex-1 flex flex-col gap-8">
+          {/* Shipping Form */}
+          <div className="bg-white border border-[#d4cfc7] p-6 shadow-sm">
+            <h2 className="font-serif text-[20px] font-bold text-[#1a1a18] uppercase mb-6 flex items-center gap-2">
+              <span>1.</span> Shipping Information
             </h2>
             <div className="flex flex-col gap-5">
               <div>
@@ -189,7 +204,7 @@ export default function Checkout() {
                   onChange={(e) => update('shippingAddress', e.target.value)}
                   required
                   className={inputCls}
-                  placeholder="House No., Street, Area"
+                  placeholder="House No., Building, Street, Area"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -222,7 +237,7 @@ export default function Checkout() {
                     onChange={(e) => update('shippingPincode', e.target.value)}
                     required
                     className={inputCls}
-                    placeholder="000000"
+                    placeholder="e.g. 110001"
                   />
                 </div>
                 <div>
@@ -236,13 +251,13 @@ export default function Checkout() {
                 </div>
               </div>
               <div>
-                <label className={labelCls}>Phone</label>
+                <label className={labelCls}>Phone Number</label>
                 <input
                   value={form.phone}
                   onChange={(e) => update('phone', e.target.value)}
                   required
                   className={inputCls}
-                  placeholder="+91 XXXXX XXXXX"
+                  placeholder="+91 98765 43210"
                 />
               </div>
               <div>
@@ -252,28 +267,107 @@ export default function Checkout() {
                   onChange={(e) => update('notes', e.target.value)}
                   rows={3}
                   className="w-full border border-[#d4cfc7] px-4 py-3 font-sans text-[14px] focus:outline-none focus:border-[#d4af37] bg-[#faf8f3] resize-none"
-                  placeholder="Any special instructions?"
+                  placeholder="Any delivery instructions, landmark, etc."
                 />
               </div>
             </div>
           </div>
+
+          {/* Payment Method Selector */}
+          <div className="bg-white border border-[#d4cfc7] p-6 shadow-sm">
+            <h2 className="font-serif text-[20px] font-bold text-[#1a1a18] uppercase mb-6 flex items-center gap-2">
+              <span>2.</span> Payment Method
+            </h2>
+
+            <div className="flex flex-col gap-4">
+              {/* Online Payment (Razorpay) */}
+              <label
+                onClick={() => setPaymentMethod('razorpay')}
+                className={`flex items-start gap-4 p-4 border cursor-pointer transition-all ${
+                  paymentMethod === 'razorpay'
+                    ? 'border-[#d4af37] bg-[#faf8f3] ring-1 ring-[#d4af37]'
+                    : 'border-[#d4cfc7] hover:border-[#1a1a18]'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  checked={paymentMethod === 'razorpay'}
+                  onChange={() => setPaymentMethod('razorpay')}
+                  className="mt-1 accent-[#d4af37]"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <CreditCard size={18} className="text-[#d4af37]" />
+                    <span className="font-serif text-[14px] font-bold text-[#1a1a18] uppercase tracking-[0.5px]">
+                      Online Payment (Razorpay)
+                    </span>
+                  </div>
+                  <p className="font-sans text-[13px] text-[#6a6a60] mt-1">
+                    Pay securely via UPI (Google Pay, PhonePe, Paytm), Debit/Credit Cards, or NetBanking.
+                  </p>
+                </div>
+              </label>
+
+              {/* Cash On Delivery */}
+              <label
+                onClick={() => setPaymentMethod('cod')}
+                className={`flex items-start gap-4 p-4 border cursor-pointer transition-all ${
+                  paymentMethod === 'cod'
+                    ? 'border-[#d4af37] bg-[#faf8f3] ring-1 ring-[#d4af37]'
+                    : 'border-[#d4cfc7] hover:border-[#1a1a18]'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  checked={paymentMethod === 'cod'}
+                  onChange={() => setPaymentMethod('cod')}
+                  className="mt-1 accent-[#d4af37]"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Banknote size={18} className="text-[#1a1a18]" />
+                    <span className="font-serif text-[14px] font-bold text-[#1a1a18] uppercase tracking-[0.5px]">
+                      Cash on Delivery (COD)
+                    </span>
+                  </div>
+                  <p className="font-sans text-[13px] text-[#6a6a60] mt-1">
+                    Pay with cash or UPI directly when your collectible package is delivered to your doorstep.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <div className="mt-4 flex items-center gap-2 text-[12px] text-[#8a8278]">
+              <ShieldCheck size={16} className="text-green-700" />
+              <span>100% Secure Checkout & Buyer Protection Guarantee</span>
+            </div>
+          </div>
         </div>
 
-        {/* Order Summary */}
-        <div className="w-full lg:w-[340px] flex-shrink-0">
-          <div className="bg-white border border-[#d4cfc7] p-6 sticky top-6">
+        {/* Right Column: Order Summary */}
+        <div className="w-full lg:w-[360px] flex-shrink-0">
+          <div className="bg-white border border-[#d4cfc7] p-6 sticky top-6 shadow-sm">
             <h2 className="font-serif text-[20px] font-bold text-[#1a1a18] uppercase mb-6">
               Order Summary
             </h2>
 
-            <div className="flex flex-col gap-2 mb-4">
+            <div className="flex flex-col gap-3 mb-4 max-h-[300px] overflow-y-auto pr-1">
               {cartData.items.map((item) => (
-                <div key={item.id} className="flex justify-between font-sans text-[13px]">
-                  <span className="text-[#4a4a4a] line-clamp-1 flex-1 mr-2">
-                    {item.product?.name} × {item.quantity}
-                  </span>
+                <div key={item.id} className="flex justify-between items-center font-sans text-[13px] border-b border-[#f0ede6] pb-2">
+                  <div className="flex items-center gap-3 mr-2 overflow-hidden">
+                    <img
+                      src={item.product?.image}
+                      alt={item.product?.name}
+                      className="w-10 h-10 object-cover border border-[#e5dfd5] shrink-0"
+                    />
+                    <span className="text-[#4a4a4a] line-clamp-1">
+                      {item.product?.name} <span className="font-bold">× {item.quantity}</span>
+                    </span>
+                  </div>
                   <span className="text-[#1a1a18] font-medium flex-shrink-0">
-                    ₹{((item.product?.price ?? 0) * item.quantity).toLocaleString('en-IN')}
+                    {formatPrice((item.product?.price ?? 0) * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -281,27 +375,37 @@ export default function Checkout() {
 
             <div className="border-t border-[#d4cfc7] pt-4 flex flex-col gap-2 mb-6">
               <div className="flex justify-between font-sans text-[14px]">
-                <span className="text-[#4a4a4a]">Subtotal</span>
-                <span>₹{subtotal.toLocaleString('en-IN')}</span>
+                <span className="text-[#6a6a60]">Subtotal</span>
+                <span className="font-medium">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between font-sans text-[14px]">
-                <span className="text-[#4a4a4a]">Shipping</span>
+                <span className="text-[#6a6a60]">Shipping</span>
                 <span className={shippingCost === 0 ? 'text-green-700 font-medium' : ''}>
-                  {shippingCost === 0 ? 'Free' : `₹${shippingCost.toLocaleString('en-IN')}`}
+                  {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
                 </span>
               </div>
-              <div className="flex justify-between font-serif text-[16px] font-bold pt-2 border-t border-[#d4cfc7]">
-                <span>Total</span>
-                <span className="text-[#d4af37]">₹{total.toLocaleString('en-IN')}</span>
+              <div className="flex justify-between font-sans text-[13px] text-[#8a8278]">
+                <span>Payment Mode</span>
+                <span className="font-semibold uppercase text-[#1a1a18]">
+                  {paymentMethod === 'cod' ? 'Cash On Delivery' : 'Online (Razorpay / Cards / UPI)'}
+                </span>
+              </div>
+              <div className="flex justify-between font-serif text-[18px] font-bold pt-3 border-t border-[#d4cfc7]">
+                <span>Total Amount</span>
+                <span className="text-[#d4af37]">{formatPrice(total)}</span>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-[52px] bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors disabled:opacity-60"
+              className="w-full h-[52px] bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors disabled:opacity-60 cursor-pointer"
             >
-              {loading ? 'Placing Order…' : 'Place Order'}
+              {loading
+                ? 'Processing Order…'
+                : paymentMethod === 'cod'
+                ? 'Confirm COD Order'
+                : `Pay ${formatPrice(total)}`}
             </button>
           </div>
         </div>

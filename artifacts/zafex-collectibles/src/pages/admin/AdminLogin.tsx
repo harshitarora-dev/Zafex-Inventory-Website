@@ -26,12 +26,14 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-[#1a1a18] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <span className="text-[#d4af37] text-2xl font-serif font-bold tracking-widest">✦</span>
-          </div>
+        <div className="text-center mb-8">
+          <img
+            src="/logo.png"
+            alt="Zafex"
+            className="w-[64px] h-[64px] object-contain rounded-lg bg-white p-1 mx-auto mb-3 shadow"
+          />
           <h1 className="font-serif text-[28px] tracking-[4px] uppercase text-[#f5f0e8]">
-            ZAFEX
+            <span className="text-[#ff7a00]">ZAF</span><span>EX</span>
           </h1>
           <p className="text-[#8a8278] text-[11px] tracking-[3px] uppercase mt-1">
             Admin Portal

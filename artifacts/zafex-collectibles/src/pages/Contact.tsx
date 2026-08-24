@@ -1,18 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'wouter';
-import { MapPin, Phone, Mail } from 'lucide-react';
+import { MapPin, Phone, Mail, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { submitContact } from '@/lib/api';
 
 const Contact = () => {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Message Sent",
-      description: "We'll get back to you via raven (or email) shortly.",
-    });
-    (e.target as HTMLFormElement).reset();
+    setLoading(true);
+    try {
+      await submitContact(formData);
+      toast({
+        title: "Message Sent Successfully",
+        description: "Thank you for reaching out! We'll get back to you shortly.",
+      });
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch (err: unknown) {
+      toast({
+        title: "Could not send message",
+        description: err instanceof Error ? err.message : "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,22 +65,51 @@ const Contact = () => {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Your Name</label>
-                  <input required type="text" className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]" />
+                  <input
+                    required
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
+                    className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]"
+                  />
                 </div>
                 <div>
                   <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Email Address</label>
-                  <input required type="email" className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]" />
+                  <input
+                    required
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
+                    className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]"
+                  />
                 </div>
               </div>
               <div>
                 <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Subject</label>
-                <input required type="text" className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]" />
+                <input
+                  required
+                  type="text"
+                  value={formData.subject}
+                  onChange={(e) => setFormData((f) => ({ ...f, subject: e.target.value }))}
+                  className="w-full h-[48px] bg-white border border-[#d4cfc7] px-4 font-sans focus:outline-none focus:border-[#d4af37]"
+                />
               </div>
               <div>
                 <label className="font-serif text-[11px] uppercase tracking-[1px] text-[#1a1a18] font-bold block mb-2">Message</label>
-                <textarea required rows={5} className="w-full bg-white border border-[#d4cfc7] p-4 font-sans focus:outline-none focus:border-[#d4af37] resize-none"></textarea>
+                <textarea
+                  required
+                  rows={5}
+                  value={formData.message}
+                  onChange={(e) => setFormData((f) => ({ ...f, message: e.target.value }))}
+                  className="w-full bg-white border border-[#d4cfc7] p-4 font-sans focus:outline-none focus:border-[#d4af37] resize-none"
+                ></textarea>
               </div>
-              <button type="submit" className="h-[52px] bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] hover:bg-[#d4af37] transition-colors w-full md:w-auto px-8 self-start">
+              <button
+                type="submit"
+                disabled={loading}
+                className="h-[52px] bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors w-full md:w-auto px-8 self-start flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+              >
+                {loading && <Loader2 size={16} className="animate-spin" />}
                 SEND MESSAGE
               </button>
             </form>
