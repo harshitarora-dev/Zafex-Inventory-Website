@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Facebook, Instagram, MessageCircle, Twitter } from 'lucide-react';
-import { SiPinterest } from 'react-icons/si';
+import { Facebook, Instagram } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -37,12 +36,6 @@ const Footer = () => {
               </a>
               <a href="https://www.instagram.com/zafex_collectibles?igsh=ZjA2aXQzanY1d205&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
                 <Instagram size={16} />
-              </a>
-              <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
-                <SiPinterest size={16} />
-              </a>
-              <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
-                <MessageCircle size={16} />
               </a>
             </div>
 

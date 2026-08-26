@@ -34,9 +34,13 @@ export type Product = {
   rating?: number;
   reviewCount?: number;
   colors?: string[];
+  sizes?: string[];
+  highlights?: string[];
+  materials?: string[];
   desc?: string;
   tags?: string[];
   inStock?: boolean;
+  stockCount?: number;
   ebayUrl?: string;
 };
 

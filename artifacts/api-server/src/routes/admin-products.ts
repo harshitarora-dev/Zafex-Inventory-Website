@@ -11,17 +11,22 @@ const router = Router();
 /* ── Image upload setup ────────────────────────────────────────────────── */
 function getTargetImageDirs(): string[] {
   return [
-    path.resolve(process.cwd(), "..", "public_html", "images"),
+    path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images"),
+    path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "dist", "public", "images"),
+    path.resolve(process.cwd(), "hostinger-frontend", "images"),
+    path.resolve(process.cwd(), "public", "images"),
     path.resolve(process.cwd(), "public_html", "images"),
+    path.resolve(process.cwd(), "..", "public_html", "images"),
     "/home/u933632718/domains/zafexcollectibles.com/public_html/images",
     "/home/u933632718/public_html/images",
-    path.resolve(process.cwd(), "public", "images"),
-    path.resolve(process.cwd(), "dist", "public", "images"),
     path.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images"),
   ];
 }
 
 function getPrimaryImagesDir(): string {
+  const localArtifactsDir = path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
+  try { fs.mkdirSync(localArtifactsDir, { recursive: true }); } catch {}
+
   const hostingerDir = path.resolve(process.cwd(), "..", "public_html", "images");
   if (fs.existsSync(path.resolve(process.cwd(), "..", "public_html"))) {
     try { fs.mkdirSync(hostingerDir, { recursive: true }); } catch {}
@@ -32,9 +37,7 @@ function getPrimaryImagesDir(): string {
     try { fs.mkdirSync(absHostinger, { recursive: true }); } catch {}
     return absHostinger;
   }
-  const localDir = path.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images");
-  try { fs.mkdirSync(localDir, { recursive: true }); } catch {}
-  return localDir;
+  return localArtifactsDir;
 }
 
 function writeImageToAllDirs(filename: string, buffer: Buffer): void {
@@ -148,8 +151,43 @@ router.post(
   safeUpload,
   async (req, res) => {
     try {
-      const { name, cat, sub, price, mrp, discount, badge, desc: description, tags, inStock, image: imageBase64, gallery: rawGallery } =
-        req.body as Record<string, any>;
+      const {
+        name,
+        sku,
+        brand,
+        cat,
+        sub,
+        collection,
+        price,
+        mrp,
+        discount,
+        priceRangeMin,
+        priceRangeMax,
+        badge,
+        desc: description,
+        tags,
+        inStock,
+        stockCount,
+        image: imageBase64,
+        gallery: rawGallery,
+        video,
+        customerPhotos: rawCustomerPhotos,
+        lifestyleImages: rawLifestyleImages,
+        sizeChartImage: rawSizeChartImage,
+        material,
+        ringSize,
+        ringType,
+        gauge,
+        finish,
+        weight,
+        manufacturingTime,
+        country,
+        hsCode,
+        availability,
+        estimatedDelivery,
+        colors: rawColors,
+        ebayUrl,
+      } = req.body as Record<string, any>;
 
       if (!name || !cat || !sub || (!price && !mrp)) {
         res.status(400).json({ error: "name, cat, sub and price or mrp are required" });
@@ -167,26 +205,78 @@ router.post(
         imagePath = imageBase64;
       }
 
-      // Process multiple gallery images
-      let galleryImages: string[] = [];
-      let parsedGallery: any = rawGallery;
-      if (typeof rawGallery === "string") {
-        try { parsedGallery = JSON.parse(rawGallery); } catch {}
-      }
-      if (Array.isArray(parsedGallery)) {
-        for (const item of parsedGallery) {
-          if (typeof item === "string") {
-            if (item.startsWith("data:image/")) {
-              const saved = saveBase64Image(item);
-              if (saved) galleryImages.push(saved);
-            } else if (item.trim()) {
-              galleryImages.push(item.trim());
+      // Process helper for multiple image arrays
+      const processImageArray = (raw: any): string[] => {
+        let list: string[] = [];
+        let parsed: any = raw;
+        if (typeof raw === "string") {
+          try { parsed = JSON.parse(raw); } catch {}
+        }
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            if (typeof item === "string") {
+              if (item.startsWith("data:image/")) {
+                const saved = saveBase64Image(item);
+                if (saved) list.push(saved);
+              } else if (item.trim()) {
+                list.push(item.trim());
+              }
             }
           }
         }
-      }
+        return list;
+      };
+
+      const galleryImages = processImageArray(rawGallery);
       if (galleryImages.length === 0 && imagePath) {
-        galleryImages = [imagePath];
+        galleryImages.push(imagePath);
+      }
+
+      const customerPhotos = processImageArray(rawCustomerPhotos).slice(0, 2);
+      const lifestyleImages = processImageArray(rawLifestyleImages);
+
+      let sizeChartImagePath: string | null = null;
+      if (rawSizeChartImage && typeof rawSizeChartImage === "string") {
+        if (rawSizeChartImage.startsWith("data:image/")) {
+          sizeChartImagePath = saveBase64Image(rawSizeChartImage);
+        } else if (rawSizeChartImage.trim()) {
+          sizeChartImagePath = rawSizeChartImage.trim();
+        }
+      }
+
+      const parseStringArray = (raw: any): string[] => {
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw.map((s) => String(s).trim()).filter(Boolean);
+        if (typeof raw === "string") {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
+          } catch {}
+          return raw.split(",").map((s) => s.trim()).filter(Boolean);
+        }
+        return [];
+      };
+
+      const sizesList = parseStringArray(req.body.sizes);
+      const highlightsList = parseStringArray(req.body.highlights);
+      const materialsList = parseStringArray(req.body.materials);
+
+      let colorsList: string[] = [];
+      if (rawColors) {
+        if (Array.isArray(rawColors)) {
+          colorsList = rawColors;
+        } else if (typeof rawColors === "string") {
+          try {
+            colorsList = JSON.parse(rawColors);
+          } catch {
+            colorsList = rawColors.split(",").map((c: string) => c.trim()).filter(Boolean);
+          }
+        }
+      }
+
+      let priceRange: [number, number] | null = null;
+      if (priceRangeMin || priceRangeMax) {
+        priceRange = [Number(priceRangeMin) || Number(price) || 0, Number(priceRangeMax) || Number(price) || 0];
       }
 
       const id = generateId(name);
@@ -208,18 +298,43 @@ router.post(
         .insert(productsTable)
         .values({
           id,
+          sku: sku || null,
           name,
+          brand: brand || "ZAFS",
           cat,
           sub,
+          collection: collection || null,
           price: finalPrice,
           mrp: mrpNum,
           discount: discountNum,
+          priceRange: priceRange,
           badge: badge || null,
           image: imagePath,
           gallery: galleryImages.length ? galleryImages : [imagePath],
+          video: video || null,
+          customerPhotos: customerPhotos.length ? customerPhotos : null,
+          lifestyleImages: lifestyleImages.length ? lifestyleImages : null,
+          sizeChartImage: sizeChartImagePath,
+          material: material || null,
+          ringSize: ringSize || null,
+          ringType: ringType || null,
+          gauge: gauge || null,
+          finish: finish || null,
+          weight: weight || null,
+          manufacturingTime: manufacturingTime || null,
+          country: country || "India",
+          hsCode: hsCode || null,
+          availability: availability || "In Stock",
+          estimatedDelivery: estimatedDelivery || null,
+          colors: colorsList.length ? colorsList : null,
+          sizes: sizesList.length ? sizesList : null,
+          highlights: highlightsList.length ? highlightsList : null,
+          materials: materialsList.length ? materialsList : null,
           desc: description || null,
           tags: parsedTags.length ? parsedTags : null,
           inStock: inStock !== false && inStock !== "false",
+          stockCount: stockCount ? Number(stockCount) : 100,
+          ebayUrl: ebayUrl || null,
         });
 
       const [created] = await db
@@ -242,8 +357,43 @@ router.put(
   async (req, res) => {
     try {
       const id = req.params["id"] as string;
-      const { name, cat, sub, price, mrp, discount, badge, desc: description, tags, inStock, image: imageBase64, gallery: rawGallery } =
-        req.body as Record<string, any>;
+      const {
+        name,
+        sku,
+        brand,
+        cat,
+        sub,
+        collection,
+        price,
+        mrp,
+        discount,
+        priceRangeMin,
+        priceRangeMax,
+        badge,
+        desc: description,
+        tags,
+        inStock,
+        stockCount,
+        image: imageBase64,
+        gallery: rawGallery,
+        video,
+        customerPhotos: rawCustomerPhotos,
+        lifestyleImages: rawLifestyleImages,
+        sizeChartImage: rawSizeChartImage,
+        material,
+        ringSize,
+        ringType,
+        gauge,
+        finish,
+        weight,
+        manufacturingTime,
+        country,
+        hsCode,
+        availability,
+        estimatedDelivery,
+        colors: rawColors,
+        ebayUrl,
+      } = req.body as Record<string, any>;
 
       const existing = await db
         .select()
@@ -269,33 +419,70 @@ router.put(
         imagePath = imageBase64;
       }
 
-      // Process multiple gallery images
-      let galleryImages: string[] = [];
-      if (rawGallery !== undefined) {
-        let parsedGallery: any = rawGallery;
-        if (typeof rawGallery === "string") {
-          try { parsedGallery = JSON.parse(rawGallery); } catch {}
+      const processImageArray = (raw: any): string[] => {
+        let list: string[] = [];
+        let parsed: any = raw;
+        if (typeof raw === "string") {
+          try { parsed = JSON.parse(raw); } catch {}
         }
-        if (Array.isArray(parsedGallery)) {
-          for (const item of parsedGallery) {
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
             if (typeof item === "string") {
               if (item.startsWith("data:image/")) {
                 const saved = saveBase64Image(item);
-                if (saved) galleryImages.push(saved);
+                if (saved) list.push(saved);
               } else if (item.trim()) {
-                galleryImages.push(item.trim());
+                list.push(item.trim());
               }
             }
           }
         }
-      }
+        return list;
+      };
 
+      let galleryImages = rawGallery !== undefined ? processImageArray(rawGallery) : (existing[0].gallery ?? [imagePath]);
       if (galleryImages.length > 0) {
         if (!galleryImages.includes(imagePath)) {
           imagePath = galleryImages[0];
         }
       } else {
         galleryImages = [imagePath];
+      }
+
+      const customerPhotos = rawCustomerPhotos !== undefined ? processImageArray(rawCustomerPhotos).slice(0, 2) : existing[0].customerPhotos;
+      const lifestyleImages = rawLifestyleImages !== undefined ? processImageArray(rawLifestyleImages) : existing[0].lifestyleImages;
+
+      let sizeChartImagePath = existing[0].sizeChartImage;
+      if (rawSizeChartImage !== undefined) {
+        if (typeof rawSizeChartImage === "string" && rawSizeChartImage.startsWith("data:image/")) {
+          sizeChartImagePath = saveBase64Image(rawSizeChartImage);
+        } else {
+          sizeChartImagePath = rawSizeChartImage || null;
+        }
+      }
+
+      let colorsList = existing[0].colors;
+      if (rawColors !== undefined) {
+        let parsedColors: any = rawColors;
+        if (typeof rawColors === "string") {
+          try { parsedColors = JSON.parse(rawColors); } catch {
+            parsedColors = rawColors.split(",").map((c: string) => c.trim()).filter(Boolean);
+          }
+        }
+        if (Array.isArray(parsedColors)) {
+          colorsList = parsedColors.map((c: any) => String(c).trim()).filter(Boolean);
+        } else {
+          colorsList = null;
+        }
+      }
+
+      let priceRange = existing[0].priceRange;
+      if (priceRangeMin !== undefined || priceRangeMax !== undefined) {
+        if (priceRangeMin || priceRangeMax) {
+          priceRange = [Number(priceRangeMin) || existing[0].price, Number(priceRangeMax) || existing[0].price];
+        } else {
+          priceRange = null;
+        }
       }
 
       const parsedTags =
@@ -314,17 +501,42 @@ router.put(
 
       const updates: Partial<typeof existing[0]> = {
         ...(name && { name }),
+        ...(sku !== undefined && { sku: sku || null }),
+        ...(brand !== undefined && { brand: brand || "ZAFS" }),
         ...(cat && { cat }),
         ...(sub && { sub }),
+        ...(collection !== undefined && { collection: collection || null }),
         price: finalPrice,
         mrp: mrpNum,
         discount: discountNum,
+        priceRange: priceRange,
         badge: badge !== undefined ? (badge || null) : existing[0].badge,
+        image: imagePath,
+        gallery: galleryImages,
+        ...(video !== undefined && { video: video || null }),
+        customerPhotos: customerPhotos?.length ? customerPhotos : null,
+        lifestyleImages: lifestyleImages?.length ? lifestyleImages : null,
+        sizeChartImage: sizeChartImagePath,
+        ...(material !== undefined && { material: material || null }),
+        ...(ringSize !== undefined && { ringSize: ringSize || null }),
+        ...(ringType !== undefined && { ringType: ringType || null }),
+        ...(gauge !== undefined && { gauge: gauge || null }),
+        ...(finish !== undefined && { finish: finish || null }),
+        ...(weight !== undefined && { weight: weight || null }),
+        ...(manufacturingTime !== undefined && { manufacturingTime: manufacturingTime || null }),
+        ...(country !== undefined && { country: country || "India" }),
+        ...(hsCode !== undefined && { hsCode: hsCode || null }),
+        ...(availability !== undefined && { availability: availability || "In Stock" }),
+        ...(estimatedDelivery !== undefined && { estimatedDelivery: estimatedDelivery || null }),
+        colors: colorsList?.length ? colorsList : null,
+        ...(req.body.sizes !== undefined && { sizes: parseStringArray(req.body.sizes).length ? parseStringArray(req.body.sizes) : null }),
+        ...(req.body.highlights !== undefined && { highlights: parseStringArray(req.body.highlights).length ? parseStringArray(req.body.highlights) : null }),
+        ...(req.body.materials !== undefined && { materials: parseStringArray(req.body.materials).length ? parseStringArray(req.body.materials) : null }),
         ...(description !== undefined && { desc: description || null }),
         tags: parsedTags.length ? parsedTags : null,
         inStock: inStock !== undefined ? (inStock !== false && inStock !== "false") : existing[0].inStock,
-        image: imagePath,
-        gallery: galleryImages,
+        ...(stockCount !== undefined && { stockCount: Number(stockCount) || 100 }),
+        ...(ebayUrl !== undefined && { ebayUrl: ebayUrl || null }),
         updatedAt: new Date(),
       };
 
@@ -339,8 +551,8 @@ router.put(
         .where(eq(productsTable.id, id));
 
       res.json(updated);
-    } catch {
-      res.status(500).json({ error: "Failed to update product" });
+    } catch (err: unknown) {
+      res.status(500).json({ error: "Failed to update product: " + (err instanceof Error ? err.message : "") });
     }
   },
 );

@@ -13,6 +13,7 @@ import adminProductsRouter from "./admin-products";
 import adminOrdersRouter from "./admin-orders";
 import adminDashboardRouter from "./admin-dashboard";
 import adminHomepageRouter from "./admin-homepage";
+import homepageRouter from "./homepage";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(adminProductsRouter);
 router.use(adminOrdersRouter);
 router.use(adminDashboardRouter);
 router.use(adminHomepageRouter);
+router.use(homepageRouter);
 
 export default router;

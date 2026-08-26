@@ -11,8 +11,8 @@ const resourceCards = [
 
 const Resources = () => (
   <div className="min-h-screen bg-[#f5f0e8]">
-    <section className="bg-[#cec3b5] px-4 py-14 text-center">
-      <h1 className="font-serif text-[48px] font-light uppercase leading-none tracking-[0.1em] text-[#1a1208] sm:text-[60px]">
+    <section className="bg-[#cec3b5] px-4 py-12 sm:py-14 text-center">
+      <h1 className="font-serif text-[28px] xs:text-[34px] sm:text-[48px] md:text-[60px] font-light uppercase leading-tight tracking-[2px] sm:tracking-[0.1em] text-[#1a1208]">
         Resources
       </h1>
     </section>

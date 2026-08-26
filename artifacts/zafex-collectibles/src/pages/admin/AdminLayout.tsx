@@ -57,7 +57,7 @@ export default function AdminLayout({ children }: Props) {
     { href: '/admin/orders',          label: 'Orders',           icon: ShoppingBag },
     { href: '/admin/customers',       label: 'Customers',        icon: Users },
     { href: '/admin/contacts',        label: 'Inquiries',        icon: MessageSquare },
-    { href: '/admin/homepage-images', label: 'Homepage Images',  icon: Image },
+    { href: '/admin/homepage',        label: 'Homepage',         icon: Image },
   ];
 
   const sidebarContent = (

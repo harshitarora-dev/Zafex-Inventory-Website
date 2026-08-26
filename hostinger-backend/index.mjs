@@ -15235,11 +15235,11 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path6) {
-      if (!path6 || typeof path6 !== "string") {
+    function lookup(path7) {
+      if (!path7 || typeof path7 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path6).toLowerCase().slice(1);
+      var extension2 = extname("x." + path7).toLowerCase().slice(1);
       if (!extension2) {
         return false;
       }
@@ -18781,13 +18781,13 @@ var require_view = __commonJS({
   "../../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/view.js"(exports, module) {
     "use strict";
     var debug = require_src()("express:view");
-    var path6 = __require("node:path");
-    var fs6 = __require("node:fs");
-    var dirname = path6.dirname;
-    var basename = path6.basename;
-    var extname = path6.extname;
-    var join = path6.join;
-    var resolve = path6.resolve;
+    var path7 = __require("node:path");
+    var fs7 = __require("node:fs");
+    var dirname = path7.dirname;
+    var basename = path7.basename;
+    var extname = path7.extname;
+    var join = path7.join;
+    var resolve = path7.resolve;
     module.exports = View2;
     function View2(name, options) {
       var opts = options || {};
@@ -18816,17 +18816,17 @@ var require_view = __commonJS({
       this.path = this.lookup(fileName);
     }
     View2.prototype.lookup = function lookup(name) {
-      var path7;
+      var path8;
       var roots = [].concat(this.root);
       debug('lookup "%s"', name);
-      for (var i = 0; i < roots.length && !path7; i++) {
+      for (var i = 0; i < roots.length && !path8; i++) {
         var root = roots[i];
         var loc = resolve(root, name);
         var dir = dirname(loc);
         var file = basename(loc);
-        path7 = this.resolve(dir, file);
+        path8 = this.resolve(dir, file);
       }
-      return path7;
+      return path8;
     };
     View2.prototype.render = function render(options, callback) {
       var sync = true;
@@ -18848,21 +18848,21 @@ var require_view = __commonJS({
     };
     View2.prototype.resolve = function resolve2(dir, file) {
       var ext = this.ext;
-      var path7 = join(dir, file);
-      var stat = tryStat(path7);
+      var path8 = join(dir, file);
+      var stat = tryStat(path8);
       if (stat && stat.isFile()) {
-        return path7;
+        return path8;
       }
-      path7 = join(dir, basename(file, ext), "index" + ext);
-      stat = tryStat(path7);
+      path8 = join(dir, basename(file, ext), "index" + ext);
+      stat = tryStat(path8);
       if (stat && stat.isFile()) {
-        return path7;
+        return path8;
       }
     };
-    function tryStat(path7) {
-      debug('stat "%s"', path7);
+    function tryStat(path8) {
+      debug('stat "%s"', path8);
       try {
-        return fs6.statSync(path7);
+        return fs7.statSync(path8);
       } catch (e) {
         return void 0;
       }
@@ -20102,15 +20102,15 @@ var require_dist2 = __commonJS({
       let index = 0;
       function consumeUntil(end) {
         const output = [];
-        let path6 = "";
+        let path7 = "";
         function writePath() {
-          if (!path6)
+          if (!path7)
             return;
           output.push({
             type: "text",
-            value: encodePath(path6)
+            value: encodePath(path7)
           });
-          path6 = "";
+          path7 = "";
         }
         while (index < chars.length) {
           const value = chars[index++];
@@ -20122,7 +20122,7 @@ var require_dist2 = __commonJS({
             if (index === chars.length) {
               throw new PathError(`Unexpected end after \\ at index ${index}`, str);
             }
-            path6 += chars[index++];
+            path7 += chars[index++];
             continue;
           }
           if (value === ":" || value === "*") {
@@ -20166,7 +20166,7 @@ var require_dist2 = __commonJS({
           if (value === "}" || value === "(" || value === ")" || value === "[" || value === "]" || value === "+" || value === "?" || value === "!") {
             throw new PathError(`Unexpected ${value} at index ${index - 1}`, str);
           }
-          path6 += value;
+          path7 += value;
         }
         if (end) {
           throw new PathError(`Unexpected end at index ${index}, expected ${end}`, str);
@@ -20176,17 +20176,17 @@ var require_dist2 = __commonJS({
       }
       return new TokenData(consumeUntil(""), str);
     }
-    function compile(path6, options = {}) {
+    function compile(path7, options = {}) {
       const { encode = encodeURIComponent, delimiter = DEFAULT_DELIMITER } = options;
-      const data = typeof path6 === "object" ? path6 : parse(path6, options);
+      const data = typeof path7 === "object" ? path7 : parse(path7, options);
       const fn = tokensToFunction(data.tokens, delimiter, encode);
-      return function path7(params = {}) {
+      return function path8(params = {}) {
         const missing = [];
-        const path8 = fn(params, missing);
+        const path9 = fn(params, missing);
         if (missing.length) {
           throw new TypeError(`Missing parameters: ${missing.join(", ")}`);
         }
-        return path8;
+        return path9;
       };
     }
     function tokensToFunction(tokens, delimiter, encode) {
@@ -20248,9 +20248,9 @@ var require_dist2 = __commonJS({
         return encodeValue(value);
       };
     }
-    function match(path6, options = {}) {
+    function match(path7, options = {}) {
       const { decode = decodeURIComponent, delimiter = DEFAULT_DELIMITER } = options;
-      const { regexp, keys } = pathToRegexp(path6, options);
+      const { regexp, keys } = pathToRegexp(path7, options);
       const decoders = keys.map((key) => {
         if (decode === false)
           return NOOP_VALUE;
@@ -20262,7 +20262,7 @@ var require_dist2 = __commonJS({
         const m = regexp.exec(input);
         if (!m)
           return false;
-        const path7 = m[0];
+        const path8 = m[0];
         const params = /* @__PURE__ */ Object.create(null);
         for (let i = 1; i < m.length; i++) {
           if (m[i] === void 0)
@@ -20271,21 +20271,21 @@ var require_dist2 = __commonJS({
           const decoder = decoders[i - 1];
           params[key.name] = decoder(m[i]);
         }
-        return { path: path7, params };
+        return { path: path8, params };
       };
     }
-    function pathToRegexp(path6, options = {}) {
+    function pathToRegexp(path7, options = {}) {
       const { delimiter = DEFAULT_DELIMITER, end = true, sensitive = false, trailing = true } = options;
       const keys = [];
       let source = "";
       let combinations = 0;
-      function process2(path7) {
-        if (Array.isArray(path7)) {
-          for (const p of path7)
+      function process2(path8) {
+        if (Array.isArray(path8)) {
+          for (const p of path8)
             process2(p);
           return;
         }
-        const data = typeof path7 === "object" ? path7 : parse(path7, options);
+        const data = typeof path8 === "object" ? path8 : parse(path8, options);
         flatten(data.tokens, 0, [], (tokens) => {
           if (combinations >= 256) {
             throw new PathError("Too many path combinations", data.originalPath);
@@ -20296,7 +20296,7 @@ var require_dist2 = __commonJS({
           combinations++;
         });
       }
-      process2(path6);
+      process2(path7);
       let pattern = `^(?:${source})`;
       if (trailing)
         pattern += "(?:" + escape2(delimiter) + "$)?";
@@ -20436,18 +20436,18 @@ var require_layer = __commonJS({
     var TRAILING_SLASH_REGEXP = /\/+$/;
     var MATCHING_GROUP_REGEXP = /\((?:\?<(.*?)>)?(?!\?)/g;
     module.exports = Layer;
-    function Layer(path6, options, fn) {
+    function Layer(path7, options, fn) {
       if (!(this instanceof Layer)) {
-        return new Layer(path6, options, fn);
+        return new Layer(path7, options, fn);
       }
-      debug("new %o", path6);
+      debug("new %o", path7);
       const opts = options || {};
       this.handle = fn;
       this.keys = [];
       this.name = fn.name || "<anonymous>";
       this.params = void 0;
       this.path = void 0;
-      this.slash = path6 === "/" && opts.end === false;
+      this.slash = path7 === "/" && opts.end === false;
       function matcher(_path) {
         if (_path instanceof RegExp) {
           const keys = [];
@@ -20486,7 +20486,7 @@ var require_layer = __commonJS({
           decode: decodeParam
         });
       }
-      this.matchers = Array.isArray(path6) ? path6.map(matcher) : [matcher(path6)];
+      this.matchers = Array.isArray(path7) ? path7.map(matcher) : [matcher(path7)];
     }
     Layer.prototype.handleError = function handleError(error, req, res, next) {
       const fn = this.handle;
@@ -20526,9 +20526,9 @@ var require_layer = __commonJS({
         next(err);
       }
     };
-    Layer.prototype.match = function match(path6) {
+    Layer.prototype.match = function match(path7) {
       let match2;
-      if (path6 != null) {
+      if (path7 != null) {
         if (this.slash) {
           this.params = {};
           this.path = "";
@@ -20536,7 +20536,7 @@ var require_layer = __commonJS({
         }
         let i = 0;
         while (!match2 && i < this.matchers.length) {
-          match2 = this.matchers[i](path6);
+          match2 = this.matchers[i](path7);
           i++;
         }
       }
@@ -20564,13 +20564,13 @@ var require_layer = __commonJS({
         throw err;
       }
     }
-    function loosen(path6) {
-      if (path6 instanceof RegExp || path6 === "/") {
-        return path6;
+    function loosen(path7) {
+      if (path7 instanceof RegExp || path7 === "/") {
+        return path7;
       }
-      return Array.isArray(path6) ? path6.map(function(p) {
+      return Array.isArray(path7) ? path7.map(function(p) {
         return loosen(p);
-      }) : String(path6).replace(TRAILING_SLASH_REGEXP, "");
+      }) : String(path7).replace(TRAILING_SLASH_REGEXP, "");
     }
   }
 });
@@ -20586,9 +20586,9 @@ var require_route = __commonJS({
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
     module.exports = Route;
-    function Route(path6) {
-      debug("new %o", path6);
-      this.path = path6;
+    function Route(path7) {
+      debug("new %o", path7);
+      this.path = path7;
       this.stack = [];
       this.methods = /* @__PURE__ */ Object.create(null);
     }
@@ -20709,27 +20709,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router16;
+    module.exports = Router17;
     module.exports.Route = Route;
-    function Router16(options) {
-      if (!(this instanceof Router16)) {
-        return new Router16(options);
+    function Router17(options) {
+      if (!(this instanceof Router17)) {
+        return new Router17(options);
       }
       const opts = options || {};
-      function router16(req, res, next) {
-        router16.handle(req, res, next);
+      function router17(req, res, next) {
+        router17.handle(req, res, next);
       }
-      Object.setPrototypeOf(router16, this);
-      router16.caseSensitive = opts.caseSensitive;
-      router16.mergeParams = opts.mergeParams;
-      router16.params = {};
-      router16.strict = opts.strict;
-      router16.stack = [];
-      return router16;
+      Object.setPrototypeOf(router17, this);
+      router17.caseSensitive = opts.caseSensitive;
+      router17.mergeParams = opts.mergeParams;
+      router17.params = {};
+      router17.strict = opts.strict;
+      router17.stack = [];
+      return router17;
     }
-    Router16.prototype = function() {
+    Router17.prototype = function() {
     };
-    Router16.prototype.param = function param(name, fn) {
+    Router17.prototype.param = function param(name, fn) {
       if (!name) {
         throw new TypeError("argument name is required");
       }
@@ -20749,7 +20749,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router16.prototype.handle = function handle(req, res, callback) {
+    Router17.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -20796,8 +20796,8 @@ var require_router = __commonJS({
         if (++sync > 100) {
           return setImmediate(next, err);
         }
-        const path6 = getPathname(req);
-        if (path6 == null) {
+        const path7 = getPathname(req);
+        if (path7 == null) {
           return done(layerError);
         }
         let layer;
@@ -20805,7 +20805,7 @@ var require_router = __commonJS({
         let route;
         while (match !== true && idx < stack.length) {
           layer = stack[idx++];
-          match = matchLayer(layer, path6);
+          match = matchLayer(layer, path7);
           route = layer.route;
           if (typeof match !== "boolean") {
             layerError = layerError || match;
@@ -20843,18 +20843,18 @@ var require_router = __commonJS({
           } else if (route) {
             layer.handleRequest(req, res, next);
           } else {
-            trimPrefix(layer, layerError, layerPath, path6);
+            trimPrefix(layer, layerError, layerPath, path7);
           }
           sync = 0;
         });
       }
-      function trimPrefix(layer, layerError, layerPath, path6) {
+      function trimPrefix(layer, layerError, layerPath, path7) {
         if (layerPath.length !== 0) {
-          if (layerPath !== path6.substring(0, layerPath.length)) {
+          if (layerPath !== path7.substring(0, layerPath.length)) {
             next(layerError);
             return;
           }
-          const c = path6[layerPath.length];
+          const c = path7[layerPath.length];
           if (c && c !== "/") {
             next(layerError);
             return;
@@ -20876,9 +20876,9 @@ var require_router = __commonJS({
         }
       }
     };
-    Router16.prototype.use = function use(handler) {
+    Router17.prototype.use = function use(handler) {
       let offset = 0;
-      let path6 = "/";
+      let path7 = "/";
       if (typeof handler !== "function") {
         let arg = handler;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -20886,7 +20886,7 @@ var require_router = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path6 = handler;
+          path7 = handler;
         }
       }
       const callbacks = flatten.call(slice.call(arguments, offset), Infinity);
@@ -20898,8 +20898,8 @@ var require_router = __commonJS({
         if (typeof fn !== "function") {
           throw new TypeError("argument handler must be a function");
         }
-        debug("use %o %s", path6, fn.name || "<anonymous>");
-        const layer = new Layer(path6, {
+        debug("use %o %s", path7, fn.name || "<anonymous>");
+        const layer = new Layer(path7, {
           sensitive: this.caseSensitive,
           strict: false,
           end: false
@@ -20909,9 +20909,9 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router16.prototype.route = function route(path6) {
-      const route2 = new Route(path6);
-      const layer = new Layer(path6, {
+    Router17.prototype.route = function route(path7) {
+      const route2 = new Route(path7);
+      const layer = new Layer(path7, {
         sensitive: this.caseSensitive,
         strict: this.strict,
         end: true
@@ -20924,8 +20924,8 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router16.prototype[method] = function(path6) {
-        const route = this.route(path6);
+      Router17.prototype[method] = function(path7) {
+        const route = this.route(path7);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
       };
@@ -20954,9 +20954,9 @@ var require_router = __commonJS({
       const fqdnIndex = url.substring(0, pathLength).indexOf("://");
       return fqdnIndex !== -1 ? url.substring(0, url.indexOf("/", 3 + fqdnIndex)) : void 0;
     }
-    function matchLayer(layer, path6) {
+    function matchLayer(layer, path7) {
       try {
-        return layer.match(path6);
+        return layer.match(path7);
       } catch (err) {
         return err;
       }
@@ -21107,13 +21107,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once2 = require_once();
-    var Router16 = require_router();
+    var Router17 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router16 = null;
+      var router17 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -21122,13 +21122,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router16 === null) {
-            router16 = new Router16({
+          if (router17 === null) {
+            router17 = new Router17({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router16;
+          return router17;
         }
       });
     };
@@ -21184,7 +21184,7 @@ var require_application = __commonJS({
     };
     app2.use = function use(fn) {
       var offset = 0;
-      var path6 = "/";
+      var path7 = "/";
       if (typeof fn !== "function") {
         var arg = fn;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -21192,22 +21192,22 @@ var require_application = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path6 = fn;
+          path7 = fn;
         }
       }
       var fns = flatten.call(slice.call(arguments, offset), Infinity);
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router16 = this.router;
+      var router17 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router16.use(path6, fn2);
+          return router17.use(path7, fn2);
         }
-        debug(".use app under %s", path6);
-        fn2.mountpath = path6;
+        debug(".use app under %s", path7);
+        fn2.mountpath = path7;
         fn2.parent = this;
-        router16.use(path6, function mounted_app(req, res, next) {
+        router17.use(path7, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -21219,8 +21219,8 @@ var require_application = __commonJS({
       }, this);
       return this;
     };
-    app2.route = function route(path6) {
-      return this.router.route(path6);
+    app2.route = function route(path7) {
+      return this.router.route(path7);
     };
     app2.engine = function engine(ext, fn) {
       if (typeof fn !== "function") {
@@ -21263,7 +21263,7 @@ var require_application = __commonJS({
       }
       return this;
     };
-    app2.path = function path6() {
+    app2.path = function path7() {
       return this.parent ? this.parent.path() + this.mountpath : "";
     };
     app2.enabled = function enabled(setting) {
@@ -21279,17 +21279,17 @@ var require_application = __commonJS({
       return this.set(setting, false);
     };
     methods.forEach(function(method) {
-      app2[method] = function(path6) {
+      app2[method] = function(path7) {
         if (method === "get" && arguments.length === 1) {
-          return this.set(path6);
+          return this.set(path7);
         }
-        var route = this.route(path6);
+        var route = this.route(path7);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
       };
     });
-    app2.all = function all(path6) {
-      var route = this.route(path6);
+    app2.all = function all(path7) {
+      var route = this.route(path7);
       var args = slice.call(arguments, 1);
       for (var i = 0; i < methods.length; i++) {
         route[methods[i]].apply(route, args);
@@ -22211,7 +22211,7 @@ var require_request = __commonJS({
       var subdomains2 = !isIP2(hostname) ? hostname.split(".").reverse() : [hostname];
       return subdomains2.slice(offset);
     });
-    defineGetter(req, "path", function path6() {
+    defineGetter(req, "path", function path7() {
       return parse(this).pathname;
     });
     defineGetter(req, "host", function host() {
@@ -22422,8 +22422,8 @@ var require_content_disposition = __commonJS({
       this.type = type;
       this.parameters = parameters;
     }
-    function basename(path6) {
-      const normalized = path6.replaceAll("\\", "/");
+    function basename(path7) {
+      const normalized = path7.replaceAll("\\", "/");
       let end = normalized.length;
       while (end > 0 && normalized[end - 1] === "/") {
         end--;
@@ -22664,32 +22664,32 @@ var require_send = __commonJS({
     var escapeHtml = require_escape_html();
     var etag = require_etag();
     var fresh = require_fresh();
-    var fs6 = __require("fs");
+    var fs7 = __require("fs");
     var mime = require_mime_types();
     var ms = require_ms();
     var onFinished = require_on_finished();
     var parseRange = require_range_parser();
-    var path6 = __require("path");
+    var path7 = __require("path");
     var statuses = require_statuses();
     var Stream = __require("stream");
     var util2 = __require("util");
-    var extname = path6.extname;
-    var join = path6.join;
-    var normalize = path6.normalize;
-    var resolve = path6.resolve;
-    var sep = path6.sep;
+    var extname = path7.extname;
+    var join = path7.join;
+    var normalize = path7.normalize;
+    var resolve = path7.resolve;
+    var sep = path7.sep;
     var BYTES_RANGE_REGEXP = /^ *bytes=/;
     var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1e3;
     var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/;
     module.exports = send;
-    function send(req, path7, options) {
-      return new SendStream(req, path7, options);
+    function send(req, path8, options) {
+      return new SendStream(req, path8, options);
     }
-    function SendStream(req, path7, options) {
+    function SendStream(req, path8, options) {
       Stream.call(this);
       var opts = options || {};
       this.options = opts;
-      this.path = path7;
+      this.path = path8;
       this.req = req;
       this._acceptRanges = opts.acceptRanges !== void 0 ? Boolean(opts.acceptRanges) : true;
       this._cacheControl = opts.cacheControl !== void 0 ? Boolean(opts.cacheControl) : true;
@@ -22803,10 +22803,10 @@ var require_send = __commonJS({
       var lastModified = this.res.getHeader("Last-Modified");
       return parseHttpDate(lastModified) <= parseHttpDate(ifRange);
     };
-    SendStream.prototype.redirect = function redirect(path7) {
+    SendStream.prototype.redirect = function redirect(path8) {
       var res = this.res;
       if (hasListeners(this, "directory")) {
-        this.emit("directory", res, path7);
+        this.emit("directory", res, path8);
         return;
       }
       if (this.hasTrailingSlash()) {
@@ -22826,38 +22826,38 @@ var require_send = __commonJS({
     SendStream.prototype.pipe = function pipe(res) {
       var root = this._root;
       this.res = res;
-      var path7 = decode(this.path);
-      if (path7 === -1) {
+      var path8 = decode(this.path);
+      if (path8 === -1) {
         this.error(400);
         return res;
       }
-      if (~path7.indexOf("\0")) {
+      if (~path8.indexOf("\0")) {
         this.error(400);
         return res;
       }
       var parts;
       if (root !== null) {
-        if (path7) {
-          path7 = normalize("." + sep + path7);
+        if (path8) {
+          path8 = normalize("." + sep + path8);
         }
-        if (UP_PATH_REGEXP.test(path7)) {
-          debug('malicious path "%s"', path7);
+        if (UP_PATH_REGEXP.test(path8)) {
+          debug('malicious path "%s"', path8);
           this.error(403);
           return res;
         }
-        parts = path7.split(sep);
-        path7 = normalize(join(root, path7));
+        parts = path8.split(sep);
+        path8 = normalize(join(root, path8));
       } else {
-        if (UP_PATH_REGEXP.test(path7)) {
-          debug('malicious path "%s"', path7);
+        if (UP_PATH_REGEXP.test(path8)) {
+          debug('malicious path "%s"', path8);
           this.error(403);
           return res;
         }
-        parts = normalize(path7).split(sep);
-        path7 = resolve(path7);
+        parts = normalize(path8).split(sep);
+        path8 = resolve(path8);
       }
       if (containsDotFile(parts)) {
-        debug('%s dotfile "%s"', this._dotfiles, path7);
+        debug('%s dotfile "%s"', this._dotfiles, path8);
         switch (this._dotfiles) {
           case "allow":
             break;
@@ -22871,13 +22871,13 @@ var require_send = __commonJS({
         }
       }
       if (this._index.length && this.hasTrailingSlash()) {
-        this.sendIndex(path7);
+        this.sendIndex(path8);
         return res;
       }
-      this.sendFile(path7);
+      this.sendFile(path8);
       return res;
     };
-    SendStream.prototype.send = function send2(path7, stat) {
+    SendStream.prototype.send = function send2(path8, stat) {
       var len = stat.size;
       var options = this.options;
       var opts = {};
@@ -22889,9 +22889,9 @@ var require_send = __commonJS({
         this.headersAlreadySent();
         return;
       }
-      debug('pipe "%s"', path7);
-      this.setHeader(path7, stat);
-      this.type(path7);
+      debug('pipe "%s"', path8);
+      this.setHeader(path8, stat);
+      this.type(path8);
       if (this.isConditionalGET()) {
         if (this.isPreconditionFailure()) {
           this.error(412);
@@ -22940,30 +22940,30 @@ var require_send = __commonJS({
         res.end();
         return;
       }
-      this.stream(path7, opts);
+      this.stream(path8, opts);
     };
-    SendStream.prototype.sendFile = function sendFile(path7) {
+    SendStream.prototype.sendFile = function sendFile(path8) {
       var i = 0;
       var self2 = this;
-      debug('stat "%s"', path7);
-      fs6.stat(path7, function onstat(err, stat) {
-        var pathEndsWithSep = path7[path7.length - 1] === sep;
-        if (err && err.code === "ENOENT" && !extname(path7) && !pathEndsWithSep) {
+      debug('stat "%s"', path8);
+      fs7.stat(path8, function onstat(err, stat) {
+        var pathEndsWithSep = path8[path8.length - 1] === sep;
+        if (err && err.code === "ENOENT" && !extname(path8) && !pathEndsWithSep) {
           return next(err);
         }
         if (err) return self2.onStatError(err);
-        if (stat.isDirectory()) return self2.redirect(path7);
+        if (stat.isDirectory()) return self2.redirect(path8);
         if (pathEndsWithSep) return self2.error(404);
-        self2.emit("file", path7, stat);
-        self2.send(path7, stat);
+        self2.emit("file", path8, stat);
+        self2.send(path8, stat);
       });
       function next(err) {
         if (self2._extensions.length <= i) {
           return err ? self2.onStatError(err) : self2.error(404);
         }
-        var p = path7 + "." + self2._extensions[i++];
+        var p = path8 + "." + self2._extensions[i++];
         debug('stat "%s"', p);
-        fs6.stat(p, function(err2, stat) {
+        fs7.stat(p, function(err2, stat) {
           if (err2) return next(err2);
           if (stat.isDirectory()) return next();
           self2.emit("file", p, stat);
@@ -22971,7 +22971,7 @@ var require_send = __commonJS({
         });
       }
     };
-    SendStream.prototype.sendIndex = function sendIndex(path7) {
+    SendStream.prototype.sendIndex = function sendIndex(path8) {
       var i = -1;
       var self2 = this;
       function next(err) {
@@ -22979,9 +22979,9 @@ var require_send = __commonJS({
           if (err) return self2.onStatError(err);
           return self2.error(404);
         }
-        var p = join(path7, self2._index[i]);
+        var p = join(path8, self2._index[i]);
         debug('stat "%s"', p);
-        fs6.stat(p, function(err2, stat) {
+        fs7.stat(p, function(err2, stat) {
           if (err2) return next(err2);
           if (stat.isDirectory()) return next();
           self2.emit("file", p, stat);
@@ -22990,10 +22990,10 @@ var require_send = __commonJS({
       }
       next();
     };
-    SendStream.prototype.stream = function stream(path7, options) {
+    SendStream.prototype.stream = function stream(path8, options) {
       var self2 = this;
       var res = this.res;
-      var stream2 = fs6.createReadStream(path7, options);
+      var stream2 = fs7.createReadStream(path8, options);
       this.emit("stream", stream2);
       stream2.pipe(res);
       function cleanup() {
@@ -23008,17 +23008,17 @@ var require_send = __commonJS({
         self2.emit("end");
       });
     };
-    SendStream.prototype.type = function type(path7) {
+    SendStream.prototype.type = function type(path8) {
       var res = this.res;
       if (res.getHeader("Content-Type")) return;
-      var ext = extname(path7);
+      var ext = extname(path8);
       var type2 = mime.contentType(ext) || "application/octet-stream";
       debug("content-type %s", type2);
       res.setHeader("Content-Type", type2);
     };
-    SendStream.prototype.setHeader = function setHeader(path7, stat) {
+    SendStream.prototype.setHeader = function setHeader(path8, stat) {
       var res = this.res;
-      this.emit("headers", res, path7, stat);
+      this.emit("headers", res, path8, stat);
       if (this._acceptRanges && !res.getHeader("Accept-Ranges")) {
         debug("accept ranges");
         res.setHeader("Accept-Ranges", "bytes");
@@ -23076,9 +23076,9 @@ var require_send = __commonJS({
       }
       return err instanceof Error ? createError(status, err, { expose: false }) : createError(status, err);
     }
-    function decode(path7) {
+    function decode(path8) {
       try {
-        return decodeURIComponent(path7);
+        return decodeURIComponent(path8);
       } catch (err) {
         return -1;
       }
@@ -23222,7 +23222,7 @@ var require_response = __commonJS({
     var http = __require("node:http");
     var onFinished = require_on_finished();
     var mime = require_mime_types();
-    var path6 = __require("node:path");
+    var path7 = __require("node:path");
     var pathIsAbsolute = __require("node:path").isAbsolute;
     var statuses = require_statuses();
     var sign = require_cookie_signature().sign;
@@ -23231,8 +23231,8 @@ var require_response = __commonJS({
     var setCharset = require_utils3().setCharset;
     var cookie = require_cookie();
     var send = require_send();
-    var extname = path6.extname;
-    var resolve = path6.resolve;
+    var extname = path7.extname;
+    var resolve = path7.resolve;
     var vary = require_vary();
     var { Buffer: Buffer3 } = __require("node:buffer");
     var res = Object.create(http.ServerResponse.prototype);
@@ -23378,26 +23378,26 @@ var require_response = __commonJS({
       this.type("txt");
       return this.send(body);
     };
-    res.sendFile = function sendFile(path7, options, callback) {
+    res.sendFile = function sendFile(path8, options, callback) {
       var done = callback;
       var req = this.req;
       var res2 = this;
       var next = req.next;
       var opts = options || {};
-      if (!path7) {
+      if (!path8) {
         throw new TypeError("path argument is required to res.sendFile");
       }
-      if (typeof path7 !== "string") {
+      if (typeof path8 !== "string") {
         throw new TypeError("path must be a string to res.sendFile");
       }
       if (typeof options === "function") {
         done = options;
         opts = {};
       }
-      if (!opts.root && !pathIsAbsolute(path7)) {
+      if (!opts.root && !pathIsAbsolute(path8)) {
         throw new TypeError("path must be absolute or specify root to res.sendFile");
       }
-      var pathname = encodeURI(path7);
+      var pathname = encodeURI(path8);
       opts.etag = this.app.enabled("etag");
       var file = send(req, pathname, opts);
       sendfile(res2, file, opts, function(err) {
@@ -23408,7 +23408,7 @@ var require_response = __commonJS({
         }
       });
     };
-    res.download = function download(path7, filename, options, callback) {
+    res.download = function download(path8, filename, options, callback) {
       var done = callback;
       var name = filename;
       var opts = options || null;
@@ -23425,7 +23425,7 @@ var require_response = __commonJS({
         opts = filename;
       }
       var headers = {
-        "Content-Disposition": contentDisposition(name || path7)
+        "Content-Disposition": contentDisposition(name || path8)
       };
       if (opts && opts.headers) {
         var keys = Object.keys(opts.headers);
@@ -23438,7 +23438,7 @@ var require_response = __commonJS({
       }
       opts = Object.create(opts);
       opts.headers = headers;
-      var fullPath = !opts.root ? resolve(path7) : path7;
+      var fullPath = !opts.root ? resolve(path8) : path8;
       return this.sendFile(fullPath, opts, done);
     };
     res.contentType = res.type = function contentType(type) {
@@ -23721,11 +23721,11 @@ var require_serve_static = __commonJS({
         }
         var forwardError = !fallthrough;
         var originalUrl = parseUrl.original(req);
-        var path6 = parseUrl(req).pathname;
-        if (path6 === "/" && originalUrl.pathname.substr(-1) !== "/") {
-          path6 = "";
+        var path7 = parseUrl(req).pathname;
+        if (path7 === "/" && originalUrl.pathname.substr(-1) !== "/") {
+          path7 = "";
         }
-        var stream = send(req, path6, opts);
+        var stream = send(req, path7, opts);
         stream.on("directory", onDirectory);
         if (setHeaders) {
           stream.on("headers", setHeaders);
@@ -23792,7 +23792,7 @@ var require_express = __commonJS({
     var EventEmitter = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router16 = require_router();
+    var Router17 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -23814,8 +23814,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router16.Route;
-    exports.Router = Router16;
+    exports.Route = Router17.Route;
+    exports.Router = Router17;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -24373,8 +24373,8 @@ var require_req = __commonJS({
       if (req.originalUrl) {
         _req.url = req.originalUrl;
       } else {
-        const path6 = req.path;
-        _req.url = typeof path6 === "string" ? path6 : req.url ? req.url.path || req.url : void 0;
+        const path7 = req.path;
+        _req.url = typeof path7 === "string" ? path7 : req.url ? req.url.path || req.url : void 0;
       }
       if (req.query) {
         _req.query = req.query;
@@ -24539,14 +24539,14 @@ var require_redact = __commonJS({
       }
       return obj;
     }
-    function parsePath(path6) {
+    function parsePath(path7) {
       const parts = [];
       let current = "";
       let inBrackets = false;
       let inQuotes = false;
       let quoteChar = "";
-      for (let i = 0; i < path6.length; i++) {
-        const char2 = path6[i];
+      for (let i = 0; i < path7.length; i++) {
+        const char2 = path7[i];
         if (!inBrackets && char2 === ".") {
           if (current) {
             parts.push(current);
@@ -24677,10 +24677,10 @@ var require_redact = __commonJS({
       return current;
     }
     function redactPaths(obj, paths, censor, remove = false) {
-      for (const path6 of paths) {
-        const parts = parsePath(path6);
+      for (const path7 of paths) {
+        const parts = parsePath(path7);
         if (parts.includes("*")) {
-          redactWildcardPath(obj, parts, censor, path6, remove);
+          redactWildcardPath(obj, parts, censor, path7, remove);
         } else {
           if (remove) {
             removeKey(obj, parts);
@@ -24765,8 +24765,8 @@ var require_redact = __commonJS({
           }
         } else {
           if (afterWildcard.includes("*")) {
-            const wrappedCensor = typeof censor === "function" ? (value, path6) => {
-              const fullPath = [...pathArray.slice(0, pathLength), ...path6];
+            const wrappedCensor = typeof censor === "function" ? (value, path7) => {
+              const fullPath = [...pathArray.slice(0, pathLength), ...path7];
               return censor(value, fullPath);
             } : censor;
             redactWildcardPath(current, afterWildcard, wrappedCensor, originalPath, remove);
@@ -24801,8 +24801,8 @@ var require_redact = __commonJS({
         return null;
       }
       const pathStructure = /* @__PURE__ */ new Map();
-      for (const path6 of pathsToClone) {
-        const parts = parsePath(path6);
+      for (const path7 of pathsToClone) {
+        const parts = parsePath(path7);
         let current = pathStructure;
         for (let i = 0; i < parts.length; i++) {
           const part = parts[i];
@@ -24854,24 +24854,24 @@ var require_redact = __commonJS({
       }
       return cloneSelectively(obj, pathStructure);
     }
-    function validatePath(path6) {
-      if (typeof path6 !== "string") {
+    function validatePath(path7) {
+      if (typeof path7 !== "string") {
         throw new Error("Paths must be (non-empty) strings");
       }
-      if (path6 === "") {
+      if (path7 === "") {
         throw new Error("Invalid redaction path ()");
       }
-      if (path6.includes("..")) {
-        throw new Error(`Invalid redaction path (${path6})`);
+      if (path7.includes("..")) {
+        throw new Error(`Invalid redaction path (${path7})`);
       }
-      if (path6.includes(",")) {
-        throw new Error(`Invalid redaction path (${path6})`);
+      if (path7.includes(",")) {
+        throw new Error(`Invalid redaction path (${path7})`);
       }
       let bracketCount = 0;
       let inQuotes = false;
       let quoteChar = "";
-      for (let i = 0; i < path6.length; i++) {
-        const char2 = path6[i];
+      for (let i = 0; i < path7.length; i++) {
+        const char2 = path7[i];
         if ((char2 === '"' || char2 === "'") && bracketCount > 0) {
           if (!inQuotes) {
             inQuotes = true;
@@ -24885,20 +24885,20 @@ var require_redact = __commonJS({
         } else if (char2 === "]" && !inQuotes) {
           bracketCount--;
           if (bracketCount < 0) {
-            throw new Error(`Invalid redaction path (${path6})`);
+            throw new Error(`Invalid redaction path (${path7})`);
           }
         }
       }
       if (bracketCount !== 0) {
-        throw new Error(`Invalid redaction path (${path6})`);
+        throw new Error(`Invalid redaction path (${path7})`);
       }
     }
     function validatePaths(paths) {
       if (!Array.isArray(paths)) {
         throw new TypeError("paths must be an array");
       }
-      for (const path6 of paths) {
-        validatePath(path6);
+      for (const path7 of paths) {
+        validatePath(path7);
       }
     }
     function slowRedact(options = {}) {
@@ -25066,8 +25066,8 @@ var require_redaction = __commonJS({
         if (shape[k] === null) {
           o[k] = (value) => topCensor(value, [k]);
         } else {
-          const wrappedCensor = typeof censor === "function" ? (value, path6) => {
-            return censor(value, [k, ...path6]);
+          const wrappedCensor = typeof censor === "function" ? (value, path7) => {
+            return censor(value, [k, ...path7]);
           } : censor;
           o[k] = Redact({
             paths: shape[k],
@@ -25285,10 +25285,10 @@ var require_atomic_sleep = __commonJS({
 var require_sonic_boom = __commonJS({
   "../../node_modules/.pnpm/sonic-boom@4.2.1/node_modules/sonic-boom/index.js"(exports, module) {
     "use strict";
-    var fs6 = __require("fs");
+    var fs7 = __require("fs");
     var EventEmitter = __require("events");
     var inherits = __require("util").inherits;
-    var path6 = __require("path");
+    var path7 = __require("path");
     var sleep = require_atomic_sleep();
     var assert = __require("assert");
     var BUSY_WRITE_TIMEOUT = 100;
@@ -25342,20 +25342,20 @@ var require_sonic_boom = __commonJS({
       const mode = sonic.mode;
       if (sonic.sync) {
         try {
-          if (sonic.mkdir) fs6.mkdirSync(path6.dirname(file), { recursive: true });
-          const fd = fs6.openSync(file, flags, mode);
+          if (sonic.mkdir) fs7.mkdirSync(path7.dirname(file), { recursive: true });
+          const fd = fs7.openSync(file, flags, mode);
           fileOpened(null, fd);
         } catch (err) {
           fileOpened(err);
           throw err;
         }
       } else if (sonic.mkdir) {
-        fs6.mkdir(path6.dirname(file), { recursive: true }, (err) => {
+        fs7.mkdir(path7.dirname(file), { recursive: true }, (err) => {
           if (err) return fileOpened(err);
-          fs6.open(file, flags, mode, fileOpened);
+          fs7.open(file, flags, mode, fileOpened);
         });
       } else {
-        fs6.open(file, flags, mode, fileOpened);
+        fs7.open(file, flags, mode, fileOpened);
       }
     }
     function SonicBoom(opts) {
@@ -25396,8 +25396,8 @@ var require_sonic_boom = __commonJS({
         this.flush = flushBuffer;
         this.flushSync = flushBufferSync;
         this._actualWrite = actualWriteBuffer;
-        fsWriteSync = () => fs6.writeSync(this.fd, this._writingBuf);
-        fsWrite = () => fs6.write(this.fd, this._writingBuf, this.release);
+        fsWriteSync = () => fs7.writeSync(this.fd, this._writingBuf);
+        fsWrite = () => fs7.write(this.fd, this._writingBuf, this.release);
       } else if (contentMode === void 0 || contentMode === kContentModeUtf8) {
         this._writingBuf = "";
         this.write = write;
@@ -25406,15 +25406,15 @@ var require_sonic_boom = __commonJS({
         this._actualWrite = actualWrite;
         fsWriteSync = () => {
           if (Buffer.isBuffer(this._writingBuf)) {
-            return fs6.writeSync(this.fd, this._writingBuf);
+            return fs7.writeSync(this.fd, this._writingBuf);
           }
-          return fs6.writeSync(this.fd, this._writingBuf, "utf8");
+          return fs7.writeSync(this.fd, this._writingBuf, "utf8");
         };
         fsWrite = () => {
           if (Buffer.isBuffer(this._writingBuf)) {
-            return fs6.write(this.fd, this._writingBuf, this.release);
+            return fs7.write(this.fd, this._writingBuf, this.release);
           }
-          return fs6.write(this.fd, this._writingBuf, "utf8", this.release);
+          return fs7.write(this.fd, this._writingBuf, "utf8", this.release);
         };
       } else {
         throw new Error(`SonicBoom supports "${kContentModeUtf8}" and "${kContentModeBuffer}", but passed ${contentMode}`);
@@ -25471,7 +25471,7 @@ var require_sonic_boom = __commonJS({
           }
         }
         if (this._fsync) {
-          fs6.fsyncSync(this.fd);
+          fs7.fsyncSync(this.fd);
         }
         const len = this._len;
         if (this._reopening) {
@@ -25585,7 +25585,7 @@ var require_sonic_boom = __commonJS({
       const onDrain = () => {
         if (!this._fsync) {
           try {
-            fs6.fsync(this.fd, (err) => {
+            fs7.fsync(this.fd, (err) => {
               this._flushPending = false;
               cb(err);
             });
@@ -25687,7 +25687,7 @@ var require_sonic_boom = __commonJS({
       const fd = this.fd;
       this.once("ready", () => {
         if (fd !== this.fd) {
-          fs6.close(fd, (err) => {
+          fs7.close(fd, (err) => {
             if (err) {
               return this.emit("error", err);
             }
@@ -25736,7 +25736,7 @@ var require_sonic_boom = __commonJS({
           buf = this._bufs[0];
         }
         try {
-          const n = Buffer.isBuffer(buf) ? fs6.writeSync(this.fd, buf) : fs6.writeSync(this.fd, buf, "utf8");
+          const n = Buffer.isBuffer(buf) ? fs7.writeSync(this.fd, buf) : fs7.writeSync(this.fd, buf, "utf8");
           const releasedBufObj = releaseWritingBuf(buf, this._len, n);
           buf = releasedBufObj.writingBuf;
           this._len = releasedBufObj.len;
@@ -25752,7 +25752,7 @@ var require_sonic_boom = __commonJS({
         }
       }
       try {
-        fs6.fsyncSync(this.fd);
+        fs7.fsyncSync(this.fd);
       } catch {
       }
     }
@@ -25773,7 +25773,7 @@ var require_sonic_boom = __commonJS({
           buf = mergeBuf(this._bufs[0], this._lens[0]);
         }
         try {
-          const n = fs6.writeSync(this.fd, buf);
+          const n = fs7.writeSync(this.fd, buf);
           buf = buf.subarray(n);
           this._len = Math.max(this._len - n, 0);
           if (buf.length <= 0) {
@@ -25801,13 +25801,13 @@ var require_sonic_boom = __commonJS({
       this._writingBuf = this._writingBuf.length ? this._writingBuf : this._bufs.shift() || "";
       if (this.sync) {
         try {
-          const written = Buffer.isBuffer(this._writingBuf) ? fs6.writeSync(this.fd, this._writingBuf) : fs6.writeSync(this.fd, this._writingBuf, "utf8");
+          const written = Buffer.isBuffer(this._writingBuf) ? fs7.writeSync(this.fd, this._writingBuf) : fs7.writeSync(this.fd, this._writingBuf, "utf8");
           release(null, written);
         } catch (err) {
           release(err);
         }
       } else {
-        fs6.write(this.fd, this._writingBuf, release);
+        fs7.write(this.fd, this._writingBuf, release);
       }
     }
     function actualWriteBuffer() {
@@ -25816,7 +25816,7 @@ var require_sonic_boom = __commonJS({
       this._writingBuf = this._writingBuf.length ? this._writingBuf : mergeBuf(this._bufs.shift(), this._lens.shift());
       if (this.sync) {
         try {
-          const written = fs6.writeSync(this.fd, this._writingBuf);
+          const written = fs7.writeSync(this.fd, this._writingBuf);
           release(null, written);
         } catch (err) {
           release(err);
@@ -25825,7 +25825,7 @@ var require_sonic_boom = __commonJS({
         if (kCopyBuffer) {
           this._writingBuf = Buffer.from(this._writingBuf);
         }
-        fs6.write(this.fd, this._writingBuf, release);
+        fs7.write(this.fd, this._writingBuf, release);
       }
     }
     function actualClose(sonic) {
@@ -25841,12 +25841,12 @@ var require_sonic_boom = __commonJS({
       sonic._lens = [];
       assert(typeof sonic.fd === "number", `sonic.fd must be a number, got ${typeof sonic.fd}`);
       try {
-        fs6.fsync(sonic.fd, closeWrapped);
+        fs7.fsync(sonic.fd, closeWrapped);
       } catch {
       }
       function closeWrapped() {
         if (sonic.fd !== 1 && sonic.fd !== 2) {
-          fs6.close(sonic.fd, done);
+          fs7.close(sonic.fd, done);
         } else {
           done();
         }
@@ -29210,8 +29210,8 @@ var require_node2 = __commonJS({
           }
           break;
         case "FILE":
-          var fs6 = __require("fs");
-          stream2 = new fs6.SyncWriteStream(fd2, { autoClose: false });
+          var fs7 = __require("fs");
+          stream2 = new fs7.SyncWriteStream(fd2, { autoClose: false });
           stream2._type = "fs";
           break;
         case "PIPE":
@@ -42031,12 +42031,12 @@ var require_query2 = __commonJS({
         this._fields.push([]);
         return this.readField;
       }
-      _streamLocalInfile(connection, path6) {
+      _streamLocalInfile(connection, path7) {
         if (this._streamFactory) {
-          this._localStream = this._streamFactory(path6);
+          this._localStream = this._streamFactory(path7);
         } else {
           this._localStreamError = new Error(
-            `As a result of LOCAL INFILE command server wants to read ${path6} file, but as of v2.0 you must provide streamFactory option returning ReadStream.`
+            `As a result of LOCAL INFILE command server wants to read ${path7} file, but as of v2.0 you must provide streamFactory option returning ReadStream.`
           );
           connection.writePacket(EmptyPacket);
           return this.infileOk;
@@ -55514,11 +55514,11 @@ var require_mime_types2 = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path6) {
-      if (!path6 || typeof path6 !== "string") {
+    function lookup(path7) {
+      if (!path7 || typeof path7 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path6).toLowerCase().substr(1);
+      var extension2 = extname("x." + path7).toLowerCase().substr(1);
       if (!extension2) {
         return false;
       }
@@ -55820,11 +55820,11 @@ var require_form_data = __commonJS({
     "use strict";
     var CombinedStream = require_combined_stream();
     var util2 = __require("util");
-    var path6 = __require("path");
+    var path7 = __require("path");
     var http = __require("http");
     var https = __require("https");
     var parseUrl = __require("url").parse;
-    var fs6 = __require("fs");
+    var fs7 = __require("fs");
     var Stream = __require("stream").Stream;
     var crypto2 = __require("crypto");
     var mime = require_mime_types2();
@@ -55894,7 +55894,7 @@ var require_form_data = __commonJS({
         if (value.end != void 0 && value.end != Infinity && value.start != void 0) {
           callback(null, value.end + 1 - (value.start ? value.start : 0));
         } else {
-          fs6.stat(value.path, function(err, stat) {
+          fs7.stat(value.path, function(err, stat) {
             if (err) {
               callback(err);
               return;
@@ -55951,11 +55951,11 @@ var require_form_data = __commonJS({
     FormData2.prototype._getContentDisposition = function(value, options) {
       var filename;
       if (typeof options.filepath === "string") {
-        filename = path6.normalize(options.filepath).replace(/\\/g, "/");
+        filename = path7.normalize(options.filepath).replace(/\\/g, "/");
       } else if (options.filename || value && (value.name || value.path)) {
-        filename = path6.basename(options.filename || value && (value.name || value.path));
+        filename = path7.basename(options.filename || value && (value.name || value.path));
       } else if (value && value.readable && hasOwn(value, "httpVersion")) {
-        filename = path6.basename(value.client._httpMessage.path || "");
+        filename = path7.basename(value.client._httpMessage.path || "");
       }
       if (filename) {
         return 'filename="' + escapeHeaderParam(filename) + '"';
@@ -57129,7 +57129,7 @@ var require_axios = __commonJS({
     var https = __require("https");
     var http2 = __require("http2");
     var util2 = __require("util");
-    var path6 = __require("path");
+    var path7 = __require("path");
     var followRedirects = require_follow_redirects();
     var zlib = __require("zlib");
     var stream = __require("stream");
@@ -58197,9 +58197,9 @@ var require_axios = __commonJS({
     function removeBrackets(key) {
       return utils$1.endsWith(key, "[]") ? key.slice(0, -2) : key;
     }
-    function renderKey(path7, key, dots) {
-      if (!path7) return key;
-      return path7.concat(key).map(function each(token, i) {
+    function renderKey(path8, key, dots) {
+      if (!path8) return key;
+      return path8.concat(key).map(function each(token, i) {
         token = removeBrackets(token);
         return !dots && i ? "[" + token + "]" : token;
       }).join(dots ? "." : "");
@@ -58277,13 +58277,13 @@ var require_axios = __commonJS({
           return currentValue;
         });
       }
-      function defaultVisitor(value, key, path7) {
+      function defaultVisitor(value, key, path8) {
         let arr = value;
         if (utils$1.isReactNative(formData) && utils$1.isReactNativeBlob(value)) {
-          formData.append(renderKey(path7, key, dots), convertValue(value));
+          formData.append(renderKey(path8, key, dots), convertValue(value));
           return false;
         }
-        if (value && !path7 && typeof value === "object") {
+        if (value && !path8 && typeof value === "object") {
           if (utils$1.endsWith(key, "{}")) {
             key = metaTokens ? key : key.slice(0, -2);
             value = stringifyWithDepthLimit(value, 1);
@@ -58302,7 +58302,7 @@ var require_axios = __commonJS({
         if (isVisitable(value)) {
           return true;
         }
-        formData.append(renderKey(path7, key, dots), convertValue(value));
+        formData.append(renderKey(path8, key, dots), convertValue(value));
         return false;
       }
       const exposedHelpers = Object.assign(predicates, {
@@ -58310,17 +58310,17 @@ var require_axios = __commonJS({
         convertValue,
         isVisitable
       });
-      function build(value, path7, depth = 0) {
+      function build(value, path8, depth = 0) {
         if (utils$1.isUndefined(value)) return;
         throwIfMaxDepthExceeded(depth);
         if (stack.indexOf(value) !== -1) {
-          throw new Error("Circular reference detected in " + path7.join("."));
+          throw new Error("Circular reference detected in " + path8.join("."));
         }
         stack.push(value);
         utils$1.forEach(value, function each(el, key) {
-          const result = !(utils$1.isUndefined(el) || el === null) && visitor.call(formData, el, utils$1.isString(key) ? key.trim() : key, path7, exposedHelpers);
+          const result = !(utils$1.isUndefined(el) || el === null) && visitor.call(formData, el, utils$1.isString(key) ? key.trim() : key, path8, exposedHelpers);
           if (result === true) {
-            build(el, path7 ? path7.concat(key) : [key], depth + 1);
+            build(el, path8 ? path8.concat(key) : [key], depth + 1);
           }
         });
         stack.pop();
@@ -58509,7 +58509,7 @@ var require_axios = __commonJS({
     };
     function toURLEncodedForm(data, options) {
       return toFormData(data, new platform.classes.URLSearchParams(), {
-        visitor: function(value, key, path7, helpers) {
+        visitor: function(value, key, path8, helpers) {
           if (platform.isNode && utils$1.isBuffer(value)) {
             this.append(key, value.toString("base64"));
             return false;
@@ -58526,14 +58526,14 @@ var require_axios = __commonJS({
       }
     }
     function parsePropPath(name) {
-      const path7 = [];
+      const path8 = [];
       const pattern = /[^.[\]]+|\[([^.[\]]*)]/g;
       let match;
       while ((match = pattern.exec(name)) !== null) {
-        throwIfDepthExceeded(path7.length);
-        path7.push(match[0] === "[]" ? "" : match[1] || match[0]);
+        throwIfDepthExceeded(path8.length);
+        path8.push(match[0] === "[]" ? "" : match[1] || match[0]);
       }
-      return path7;
+      return path8;
     }
     function arrayToObject(arr) {
       const obj = {};
@@ -58548,12 +58548,12 @@ var require_axios = __commonJS({
       return obj;
     }
     function formDataToJSON(formData) {
-      function buildPath(path7, value, target, index) {
+      function buildPath(path8, value, target, index) {
         throwIfDepthExceeded(index);
-        let name = path7[index++];
+        let name = path8[index++];
         if (name === "__proto__") return true;
         const isNumericKey = Number.isFinite(+name);
-        const isLast = index >= path7.length;
+        const isLast = index >= path8.length;
         name = !name && utils$1.isArray(target) ? target.length : name;
         if (isLast) {
           if (utils$1.hasOwnProp(target, name)) {
@@ -58566,7 +58566,7 @@ var require_axios = __commonJS({
         if (!utils$1.hasOwnProp(target, name) || !utils$1.isObject(target[name])) {
           target[name] = [];
         }
-        const result = buildPath(path7, value, target[name], index);
+        const result = buildPath(path8, value, target[name], index);
         if (result && utils$1.isArray(target[name])) {
           target[name] = arrayToObject(target[name]);
         }
@@ -60177,8 +60177,8 @@ var require_axios = __commonJS({
           const allowedSocketPaths = own2("allowedSocketPaths");
           if (allowedSocketPaths != null) {
             const allowed = Array.isArray(allowedSocketPaths) ? allowedSocketPaths : [allowedSocketPaths];
-            const resolvedSocket = path6.resolve(socketPath);
-            const isAllowed = allowed.some((entry) => typeof entry === "string" && path6.resolve(entry) === resolvedSocket);
+            const resolvedSocket = path7.resolve(socketPath);
+            const isAllowed = allowed.some((entry) => typeof entry === "string" && path7.resolve(entry) === resolvedSocket);
             if (!isAllowed) {
               return reject(new AxiosError(`socketPath "${socketPath}" is not permitted by allowedSocketPaths`, AxiosError.ERR_BAD_OPTION_VALUE, config));
             }
@@ -60477,14 +60477,14 @@ var require_axios = __commonJS({
     var cookies = platform.hasStandardBrowserEnv ? (
       // Standard browser envs support document.cookie
       {
-        write(name, value, expires, path7, domain, secure, sameSite) {
+        write(name, value, expires, path8, domain, secure, sameSite) {
           if (typeof document === "undefined") return;
           const cookie = [`${name}=${encodeURIComponent(value)}`];
           if (utils$1.isNumber(expires)) {
             cookie.push(`expires=${new Date(expires).toUTCString()}`);
           }
-          if (utils$1.isString(path7)) {
-            cookie.push(`path=${path7}`);
+          if (utils$1.isString(path8)) {
+            cookie.push(`path=${path8}`);
           }
           if (utils$1.isString(domain)) {
             cookie.push(`domain=${domain}`);
@@ -65613,19 +65613,19 @@ var require_utils4 = __commonJS({
       if (decode)
         return decode(data, hint);
     }
-    function basename(path6) {
-      if (typeof path6 !== "string")
+    function basename(path7) {
+      if (typeof path7 !== "string")
         return "";
-      for (let i = path6.length - 1; i >= 0; --i) {
-        switch (path6.charCodeAt(i)) {
+      for (let i = path7.length - 1; i >= 0; --i) {
+        switch (path7.charCodeAt(i)) {
           case 47:
           // '/'
           case 92:
-            path6 = path6.slice(i + 1);
-            return path6 === ".." || path6 === "." ? "" : path6;
+            path7 = path7.slice(i + 1);
+            return path7 === ".." || path7 === "." ? "" : path7;
         }
       }
-      return path6 === ".." || path6 === "." ? "" : path6;
+      return path7 === ".." || path7 === "." ? "" : path7;
     }
     var TOKEN = [
       0,
@@ -69482,9 +69482,9 @@ var require_make_middleware = __commonJS({
 // ../../node_modules/.pnpm/multer@2.2.0/node_modules/multer/storage/disk.js
 var require_disk = __commonJS({
   "../../node_modules/.pnpm/multer@2.2.0/node_modules/multer/storage/disk.js"(exports, module) {
-    var fs6 = __require("fs");
+    var fs7 = __require("fs");
     var os = __require("os");
-    var path6 = __require("path");
+    var path7 = __require("path");
     var crypto2 = __require("crypto");
     function getFilename(req, file, cb) {
       crypto2.randomBytes(16, function(err, raw) {
@@ -69497,7 +69497,7 @@ var require_disk = __commonJS({
     function DiskStorage(opts) {
       this.getFilename = opts.filename || getFilename;
       if (typeof opts.destination === "string") {
-        fs6.mkdirSync(opts.destination, { recursive: true });
+        fs7.mkdirSync(opts.destination, { recursive: true });
         this.getDestination = function($0, $1, cb) {
           cb(null, opts.destination);
         };
@@ -69511,9 +69511,9 @@ var require_disk = __commonJS({
         if (err) return cb(err);
         that.getFilename(req, file, function(err2, filename) {
           if (err2) return cb(err2);
-          var finalPath = path6.join(destination, filename);
+          var finalPath = path7.join(destination, filename);
           if (file.stream.destroyed) return;
-          var outStream = fs6.createWriteStream(finalPath);
+          var outStream = fs7.createWriteStream(finalPath);
           file.path = finalPath;
           file.stream.pipe(outStream);
           outStream.on("error", cb);
@@ -69529,11 +69529,11 @@ var require_disk = __commonJS({
       });
     };
     DiskStorage.prototype._removeFile = function _removeFile(req, file, cb) {
-      var path7 = file.path;
+      var path8 = file.path;
       delete file.destination;
       delete file.filename;
       delete file.path;
-      fs6.unlink(path7, cb);
+      fs7.unlink(path8, cb);
     };
     module.exports = function(opts) {
       return new DiskStorage(opts);
@@ -72993,20 +72993,20 @@ var require_multer = __commonJS({
 });
 
 // src/index.ts
-import fs5 from "node:fs";
-import path5 from "node:path";
+import fs6 from "node:fs";
+import path6 from "node:path";
 
 // src/app.ts
-var import_express16 = __toESM(require_express2(), 1);
+var import_express17 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
 var import_cookie_parser = __toESM(require_cookie_parser(), 1);
 var import_express_session = __toESM(require_express_session(), 1);
-import path4 from "node:path";
-import fs4 from "node:fs";
+import path5 from "node:path";
+import fs5 from "node:fs";
 
 // src/routes/index.ts
-var import_express15 = __toESM(require_express2(), 1);
+var import_express16 = __toESM(require_express2(), 1);
 
 // src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -73370,8 +73370,8 @@ function getErrorMap() {
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path6, errorMaps, issueData } = params;
-  const fullPath = [...path6, ...issueData.path || []];
+  const { data, path: path7, errorMaps, issueData } = params;
+  const fullPath = [...path7, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -73486,11 +73486,11 @@ var errorUtil;
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path6, key) {
+  constructor(parent, value, path7, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path6;
+    this._path = path7;
     this._key = key;
   }
   get path() {
@@ -80055,7 +80055,7 @@ var TransactionRollbackError = class extends DrizzleError {
 function mapResultRow(columns, row, joinsNotNullableMap) {
   const nullifyMap = {};
   const result = columns.reduce(
-    (result2, { path: path6, field }, columnIndex) => {
+    (result2, { path: path7, field }, columnIndex) => {
       let decoder;
       if (is(field, Column)) {
         decoder = field;
@@ -80067,8 +80067,8 @@ function mapResultRow(columns, row, joinsNotNullableMap) {
         decoder = field.sql.decoder;
       }
       let node = result2;
-      for (const [pathChunkIndex, pathChunk] of path6.entries()) {
-        if (pathChunkIndex < path6.length - 1) {
+      for (const [pathChunkIndex, pathChunk] of path7.entries()) {
+        if (pathChunkIndex < path7.length - 1) {
           if (!(pathChunk in node)) {
             node[pathChunk] = {};
           }
@@ -80076,8 +80076,8 @@ function mapResultRow(columns, row, joinsNotNullableMap) {
         } else {
           const rawValue = row[columnIndex];
           const value = node[pathChunk] = rawValue === null ? null : decoder.mapFromDriverValue(rawValue);
-          if (joinsNotNullableMap && is(field, Column) && path6.length === 2) {
-            const objectName = path6[0];
+          if (joinsNotNullableMap && is(field, Column) && path7.length === 2) {
+            const objectName = path7[0];
             if (!(objectName in nullifyMap)) {
               nullifyMap[objectName] = value === null ? getTableName(field.table) : false;
             } else if (typeof nullifyMap[objectName] === "string" && nullifyMap[objectName] !== getTableName(field.table)) {
@@ -84968,6 +84968,7 @@ var schema_exports = {};
 __export(schema_exports, {
   cartTable: () => cartTable,
   contactsTable: () => contactsTable,
+  homepageConfigTable: () => homepageConfigTable,
   orderItemsTable: () => orderItemsTable,
   orderStatusHistoryTable: () => orderStatusHistoryTable,
   ordersTable: () => ordersTable,
@@ -84978,20 +84979,49 @@ __export(schema_exports, {
 });
 var productsTable = mysqlTable("products", {
   id: varchar("id", { length: 100 }).primaryKey(),
+  sku: varchar("sku", { length: 100 }),
   name: varchar("name", { length: 255 }).notNull(),
+  brand: varchar("brand", { length: 100 }).default("ZAFS"),
   cat: varchar("cat", { length: 100 }).notNull(),
   sub: varchar("sub", { length: 100 }).notNull(),
+  collection: varchar("collection", { length: 100 }),
   price: int("price").notNull(),
   mrp: int("mrp"),
   discount: int("discount").default(0),
+  priceRange: json("price_range").$type(),
   badge: varchar("badge", { length: 100 }),
   image: varchar("image", { length: 500 }).notNull(),
   gallery: json("gallery").$type(),
+  video: varchar("video", { length: 500 }),
+  customerPhotos: json("customer_photos").$type(),
+  lifestyleImages: json("lifestyle_images").$type(),
+  sizeChartImage: varchar("size_chart_image", { length: 500 }),
+  material: varchar("material", { length: 200 }),
+  ringSize: varchar("ring_size", { length: 100 }),
+  ringType: varchar("ring_type", { length: 100 }),
+  gauge: varchar("gauge", { length: 100 }),
+  finish: varchar("finish", { length: 200 }),
+  weight: varchar("weight", { length: 100 }),
+  manufacturingTime: varchar("manufacturing_time", { length: 100 }),
+  country: varchar("country", { length: 100 }).default("India"),
+  hsCode: varchar("hs_code", { length: 100 }),
+  availability: varchar("availability", { length: 100 }).default("In Stock"),
+  estimatedDelivery: varchar("estimated_delivery", { length: 100 }),
+  colors: json("colors").$type(),
+  sizes: json("sizes").$type(),
+  highlights: json("highlights").$type(),
+  materials: json("materials").$type(),
   desc: text("desc"),
   tags: json("tags").$type(),
   inStock: boolean("in_stock").notNull().default(true),
   stockCount: int("stock_count").default(100),
+  ebayUrl: varchar("ebay_url", { length: 500 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+var homepageConfigTable = mysqlTable("homepage_config", {
+  id: varchar("id", { length: 50 }).primaryKey().default("default"),
+  data: json("data").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 var usersTable = mysqlTable("users", {
@@ -85083,8 +85113,10 @@ import fs from "node:fs";
 import path from "node:path";
 function loadEnv() {
   const envPaths = [
+    path.resolve(process.cwd(), "artifacts", "api-server", ".env"),
     path.resolve(process.cwd(), ".env"),
     path.resolve(__dirname, ".env"),
+    path.resolve(__dirname, "..", "..", "artifacts", "api-server", ".env"),
     "/home/u933632718/domains/zafexcollectibles.com/backend/.env"
   ];
   for (const p of envPaths) {
@@ -85141,6 +85173,18 @@ function createPool2() {
 var pool = createPool2();
 var db = drizzle(pool, { schema: schema_exports, mode: "default" });
 async function initDatabase() {
+  loadEnv();
+  const host = process.env["DB_HOST"] || "127.0.0.1";
+  const user = process.env["DB_USER"] || "root";
+  const password = process.env["DB_PASSWORD"] || "";
+  const database = process.env["DB_NAME"] || "zafex_db";
+  const port2 = Number(process.env["DB_PORT"] || "3306");
+  try {
+    const rawConn = await import_promise.default.createConnection({ host, user, password, port: port2 });
+    await rawConn.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
+    await rawConn.end();
+  } catch {
+  }
   const connection = await pool.getConnection();
   try {
     await connection.query(`
@@ -85176,17 +85220,40 @@ async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
-    try {
-      await connection.query(`ALTER TABLE products ADD COLUMN mrp INT NULL;`);
-    } catch {
-    }
-    try {
-      await connection.query(`ALTER TABLE products ADD COLUMN discount INT DEFAULT 0;`);
-    } catch {
-    }
-    try {
-      await connection.query(`ALTER TABLE products ADD COLUMN gallery JSON NULL;`);
-    } catch {
+    const extraColumns = [
+      "sku VARCHAR(100) NULL",
+      "brand VARCHAR(100) DEFAULT 'ZAFS'",
+      "collection VARCHAR(100) NULL",
+      "mrp INT NULL",
+      "discount INT DEFAULT 0",
+      "price_range JSON NULL",
+      "gallery JSON NULL",
+      "video VARCHAR(500) NULL",
+      "customer_photos JSON NULL",
+      "lifestyle_images JSON NULL",
+      "size_chart_image VARCHAR(500) NULL",
+      "material VARCHAR(200) NULL",
+      "ring_size VARCHAR(100) NULL",
+      "ring_type VARCHAR(100) NULL",
+      "gauge VARCHAR(100) NULL",
+      "finish VARCHAR(200) NULL",
+      "weight VARCHAR(100) NULL",
+      "manufacturing_time VARCHAR(100) NULL",
+      "country VARCHAR(100) DEFAULT 'India'",
+      "hs_code VARCHAR(100) NULL",
+      "availability VARCHAR(100) DEFAULT 'In Stock'",
+      "estimated_delivery VARCHAR(100) NULL",
+      "colors JSON NULL",
+      "sizes JSON NULL",
+      "highlights JSON NULL",
+      "materials JSON NULL",
+      "ebay_url VARCHAR(500) NULL"
+    ];
+    for (const col of extraColumns) {
+      try {
+        await connection.query(`ALTER TABLE products ADD COLUMN ${col};`);
+      } catch {
+      }
     }
     await connection.query(`
       CREATE TABLE IF NOT EXISTS orders (
@@ -85282,6 +85349,13 @@ async function initDatabase() {
         message TEXT NOT NULL,
         is_read BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS homepage_config (
+        id VARCHAR(50) PRIMARY KEY DEFAULT 'default',
+        data JSON NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
   } finally {
@@ -86137,7 +86211,12 @@ router2.post("/auth/register", authLimiter, async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Registration error");
-    res.status(500).json({ error: "Registration failed. " + (err instanceof Error ? err.message : "") });
+    const errMsg = err instanceof Error ? err.message : "";
+    if (errMsg.includes("Failed query") || errMsg.includes("ACCESS_DENIED") || errMsg.includes("ECONNREFUSED")) {
+      res.status(500).json({ error: "Database connection failed. Please check your MySQL credentials (DB_PASSWORD) in .env file." });
+      return;
+    }
+    res.status(500).json({ error: "Registration failed. " + errMsg });
   }
 });
 router2.post("/auth/login", authLimiter, async (req, res) => {
@@ -86161,7 +86240,12 @@ router2.post("/auth/login", authLimiter, async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Login error");
-    res.status(500).json({ error: "Login failed. " + (err instanceof Error ? err.message : "") });
+    const errMsg = err instanceof Error ? err.message : "";
+    if (errMsg.includes("Failed query") || errMsg.includes("ACCESS_DENIED") || errMsg.includes("ECONNREFUSED")) {
+      res.status(500).json({ error: "Database connection failed. Please check your MySQL credentials (DB_PASSWORD) in .env file." });
+      return;
+    }
+    res.status(500).json({ error: "Login failed. " + errMsg });
   }
 });
 router2.post("/auth/logout", (req, res) => {
@@ -86942,10 +87026,10 @@ router10.post("/admin/login", (req, res) => {
     }
     const password = body?.password ?? (typeof body === "string" ? body : void 0);
     const p = String(password ?? "").trim();
-    const configuredPassword = String(process.env["ADMIN_PASSWORD"] || "admin123").trim();
-    const valid = p.length > 0 && (p === configuredPassword || p === "admin123" || p === "admin");
+    const configuredPassword = String(process.env["ADMIN_PASSWORD"] || "Admin@123").trim();
+    const valid = p.length > 0 && (p === configuredPassword || p === "Admin@123");
     if (!valid) {
-      res.status(401).json({ error: "Invalid password. Default is admin123 or admin." });
+      res.status(401).json({ error: "Wrong password" });
       return;
     }
     req.session.adminAuthenticated = true;
@@ -86993,16 +87077,23 @@ function requireAdmin(req, res, next) {
 var router11 = (0, import_express11.Router)();
 function getTargetImageDirs() {
   return [
-    path2.resolve(process.cwd(), "..", "public_html", "images"),
+    path2.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images"),
+    path2.resolve(process.cwd(), "artifacts", "zafex-collectibles", "dist", "public", "images"),
+    path2.resolve(process.cwd(), "hostinger-frontend", "images"),
+    path2.resolve(process.cwd(), "public", "images"),
     path2.resolve(process.cwd(), "public_html", "images"),
+    path2.resolve(process.cwd(), "..", "public_html", "images"),
     "/home/u933632718/domains/zafexcollectibles.com/public_html/images",
     "/home/u933632718/public_html/images",
-    path2.resolve(process.cwd(), "public", "images"),
-    path2.resolve(process.cwd(), "dist", "public", "images"),
     path2.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images")
   ];
 }
 function getPrimaryImagesDir() {
+  const localArtifactsDir = path2.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
+  try {
+    fs2.mkdirSync(localArtifactsDir, { recursive: true });
+  } catch {
+  }
   const hostingerDir = path2.resolve(process.cwd(), "..", "public_html", "images");
   if (fs2.existsSync(path2.resolve(process.cwd(), "..", "public_html"))) {
     try {
@@ -87019,12 +87110,7 @@ function getPrimaryImagesDir() {
     }
     return absHostinger;
   }
-  const localDir = path2.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images");
-  try {
-    fs2.mkdirSync(localDir, { recursive: true });
-  } catch {
-  }
-  return localDir;
+  return localArtifactsDir;
 }
 function writeImageToAllDirs(filename, buffer) {
   for (const d of getTargetImageDirs()) {
@@ -87113,7 +87199,43 @@ router11.post(
   safeUpload,
   async (req, res) => {
     try {
-      const { name, cat, sub, price, mrp, discount, badge, desc: description, tags, inStock, image: imageBase64, gallery: rawGallery } = req.body;
+      const {
+        name,
+        sku,
+        brand,
+        cat,
+        sub,
+        collection,
+        price,
+        mrp,
+        discount,
+        priceRangeMin,
+        priceRangeMax,
+        badge,
+        desc: description,
+        tags,
+        inStock,
+        stockCount,
+        image: imageBase64,
+        gallery: rawGallery,
+        video,
+        customerPhotos: rawCustomerPhotos,
+        lifestyleImages: rawLifestyleImages,
+        sizeChartImage: rawSizeChartImage,
+        material,
+        ringSize,
+        ringType,
+        gauge,
+        finish,
+        weight,
+        manufacturingTime,
+        country,
+        hsCode,
+        availability,
+        estimatedDelivery,
+        colors: rawColors,
+        ebayUrl
+      } = req.body;
       if (!name || !cat || !sub || !price && !mrp) {
         res.status(400).json({ error: "name, cat, sub and price or mrp are required" });
         return;
@@ -87127,28 +87249,74 @@ router11.post(
       } else if (imageBase64 && typeof imageBase64 === "string" && (imageBase64.startsWith("/images/") || imageBase64.startsWith("http"))) {
         imagePath = imageBase64;
       }
-      let galleryImages = [];
-      let parsedGallery = rawGallery;
-      if (typeof rawGallery === "string") {
-        try {
-          parsedGallery = JSON.parse(rawGallery);
-        } catch {
+      const processImageArray = (raw) => {
+        let list = [];
+        let parsed = raw;
+        if (typeof raw === "string") {
+          try {
+            parsed = JSON.parse(raw);
+          } catch {
+          }
         }
-      }
-      if (Array.isArray(parsedGallery)) {
-        for (const item of parsedGallery) {
-          if (typeof item === "string") {
-            if (item.startsWith("data:image/")) {
-              const saved = saveBase64Image(item);
-              if (saved) galleryImages.push(saved);
-            } else if (item.trim()) {
-              galleryImages.push(item.trim());
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            if (typeof item === "string") {
+              if (item.startsWith("data:image/")) {
+                const saved = saveBase64Image(item);
+                if (saved) list.push(saved);
+              } else if (item.trim()) {
+                list.push(item.trim());
+              }
             }
           }
         }
-      }
+        return list;
+      };
+      const galleryImages = processImageArray(rawGallery);
       if (galleryImages.length === 0 && imagePath) {
-        galleryImages = [imagePath];
+        galleryImages.push(imagePath);
+      }
+      const customerPhotos = processImageArray(rawCustomerPhotos).slice(0, 2);
+      const lifestyleImages = processImageArray(rawLifestyleImages);
+      let sizeChartImagePath = null;
+      if (rawSizeChartImage && typeof rawSizeChartImage === "string") {
+        if (rawSizeChartImage.startsWith("data:image/")) {
+          sizeChartImagePath = saveBase64Image(rawSizeChartImage);
+        } else if (rawSizeChartImage.trim()) {
+          sizeChartImagePath = rawSizeChartImage.trim();
+        }
+      }
+      const parseStringArray2 = (raw) => {
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw.map((s) => String(s).trim()).filter(Boolean);
+        if (typeof raw === "string") {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
+          } catch {
+          }
+          return raw.split(",").map((s) => s.trim()).filter(Boolean);
+        }
+        return [];
+      };
+      const sizesList = parseStringArray2(req.body.sizes);
+      const highlightsList = parseStringArray2(req.body.highlights);
+      const materialsList = parseStringArray2(req.body.materials);
+      let colorsList = [];
+      if (rawColors) {
+        if (Array.isArray(rawColors)) {
+          colorsList = rawColors;
+        } else if (typeof rawColors === "string") {
+          try {
+            colorsList = JSON.parse(rawColors);
+          } catch {
+            colorsList = rawColors.split(",").map((c) => c.trim()).filter(Boolean);
+          }
+        }
+      }
+      let priceRange = null;
+      if (priceRangeMin || priceRangeMax) {
+        priceRange = [Number(priceRangeMin) || Number(price) || 0, Number(priceRangeMax) || Number(price) || 0];
       }
       const id = generateId(name);
       const parsedTags = tags ? (typeof tags === "string" ? tags.split(",") : tags).map((t) => String(t).trim()).filter(Boolean) : [];
@@ -87157,18 +87325,43 @@ router11.post(
       let discountNum = mrpNum && mrpNum > finalPrice && mrpNum > 0 ? Math.round((mrpNum - finalPrice) / mrpNum * 100) : discount ? Number(discount) : 0;
       await db.insert(productsTable).values({
         id,
+        sku: sku || null,
         name,
+        brand: brand || "ZAFS",
         cat,
         sub,
+        collection: collection || null,
         price: finalPrice,
         mrp: mrpNum,
         discount: discountNum,
+        priceRange,
         badge: badge || null,
         image: imagePath,
         gallery: galleryImages.length ? galleryImages : [imagePath],
+        video: video || null,
+        customerPhotos: customerPhotos.length ? customerPhotos : null,
+        lifestyleImages: lifestyleImages.length ? lifestyleImages : null,
+        sizeChartImage: sizeChartImagePath,
+        material: material || null,
+        ringSize: ringSize || null,
+        ringType: ringType || null,
+        gauge: gauge || null,
+        finish: finish || null,
+        weight: weight || null,
+        manufacturingTime: manufacturingTime || null,
+        country: country || "India",
+        hsCode: hsCode || null,
+        availability: availability || "In Stock",
+        estimatedDelivery: estimatedDelivery || null,
+        colors: colorsList.length ? colorsList : null,
+        sizes: sizesList.length ? sizesList : null,
+        highlights: highlightsList.length ? highlightsList : null,
+        materials: materialsList.length ? materialsList : null,
         desc: description || null,
         tags: parsedTags.length ? parsedTags : null,
-        inStock: inStock !== false && inStock !== "false"
+        inStock: inStock !== false && inStock !== "false",
+        stockCount: stockCount ? Number(stockCount) : 100,
+        ebayUrl: ebayUrl || null
       });
       const [created] = await db.select().from(productsTable).where(eq(productsTable.id, id));
       res.status(201).json(created);
@@ -87184,7 +87377,43 @@ router11.put(
   async (req, res) => {
     try {
       const id = req.params["id"];
-      const { name, cat, sub, price, mrp, discount, badge, desc: description, tags, inStock, image: imageBase64, gallery: rawGallery } = req.body;
+      const {
+        name,
+        sku,
+        brand,
+        cat,
+        sub,
+        collection,
+        price,
+        mrp,
+        discount,
+        priceRangeMin,
+        priceRangeMax,
+        badge,
+        desc: description,
+        tags,
+        inStock,
+        stockCount,
+        image: imageBase64,
+        gallery: rawGallery,
+        video,
+        customerPhotos: rawCustomerPhotos,
+        lifestyleImages: rawLifestyleImages,
+        sizeChartImage: rawSizeChartImage,
+        material,
+        ringSize,
+        ringType,
+        gauge,
+        finish,
+        weight,
+        manufacturingTime,
+        country,
+        hsCode,
+        availability,
+        estimatedDelivery,
+        colors: rawColors,
+        ebayUrl
+      } = req.body;
       const existing = await db.select().from(productsTable).where(eq(productsTable.id, id));
       if (!existing.length) {
         res.status(404).json({ error: "Product not found" });
@@ -87204,28 +87433,30 @@ router11.put(
       } else if (imageBase64 && typeof imageBase64 === "string" && (imageBase64.startsWith("/images/") || imageBase64.startsWith("http"))) {
         imagePath = imageBase64;
       }
-      let galleryImages = [];
-      if (rawGallery !== void 0) {
-        let parsedGallery = rawGallery;
-        if (typeof rawGallery === "string") {
+      const processImageArray = (raw) => {
+        let list = [];
+        let parsed = raw;
+        if (typeof raw === "string") {
           try {
-            parsedGallery = JSON.parse(rawGallery);
+            parsed = JSON.parse(raw);
           } catch {
           }
         }
-        if (Array.isArray(parsedGallery)) {
-          for (const item of parsedGallery) {
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
             if (typeof item === "string") {
               if (item.startsWith("data:image/")) {
                 const saved = saveBase64Image(item);
-                if (saved) galleryImages.push(saved);
+                if (saved) list.push(saved);
               } else if (item.trim()) {
-                galleryImages.push(item.trim());
+                list.push(item.trim());
               }
             }
           }
         }
-      }
+        return list;
+      };
+      let galleryImages = rawGallery !== void 0 ? processImageArray(rawGallery) : existing[0].gallery ?? [imagePath];
       if (galleryImages.length > 0) {
         if (!galleryImages.includes(imagePath)) {
           imagePath = galleryImages[0];
@@ -87233,30 +87464,89 @@ router11.put(
       } else {
         galleryImages = [imagePath];
       }
+      const customerPhotos = rawCustomerPhotos !== void 0 ? processImageArray(rawCustomerPhotos).slice(0, 2) : existing[0].customerPhotos;
+      const lifestyleImages = rawLifestyleImages !== void 0 ? processImageArray(rawLifestyleImages) : existing[0].lifestyleImages;
+      let sizeChartImagePath = existing[0].sizeChartImage;
+      if (rawSizeChartImage !== void 0) {
+        if (typeof rawSizeChartImage === "string" && rawSizeChartImage.startsWith("data:image/")) {
+          sizeChartImagePath = saveBase64Image(rawSizeChartImage);
+        } else {
+          sizeChartImagePath = rawSizeChartImage || null;
+        }
+      }
+      let colorsList = existing[0].colors;
+      if (rawColors !== void 0) {
+        let parsedColors = rawColors;
+        if (typeof rawColors === "string") {
+          try {
+            parsedColors = JSON.parse(rawColors);
+          } catch {
+            parsedColors = rawColors.split(",").map((c) => c.trim()).filter(Boolean);
+          }
+        }
+        if (Array.isArray(parsedColors)) {
+          colorsList = parsedColors.map((c) => String(c).trim()).filter(Boolean);
+        } else {
+          colorsList = null;
+        }
+      }
+      let priceRange = existing[0].priceRange;
+      if (priceRangeMin !== void 0 || priceRangeMax !== void 0) {
+        if (priceRangeMin || priceRangeMax) {
+          priceRange = [Number(priceRangeMin) || existing[0].price, Number(priceRangeMax) || existing[0].price];
+        } else {
+          priceRange = null;
+        }
+      }
       const parsedTags = tags !== void 0 ? (typeof tags === "string" ? tags.split(",") : tags).map((t) => String(t).trim()).filter(Boolean) : existing[0].tags ?? [];
       let mrpNum = mrp !== void 0 ? mrp ? Number(mrp) : null : existing[0].mrp;
       let finalPrice = price !== void 0 && price !== "" ? Number(price) : existing[0].price;
       let discountNum = mrpNum && mrpNum > finalPrice && mrpNum > 0 ? Math.round((mrpNum - finalPrice) / mrpNum * 100) : discount !== void 0 ? Number(discount) : mrpNum && mrpNum > finalPrice ? Math.round((mrpNum - finalPrice) / mrpNum * 100) : 0;
       const updates = {
         ...name && { name },
+        ...sku !== void 0 && { sku: sku || null },
+        ...brand !== void 0 && { brand: brand || "ZAFS" },
         ...cat && { cat },
         ...sub && { sub },
+        ...collection !== void 0 && { collection: collection || null },
         price: finalPrice,
         mrp: mrpNum,
         discount: discountNum,
+        priceRange,
         badge: badge !== void 0 ? badge || null : existing[0].badge,
+        image: imagePath,
+        gallery: galleryImages,
+        ...video !== void 0 && { video: video || null },
+        customerPhotos: customerPhotos?.length ? customerPhotos : null,
+        lifestyleImages: lifestyleImages?.length ? lifestyleImages : null,
+        sizeChartImage: sizeChartImagePath,
+        ...material !== void 0 && { material: material || null },
+        ...ringSize !== void 0 && { ringSize: ringSize || null },
+        ...ringType !== void 0 && { ringType: ringType || null },
+        ...gauge !== void 0 && { gauge: gauge || null },
+        ...finish !== void 0 && { finish: finish || null },
+        ...weight !== void 0 && { weight: weight || null },
+        ...manufacturingTime !== void 0 && { manufacturingTime: manufacturingTime || null },
+        ...country !== void 0 && { country: country || "India" },
+        ...hsCode !== void 0 && { hsCode: hsCode || null },
+        ...availability !== void 0 && { availability: availability || "In Stock" },
+        ...estimatedDelivery !== void 0 && { estimatedDelivery: estimatedDelivery || null },
+        colors: colorsList?.length ? colorsList : null,
+        ...req.body.sizes !== void 0 && { sizes: parseStringArray(req.body.sizes).length ? parseStringArray(req.body.sizes) : null },
+        ...req.body.highlights !== void 0 && { highlights: parseStringArray(req.body.highlights).length ? parseStringArray(req.body.highlights) : null },
+        ...req.body.materials !== void 0 && { materials: parseStringArray(req.body.materials).length ? parseStringArray(req.body.materials) : null },
         ...description !== void 0 && { desc: description || null },
         tags: parsedTags.length ? parsedTags : null,
         inStock: inStock !== void 0 ? inStock !== false && inStock !== "false" : existing[0].inStock,
-        image: imagePath,
-        gallery: galleryImages,
+        ...stockCount !== void 0 && { stockCount: Number(stockCount) || 100 },
+        ...ebayUrl !== void 0 && { ebayUrl: ebayUrl || null },
         updatedAt: /* @__PURE__ */ new Date()
       };
       await db.update(productsTable).set(updates).where(eq(productsTable.id, id));
       const [updated] = await db.select().from(productsTable).where(eq(productsTable.id, id));
       res.json(updated);
-    } catch {
-      res.status(500).json({ error: "Failed to update product" });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update product: " + (err instanceof Error ? err.message : "") });
     }
   }
 );
@@ -87459,34 +87749,453 @@ router14.put(
 );
 var admin_homepage_default = router14;
 
-// src/routes/index.ts
+// src/routes/homepage.ts
+var import_express15 = __toESM(require_express2(), 1);
+import fs4 from "fs";
+import path4 from "path";
 var router15 = (0, import_express15.Router)();
-router15.use(health_default);
-router15.use(auth_default);
-router15.use(cart_default);
-router15.use(wishlist_default);
-router15.use(orders_default);
-router15.use(payment_default);
-router15.use(products_default);
-router15.use(reviews_default);
-router15.use(contact_default);
-router15.use(admin_default);
-router15.use(admin_products_default);
-router15.use(admin_orders_default);
-router15.use(admin_dashboard_default);
-router15.use(admin_homepage_default);
-var routes_default = router15;
+var DEFAULT_HOMEPAGE_CONFIG = {
+  hero: {
+    slides: [
+      {
+        image: "/images/hp-hero-1.png",
+        headline: "Crafted for history.",
+        subtitle: "Discover museum-worthy armor, chainmail, leather goods, and historical costumes made by master artisans.",
+        ctaText: "Explore the collection \u2192",
+        ctaLink: "/shop"
+      },
+      {
+        image: "/images/hp-hero-2.png",
+        headline: "Authentic Medieval Craft.",
+        subtitle: "Handcrafted functional armor, helmets, shields, and historical equipment for reenactors and collectors worldwide.",
+        ctaText: "Shop New Arrivals \u2192",
+        ctaLink: "/shop?badge=new"
+      }
+    ]
+  },
+  newArrivals: {
+    title: "NEW ARRIVALS",
+    subtitle: "Freshly forged armor, handcrafted chainmail, and rare historical reproductions.",
+    mode: "auto",
+    // "auto" | "manual"
+    productIds: []
+  },
+  topSelling: {
+    title: "Top Selling",
+    subtitle: "Most demanded collector pieces and battle-ready gear chosen by reenactors.",
+    mode: "auto",
+    // "auto" | "manual"
+    productIds: []
+  },
+  featuredCollections: {
+    title: "EXPLORE ZAFEX COLLECTIONS",
+    subtitle: "Discover handcrafted armor, medieval gear, historical pieces, and fantasy creations inspired by legendary eras and worlds.",
+    collections: [
+      {
+        name: "Roman Collection",
+        href: "/shop?collection=roman",
+        description: "Handcrafted Roman-inspired armor, helmets, shields, and accessories inspired by the legendary Roman era.",
+        image: "/images/round-shields.png"
+      },
+      {
+        name: "Viking Collection",
+        href: "/shop?collection=viking",
+        description: "Viking-inspired armor, helmets, chainmail, and accessories crafted for collectors, reenactors, and enthusiasts.",
+        image: "/images/viking-helmet.png"
+      },
+      {
+        name: "Templar Collection",
+        href: "/shop?collection=templar",
+        description: "Medieval Templar-inspired armor, helmets, chainmail, and accessories inspired by the legendary Knights Templar.",
+        image: "/images/tamplar-crusader-shields.png"
+      },
+      {
+        name: "Fantasy Collection",
+        href: "/shop?collection=fantasy",
+        description: "Enter a world of legendary warriors with handcrafted fantasy armor, costumes, helmets, and accessories.",
+        image: "/images/arm-armor.png"
+      },
+      {
+        name: "Women's Armor Collection",
+        href: "/shop?collection=womens-armor",
+        description: "Handcrafted armor, chainmail, and medieval accessories designed for women, cosplay, LARP, and historical-inspired looks.",
+        image: "/images/leather-breastplates.png"
+      },
+      {
+        name: "LARP & Cosplay Collection",
+        href: "/shop?collection=larp",
+        description: "Handcrafted armor, costumes, helmets, and accessories for LARP, cosplay, festivals, and fantasy events.",
+        image: "/images/axes.png"
+      },
+      {
+        name: "Cinematic & Character-Inspired Collection",
+        href: "/shop?collection=movie-replicas",
+        description: "Explore cinematic and character-inspired armor, helmets, and costume pieces crafted for collectors and enthusiasts.",
+        image: "/images/full-body-armor.png"
+      }
+    ]
+  },
+  shopByMaterial: {
+    badge: "MATERIAL SELECTION",
+    title: "THE ART OF MATERIALS",
+    subtitle: "Every ZafEx creation begins with carefully selected materials, shaped by skilled hands and inspired by history.",
+    materials: [
+      {
+        name: "Iron & Steel",
+        image: "/images/arm-armor.png",
+        description: "Strong and durable metals used to create authentic armor, weapons, and historical-inspired pieces."
+      },
+      {
+        name: "Stainless Steel",
+        image: "/images/full-body-armor.png",
+        description: "Corrosion-resistant and durable stainless steel, ideal for long-lasting armor and collectible pieces."
+      },
+      {
+        name: "Lightweight Aluminium",
+        image: "/images/viking-helmet.png",
+        description: "Lightweight aluminium designed for comfortable wear while maintaining the look and character of traditional armor."
+      },
+      {
+        name: "Genuine Leather",
+        image: "/images/leather-breastplates.png",
+        description: "Premium genuine leather used for armor straps, belts, accessories, and handcrafted details."
+      },
+      {
+        name: "Natural Cotton",
+        image: "/images/gambeson.png",
+        description: "Natural cotton fabrics used for comfortable garments, costume elements, padding, and historical-inspired designs."
+      },
+      {
+        name: "Antique Brass",
+        image: "/images/round-shields.png",
+        description: "Antique brass accents and fittings that add an authentic vintage and historical character to each creation."
+      }
+    ]
+  },
+  shopByRealm: {
+    badge: "REALMS OF ZAFEX",
+    title: "SHOP BY REALM",
+    subtitle: "Explore handcrafted creations inspired by history, legendary warriors, fantasy worlds, and unforgettable characters.",
+    realms: [
+      {
+        name: "HISTORICAL",
+        description: "Authentic-inspired pieces from legendary eras and civilizations.",
+        href: "/shop?realm=historical",
+        badge: "Legacy",
+        stripe: "bg-[#b98d46]",
+        image: "/images/hp-hero-1.png"
+      },
+      {
+        name: "ROMAN",
+        description: "Armor, helmets, shields, and accessories inspired by ancient Rome.",
+        href: "/shop?realm=roman",
+        badge: "Imperium",
+        stripe: "bg-[#7b6d59]",
+        image: "/images/full-body-armor.png"
+      },
+      {
+        name: "VIKING",
+        description: "Norse-inspired armor, chainmail, helmets, and accessories.",
+        href: "/shop?realm=viking",
+        badge: "Valhalla",
+        stripe: "bg-[#5f6c75]",
+        image: "/images/viking-helmet.png"
+      },
+      {
+        name: "TEMPLAR",
+        description: "Medieval knightly armor and accessories inspired by the Knights Templar.",
+        href: "/shop?realm=templar",
+        badge: "Crusade",
+        stripe: "bg-[#9e765b]",
+        image: "/images/arm-armor.png"
+      },
+      {
+        name: "FANTASY",
+        description: "Legendary armor and creations inspired by mythical worlds and warriors.",
+        href: "/shop?realm=fantasy",
+        badge: "Mythic",
+        stripe: "bg-[#7c678a]",
+        image: "/images/hp-stl-1.png"
+      },
+      {
+        name: "WOMEN'S ARMOR",
+        description: "Handcrafted armor and medieval pieces designed for women.",
+        href: "/shop?realm=womens-armor",
+        badge: "Crafted",
+        stripe: "bg-[#9d7278]",
+        image: "/images/hp-stl-2.png"
+      },
+      {
+        name: "LARP & COSPLAY",
+        description: "Armor, costumes, helmets, and accessories for immersive characters and events.",
+        href: "/shop?realm=larp-cosplay",
+        badge: "Stage",
+        stripe: "bg-[#5f7b7d]",
+        image: "/images/hp-stl-3.png"
+      },
+      {
+        name: "CINEMATIC & CHARACTER",
+        description: "Character-inspired pieces created for collectors, performers, and enthusiasts.",
+        href: "/shop?realm=cinematic-character",
+        badge: "Screen",
+        stripe: "bg-[#a55d3f]",
+        image: "/images/hp-stl-4.png"
+      }
+    ]
+  },
+  whyChoose: {
+    badge: "WHY ZAFEX",
+    title: "Why Choose ZAFEX",
+    subtitle: "Trusted by reenactors, performers, and collectors for premium materials, authentic detail, and reliable delivery.",
+    pillars: [
+      { label: "10+ Years Experience" },
+      { label: "1000+ Unique Products" },
+      { label: "25+ Countries Served" },
+      { label: "100% Handmade Craft" },
+      { label: "Premium Forged Steel" },
+      { label: "Secure Fast Checkout" }
+    ]
+  },
+  customerReviews: {
+    title: "The ZafEx Experience",
+    reviews: [
+      {
+        name: "Riya Kapoor",
+        text: "Beautiful armour, excellent fit, and the team answered every question before shipping.",
+        image: "/images/hp-gram-1.jpg",
+        flag: "India",
+        verified: true
+      },
+      {
+        name: "Marcus Lee",
+        text: "Arrived quickly and looks amazing on stage. The chainmail is solid and comfortable.",
+        image: "/images/hp-gram-2.jpg",
+        flag: "USA",
+        verified: true
+      },
+      {
+        name: "Elena Schmidt",
+        text: "A gorgeous replica for my medieval wedding photos. Gorgeous finish and excellent quality.",
+        image: "/images/hp-gram-3.jpg",
+        flag: "Germany",
+        verified: true
+      }
+    ]
+  },
+  zafexCollection: {
+    title: "THE ZAFEX COLLECTION",
+    items: [
+      { name: "MEDIEVAL CLOTHING", img: "/images/hp-stl-main.png", href: "/shop?category=medieval-clothing" },
+      { name: "GAMBESONS", img: "/images/gambeson.png", href: "/shop?category=gambesons" },
+      { name: "MEDIEVAL HELMETS", img: "/images/viking-helmet.png", href: "/shop?category=medieval-helmets" },
+      { name: "PLATE ARMOR", img: "/images/full-body-armor.png", href: "/shop?category=plate-armor" },
+      { name: "LEATHER ARMOR", img: "/images/leather-breastplates.png", href: "/shop?category=leather-armor" },
+      { name: "SHIELDS", img: "/images/round-shields.png", href: "/shop?category=shields" },
+      { name: "WEAPONS", img: "/images/axes.png", href: "/shop?category=weapons" },
+      { name: "ACCESSORIES", img: "/images/hp-stl-4.png", href: "/shop?category=accessories" }
+    ]
+  },
+  shopTheLook: {
+    badge: "COMPLETE THE SET",
+    title: "SHOP THE LOOK",
+    subtitle: "Get the complete warrior's kit assembled by our LARP and reenactment specialists",
+    mainImage: "/images/hp-stl-main.png",
+    featuredAttireBadge: "FEATURED ATTIRE",
+    featuredAttireTitle: "The Gothic Knight Commander",
+    featuredAttireDesc: "A formidable compilation of hand-crafted steel, chainmail, and supple leather, built to project authority and withstand the demands of reenactment and display.",
+    productIds: ["pa-1", "hm-6", "hm-3", "ac-1"]
+  },
+  featuredArsenal: {
+    badge: "OUR ARSENAL",
+    title: "Featured Collection",
+    mode: "auto",
+    // "auto" | "manual"
+    productIds: []
+  },
+  aboutZafex: {
+    badge: "THE ZAFEX LEGACY",
+    title: "About Zafex Collectibles",
+    paragraph1: "We are dedicated artisans specializing in the creation of authentic, heirloom-quality medieval armor, functional historical equipment, and unique collectibles. Every piece that leaves our workshop is meticulously handcrafted with respect for historical accuracy and an uncompromising commitment to quality.",
+    paragraph2: "From the resonant ring of our chainmail to the sturdy protection of our leather armor, we equip reenactors, theater productions, and history enthusiasts worldwide.",
+    image: "/images/hp-stl-main.png",
+    buttonText: "Learn More \u2192",
+    buttonLink: "/about"
+  },
+  trustStrip: {
+    items: [
+      { title: "NO ORDER BACKLOG", desc: "We dispatch active stock immediately. No long waiting queues." },
+      { title: "WORLDWIDE SHIPPING", desc: "Expedited courier services right to your doorstep, globally." },
+      { title: "100% SATISFIED", desc: "Easy size returns and refunds if your order doesn't fit or impress." },
+      { title: "SECURE PAYMENTS", desc: "Pay via Razorpay, Cards, NetBanking or UPI \u2013 100% safe & encrypted." }
+    ]
+  },
+  instagramGrid: {
+    badge: "SOCIAL",
+    title: "FOLLOW US ON INSTAGRAM",
+    images: [
+      "/images/hp-gram-1.jpg",
+      "/images/hp-gram-2.jpg",
+      "/images/hp-gram-3.jpg",
+      "/images/hp-gram-4.jpg",
+      "/images/hp-gram-5.jpg",
+      "/images/hp-gram-6.jpg",
+      "/images/hp-gram-7.jpg"
+    ]
+  },
+  newsletter: {
+    badge: "STAY UPDATED",
+    title: "JOIN THE ZAFEX CIRCLE",
+    subtitle: "Subscribe for early access to new arrivals, exclusive collector's discounts, and stories from the world of historical armour and LARP.",
+    buttonText: "SUBSCRIBE"
+  }
+};
+function getTargetImageDirs2() {
+  const possibleDirs = [
+    path4.resolve(process.cwd(), "artifacts/zafex-collectibles/public/images"),
+    path4.resolve(process.cwd(), "zafex-collectibles/public/images"),
+    path4.resolve(process.cwd(), "public/images"),
+    path4.resolve(process.cwd(), "../zafex-collectibles/public/images")
+  ];
+  return possibleDirs.filter((dir) => {
+    try {
+      return fs4.existsSync(path4.dirname(dir));
+    } catch {
+      return false;
+    }
+  });
+}
+function saveBase64Image2(dataUrl) {
+  try {
+    const matches = dataUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+    if (!matches || matches.length < 3) return null;
+    const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
+    const buffer = Buffer.from(matches[2], "base64");
+    const filename = `hp_${Date.now()}_${Math.floor(Math.random() * 1e4)}.${ext}`;
+    const targetDirs = getTargetImageDirs2();
+    for (const dir of targetDirs) {
+      try {
+        if (!fs4.existsSync(dir)) fs4.mkdirSync(dir, { recursive: true });
+        fs4.writeFileSync(path4.join(dir, filename), buffer);
+      } catch {
+      }
+    }
+    return `/images/${filename}`;
+  } catch {
+    return null;
+  }
+}
+router15.get("/homepage", async (_req, res) => {
+  try {
+    const rows = await db.select().from(homepageConfigTable).where(eq(homepageConfigTable.id, "default")).limit(1);
+    if (rows.length > 0 && rows[0].data) {
+      const merged = { ...DEFAULT_HOMEPAGE_CONFIG, ...rows[0].data };
+      res.json(merged);
+    } else {
+      res.json(DEFAULT_HOMEPAGE_CONFIG);
+    }
+  } catch (err) {
+    res.json(DEFAULT_HOMEPAGE_CONFIG);
+  }
+});
+router15.get("/admin/homepage", requireAdmin, async (_req, res) => {
+  try {
+    const rows = await db.select().from(homepageConfigTable).where(eq(homepageConfigTable.id, "default")).limit(1);
+    const allProducts = await db.select({
+      id: productsTable.id,
+      name: productsTable.name,
+      image: productsTable.image,
+      price: productsTable.price,
+      badge: productsTable.badge,
+      cat: productsTable.cat
+    }).from(productsTable);
+    let config = DEFAULT_HOMEPAGE_CONFIG;
+    if (rows.length > 0 && rows[0].data) {
+      config = { ...DEFAULT_HOMEPAGE_CONFIG, ...rows[0].data };
+    }
+    res.json({ config, products: allProducts });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load homepage config: " + (err instanceof Error ? err.message : "") });
+  }
+});
+router15.put("/admin/homepage", requireAdmin, async (req, res) => {
+  try {
+    const rawData = req.body;
+    if (!rawData || typeof rawData !== "object") {
+      res.status(400).json({ error: "Invalid homepage configuration data" });
+      return;
+    }
+    const processObjectImages = (obj) => {
+      if (!obj) return obj;
+      if (typeof obj === "string") {
+        if (obj.startsWith("data:image/")) {
+          const saved = saveBase64Image2(obj);
+          return saved || obj;
+        }
+        return obj;
+      }
+      if (Array.isArray(obj)) {
+        return obj.map(processObjectImages);
+      }
+      if (typeof obj === "object") {
+        const next = {};
+        for (const [k, v] of Object.entries(obj)) {
+          next[k] = processObjectImages(v);
+        }
+        return next;
+      }
+      return obj;
+    };
+    const cleanedConfig = processObjectImages(rawData);
+    const existing = await db.select().from(homepageConfigTable).where(eq(homepageConfigTable.id, "default")).limit(1);
+    if (existing.length > 0) {
+      await db.update(homepageConfigTable).set({ data: cleanedConfig, updatedAt: /* @__PURE__ */ new Date() }).where(eq(homepageConfigTable.id, "default"));
+    } else {
+      await db.insert(homepageConfigTable).values({
+        id: "default",
+        data: cleanedConfig
+      });
+    }
+    res.json({ success: true, config: cleanedConfig });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to save homepage config: " + (err instanceof Error ? err.message : "") });
+  }
+});
+var homepage_default = router15;
+
+// src/routes/index.ts
+var router16 = (0, import_express16.Router)();
+router16.use(health_default);
+router16.use(auth_default);
+router16.use(cart_default);
+router16.use(wishlist_default);
+router16.use(orders_default);
+router16.use(payment_default);
+router16.use(products_default);
+router16.use(reviews_default);
+router16.use(contact_default);
+router16.use(admin_default);
+router16.use(admin_products_default);
+router16.use(admin_orders_default);
+router16.use(admin_dashboard_default);
+router16.use(admin_homepage_default);
+router16.use(homepage_default);
+var routes_default = router16;
 
 // src/middlewares/errorHandler.ts
 function errorHandler(err, req, res, _next) {
-  logger.error({ err, url: req.url, method: req.method }, "Unhandled error");
+  logger.error({ err, url: req.url, method: req.method }, "Unhandled server error");
   if (res.headersSent) return;
-  const message = err instanceof Error ? err.message : "Internal server error";
-  res.status(500).json({ error: message });
+  let message = "Unable to process request right now. Please try again.";
+  if (err instanceof Error) {
+    if (!err.message.includes("SELECT") && !err.message.includes("INSERT") && !err.message.includes("UPDATE") && !err.message.includes("sql") && !err.message.includes("errno")) {
+      message = err.message;
+    }
+  }
+  res.status(500).json({ error: message, success: false });
 }
 
 // src/app.ts
-var app = (0, import_express16.default)();
+var app = (0, import_express17.default)();
 app.set("trust proxy", 1);
 app.use(
   (0, import_pino_http.default)({
@@ -87522,28 +88231,34 @@ app.use(
   })
 );
 app.use((0, import_cookie_parser.default)());
-app.use(import_express16.default.json({ limit: "50mb" }));
-app.use(import_express16.default.text({ type: "*/*", limit: "50mb" }));
-app.use(import_express16.default.urlencoded({ extended: true, limit: "50mb" }));
+app.use(import_express17.default.json({ limit: "50mb" }));
+app.use(import_express17.default.text({ type: "*/*", limit: "50mb" }));
+app.use(import_express17.default.urlencoded({ extended: true, limit: "50mb" }));
 var staticImageDirs = [
-  path4.resolve(process.cwd(), "..", "public_html", "images"),
+  path5.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images"),
+  path5.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public"),
+  path5.resolve(process.cwd(), "artifacts", "zafex-collectibles", "dist", "public", "images"),
+  path5.resolve(process.cwd(), "hostinger-frontend", "images"),
+  path5.resolve(process.cwd(), "public", "images"),
+  path5.resolve(process.cwd(), "public"),
+  path5.resolve(process.cwd(), "public_html", "images"),
+  path5.resolve(process.cwd(), "..", "public_html", "images"),
   "/home/u933632718/domains/zafexcollectibles.com/public_html/images",
-  path4.resolve(process.cwd(), "public", "images"),
-  path4.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images")
+  "/home/u933632718/public_html/images"
 ];
 for (const dir of staticImageDirs) {
   try {
-    fs4.mkdirSync(dir, { recursive: true });
+    fs5.mkdirSync(dir, { recursive: true });
   } catch {
   }
-  app.use("/images", import_express16.default.static(dir));
+  app.use("/images", import_express17.default.static(dir));
 }
-var localPublicDir = path4.resolve(process.cwd(), "public");
+var localPublicDir = path5.resolve(process.cwd(), "public");
 try {
-  fs4.mkdirSync(localPublicDir, { recursive: true });
+  fs5.mkdirSync(localPublicDir, { recursive: true });
 } catch {
 }
-app.use(import_express16.default.static(localPublicDir));
+app.use(import_express17.default.static(localPublicDir));
 var isProd = process.env.NODE_ENV === "production";
 app.use(
   (0, import_express_session.default)({
@@ -87568,13 +88283,15 @@ var app_default = app;
 init_products();
 try {
   const envPaths = [
-    path5.resolve(process.cwd(), ".env"),
-    path5.resolve(__dirname, ".env"),
+    path6.resolve(process.cwd(), "artifacts", "api-server", ".env"),
+    path6.resolve(process.cwd(), ".env"),
+    path6.resolve(__dirname, ".env"),
+    path6.resolve(__dirname, "..", "..", "artifacts", "api-server", ".env"),
     "/home/u933632718/domains/zafexcollectibles.com/backend/.env"
   ];
   for (const p of envPaths) {
-    if (fs5.existsSync(p)) {
-      const lines = fs5.readFileSync(p, "utf-8").split("\n");
+    if (fs6.existsSync(p)) {
+      const lines = fs6.readFileSync(p, "utf-8").split("\n");
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed || trimmed.startsWith("#")) continue;

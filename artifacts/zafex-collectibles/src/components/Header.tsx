@@ -189,95 +189,117 @@ function MobileDrawer({
 }) {
   const [shopExpanded, setShopExpanded] = useState(false);
   const [collectionsExpanded, setCollectionsExpanded] = useState(false);
+  const { currencyCode, setCurrency } = useCurrency();
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[200] flex">
       <button aria-label="Close menu" className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative ml-auto h-full w-[310px] overflow-y-auto bg-[#f4f0e8] shadow-2xl">
-        <div className="flex items-center justify-between border-b border-[#d4cdc4] px-5 py-5">
-          <span className="font-serif text-[13px] tracking-[2px] text-[#211b14]">ZAFEX</span>
-          <button onClick={onClose} aria-label="Close menu"><X size={20} /></button>
-        </div>
-        <nav className="flex flex-col">
-          <Link href="/" onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">Home</Link>
+      <div className="relative ml-auto h-full w-[310px] overflow-y-auto bg-[#f4f0e8] shadow-2xl flex flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between border-b border-[#d4cdc4] px-5 py-5">
+            <span className="font-serif text-[13px] tracking-[2px] text-[#211b14]">ZAFEX</span>
+            <button onClick={onClose} aria-label="Close menu"><X size={20} /></button>
+          </div>
+          <nav className="flex flex-col">
+            <Link href="/" onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">Home</Link>
 
-          {/* Shop expandable */}
-          <button onClick={() => setShopExpanded((v) => !v)} className="flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 text-left font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
-            Shop <ChevronDown size={14} className={shopExpanded ? 'rotate-180 text-[#8b6914]' : 'text-[#8b6914]'} />
-          </button>
-          {shopExpanded && (
-            <div className="bg-[#e9e1d5] px-5 py-2">
-              <Link href="/shop" onClick={onClose} className="block border-b border-[#d4c8b8] py-3 font-sans text-[11px] font-semibold uppercase tracking-[1px] text-[#8b6914]">Shop all</Link>
-              {shopGroups.flatMap((group) => group.slugs).map((slug) => {
-                const category = categoryBySlug.get(slug);
-                return category ? (
-                  <Link key={slug} href={`/cat/${slug}`} onClick={onClose} className="block py-2 font-sans text-[11px] text-[#33291f]">{category.label}</Link>
-                ) : null;
-              })}
-            </div>
-          )}
+            {/* Shop expandable */}
+            <button onClick={() => setShopExpanded((v) => !v)} className="flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 text-left font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+              Shop <ChevronDown size={14} className={shopExpanded ? 'rotate-180 text-[#8b6914]' : 'text-[#8b6914]'} />
+            </button>
+            {shopExpanded && (
+              <div className="bg-[#e9e1d5] px-5 py-2">
+                <Link href="/shop" onClick={onClose} className="block border-b border-[#d4c8b8] py-3 font-sans text-[11px] font-semibold uppercase tracking-[1px] text-[#8b6914]">Shop all</Link>
+                {shopGroups.flatMap((group) => group.slugs).map((slug) => {
+                  const category = categoryBySlug.get(slug);
+                  return category ? (
+                    <Link key={slug} href={`/cat/${slug}`} onClick={onClose} className="block py-2 font-sans text-[11px] text-[#33291f]">{category.label}</Link>
+                  ) : null;
+                })}
+              </div>
+            )}
 
-          {/* Collections expandable */}
-          <button onClick={() => setCollectionsExpanded((v) => !v)} className="flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 text-left font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
-            Collections <ChevronDown size={14} className={collectionsExpanded ? 'rotate-180 text-[#8b6914]' : 'text-[#8b6914]'} />
-          </button>
-          {collectionsExpanded && (
-            <div className="bg-[#e9e1d5] px-5 py-2">
-              <Link href="/cat/collections" onClick={onClose} className="block border-b border-[#d4c8b8] py-3 font-sans text-[11px] font-semibold uppercase tracking-[1px] text-[#8b6914]">All Collections</Link>
-              {collectionsSubs.map((item) => (
-                <Link key={item.slug} href={`/cat/collections/${item.slug}`} onClick={onClose} className="block py-2 font-sans text-[11px] text-[#33291f]">{item.label}</Link>
-              ))}
-            </div>
-          )}
+            {/* Collections expandable */}
+            <button onClick={() => setCollectionsExpanded((v) => !v)} className="flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 text-left font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+              Collections <ChevronDown size={14} className={collectionsExpanded ? 'rotate-180 text-[#8b6914]' : 'text-[#8b6914]'} />
+            </button>
+            {collectionsExpanded && (
+              <div className="bg-[#e9e1d5] px-5 py-2">
+                <Link href="/cat/collections" onClick={onClose} className="block border-b border-[#d4c8b8] py-3 font-sans text-[11px] font-semibold uppercase tracking-[1px] text-[#8b6914]">All Collections</Link>
+                {collectionsSubs.map((item) => (
+                  <Link key={item.slug} href={`/cat/collections/${item.slug}`} onClick={onClose} className="block py-2 font-sans text-[11px] text-[#33291f]">{item.label}</Link>
+                ))}
+              </div>
+            )}
 
-          {[
-            ['/cat/custom-orders', 'Custom Orders'],
-            ['/cat/wholesale', 'Wholesale'],
-            ['/cat/about-us', 'About Us'],
-            ['/resources', 'Resources'],
-            ['/contact', 'Contact Us'],
-          ].map(([href, label]) => (
-            <Link key={href} href={href} onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
-              {label}
+            {[
+              ['/cat/custom-orders', 'Custom Orders'],
+              ['/cat/wholesale', 'Wholesale'],
+              ['/cat/about-us', 'About Us'],
+              ['/resources', 'Resources'],
+              ['/contact', 'Contact Us'],
+            ].map(([href, label]) => (
+              <Link key={href} href={href} onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+                {label}
+              </Link>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenCompare();
+              }}
+              className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px] text-left w-full cursor-pointer text-[#211b14]"
+            >
+              <span>Compare Products</span>
+              {compareCount > 0 && (
+                <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#1a1208] text-[#d4af37] px-1 text-[9px] font-bold">
+                  {compareCount}
+                </span>
+              )}
+            </button>
+            <Link href="/wishlist" onClick={onClose} className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+              <span>My Wishlist</span>
+              {wishlistCount > 0 && (
+                <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#a91f22] px-1 text-[9px] text-white font-bold">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
-          ))}
+            <Link href="/account" onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+              My Account
+            </Link>
+            <Link href="/cart" onClick={onClose} className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
+              <span>My Cart</span>
+              {cartCount > 0 && (
+                <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#c6a767] px-1 text-[9px] text-[#211b14] font-bold">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </nav>
+        </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              onOpenCompare();
-            }}
-            className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px] text-left w-full cursor-pointer text-[#211b14]"
+        {/* Currency & Country Selector at bottom of Drawer */}
+        <div className="p-5 border-t border-[#ded7cc] bg-[#eae4d8]">
+          <label className="block text-[10px] font-serif uppercase tracking-[1.5px] text-[#7a6f60] mb-1.5 font-bold">
+            Country & Currency
+          </label>
+          <select
+            value={currencyCode}
+            onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+            aria-label="Select Currency"
+            className="w-full bg-[#171713] text-white text-xs font-serif uppercase tracking-[1px] px-3 py-2.5 rounded-lg border border-[#5d4b32] outline-none cursor-pointer"
           >
-            <span>Compare Products</span>
-            {compareCount > 0 && (
-              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#1a1208] text-[#d4af37] px-1 text-[9px] font-bold">
-                {compareCount}
-              </span>
-            )}
-          </button>
-          <Link href="/wishlist" onClick={onClose} className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
-            <span>My Wishlist</span>
-            {wishlistCount > 0 && (
-              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#a91f22] px-1 text-[9px] text-white font-bold">
-                {wishlistCount}
-              </span>
-            )}
-          </Link>
-          <Link href="/account" onClick={onClose} className="border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
-            My Account
-          </Link>
-          <Link href="/cart" onClick={onClose} className="relative flex items-center justify-between border-b border-[#ded7cc] px-5 py-4 font-sans text-[11px] font-medium uppercase tracking-[1.5px]">
-            <span>My Cart</span>
-            {cartCount > 0 && (
-              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#c6a767] px-1 text-[9px] text-[#211b14] font-bold">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-        </nav>
+            {Object.values(CURRENCIES).map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.country} — {c.code} ({c.symbol})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );

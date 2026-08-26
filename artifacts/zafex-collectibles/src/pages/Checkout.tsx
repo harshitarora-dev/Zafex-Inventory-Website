@@ -14,6 +14,28 @@ declare global {
   }
 }
 
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(true));
+      existing.addEventListener('error', () => resolve(false));
+      setTimeout(() => resolve(typeof window !== 'undefined' && !!window.Razorpay), 1000);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 const inputCls =
   'w-full h-[48px] border border-[#d4cfc7] px-4 font-sans text-[14px] focus:outline-none focus:border-[#d4af37] bg-[#faf8f3]';
 const labelCls =
@@ -32,7 +54,7 @@ export default function Checkout() {
     shippingCity: '',
     shippingState: '',
     shippingPincode: '',
-    shippingCountry: 'India',
+    shippingCountry: currentCurrency.country || 'India',
     phone: user?.phone ?? '',
     notes: '',
   });
@@ -110,8 +132,9 @@ export default function Checkout() {
 
       // Online Razorpay payment flow
       try {
+        const isLoaded = await loadRazorpayScript();
         const paymentOrder = await createPaymentOrder({ orderId });
-        if (paymentOrder.razorpayOrderId && typeof window.Razorpay !== 'undefined') {
+        if (paymentOrder.razorpayOrderId && isLoaded && typeof window.Razorpay !== 'undefined') {
           await new Promise<void>((resolve, reject) => {
             const rzp = new window.Razorpay({
               key: paymentOrder.key,
@@ -153,6 +176,8 @@ export default function Checkout() {
             description: `Order #${orderId} placed. Complete payment anytime from your orders.`,
           });
         }
+        navigate(`/orders/${orderId}`);
+        return;
       } catch (payErr) {
         const msg = (payErr as Error).message;
         if (msg !== 'dismissed') {
@@ -179,8 +204,8 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-[#f5f0e8]">
-      <section className="w-full bg-[#cec3b5] flex flex-col items-center justify-center text-center px-4 py-14">
-        <h1 className="font-serif text-[48px] font-light text-[#1a1208] uppercase tracking-[0.1em]">
+      <section className="w-full bg-[#cec3b5] flex flex-col items-center justify-center text-center px-4 py-12 sm:py-14">
+        <h1 className="font-serif text-[28px] xs:text-[34px] sm:text-[48px] font-light text-[#1a1208] uppercase tracking-[2px] sm:tracking-[0.1em]">
           Checkout
         </h1>
       </section>
@@ -242,12 +267,35 @@ export default function Checkout() {
                 </div>
                 <div>
                   <label className={labelCls}>Country</label>
-                  <input
+                  <select
                     value={form.shippingCountry}
                     onChange={(e) => update('shippingCountry', e.target.value)}
                     required
                     className={inputCls}
-                  />
+                  >
+                    <option value="India">🇮🇳 India</option>
+                    <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+                    <option value="United Arab Emirates">🇦🇪 United Arab Emirates (Dubai)</option>
+                    <option value="Turkey">🇹🇷 Turkey</option>
+                    <option value="Kuwait">🇰🇼 Kuwait</option>
+                    <option value="Qatar">🇶🇦 Qatar</option>
+                    <option value="Oman">🇴🇲 Oman</option>
+                    <option value="Bahrain">🇧🇭 Bahrain</option>
+                    <option value="United States">🇺🇸 United States</option>
+                    <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                    <option value="Canada">🇨🇦 Canada</option>
+                    <option value="Australia">🇦🇺 Australia</option>
+                    <option value="Germany">🇩🇪 Germany</option>
+                    <option value="France">🇫🇷 France</option>
+                    <option value="Italy">🇮🇹 Italy</option>
+                    <option value="Spain">🇪🇸 Spain</option>
+                    <option value="Netherlands">🇳🇱 Netherlands</option>
+                    <option value="Switzerland">🇨🇭 Switzerland</option>
+                    <option value="Singapore">🇸🇬 Singapore</option>
+                    <option value="Japan">🇯🇵 Japan</option>
+                    <option value="New Zealand">🇳🇿 New Zealand</option>
+                    <option value="Other">🌍 Other International Country</option>
+                  </select>
                 </div>
               </div>
               <div>

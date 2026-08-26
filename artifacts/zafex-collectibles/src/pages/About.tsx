@@ -5,16 +5,16 @@ import { CheckCircle2, Wrench, Globe, Users, ShieldCheck, Star } from 'lucide-re
 /* ── Small reusable section heading ─────────────────────────────────── */
 function SectionHeading({ label, title }: { label?: string; title: string }) {
   return (
-    <div className="mb-10">
+    <div className="mb-8 sm:mb-10">
       {label && (
-        <span className="font-sans text-[10px] uppercase tracking-[3px] text-[#8b6914] block mb-3">
+        <span className="font-sans text-[10px] uppercase tracking-[3px] text-[#8b6914] block mb-2 sm:mb-3">
           {label}
         </span>
       )}
-      <h2 className="font-serif text-[34px] sm:text-[40px] font-light text-[#1a1208] uppercase leading-none tracking-[0.06em]">
+      <h2 className="font-serif text-[24px] sm:text-[34px] md:text-[40px] font-light text-[#1a1208] uppercase leading-tight tracking-[1px] sm:tracking-[0.06em]">
         {title}
       </h2>
-      <div className="w-[40px] h-[2px] bg-[#8b6914] mt-5" />
+      <div className="w-[40px] h-[2px] bg-[#8b6914] mt-3 sm:mt-5" />
     </div>
   );
 }
@@ -44,16 +44,16 @@ const About = () => {
     <div className="bg-[#f5f0e8] min-h-screen">
 
       {/* ── Hero ──────────────────────────────────────────────────── */}
-      <section className="w-full bg-[#cec3b5] flex flex-col items-center justify-center text-center px-4 py-16">
-        <div className="font-sans text-[10px] uppercase tracking-[2.5px] text-[#5a4a30]/70 mb-6 flex items-center gap-2">
+      <section className="w-full bg-[#cec3b5] flex flex-col items-center justify-center text-center px-4 py-12 sm:py-16">
+        <div className="font-sans text-[10px] uppercase tracking-[2px] sm:tracking-[2.5px] text-[#5a4a30]/70 mb-4 sm:mb-6 flex items-center gap-2">
           <Link href="/" className="hover:text-[#2a2016] transition-colors">HOME</Link>
           <span className="text-[#5a4a30]/40">/</span>
           <span className="text-[#2a2016]">ABOUT US</span>
         </div>
-        <h1 className="font-serif text-[48px] sm:text-[62px] font-light text-[#1a1208] uppercase leading-none tracking-[0.1em] mb-6">
+        <h1 className="font-serif text-[26px] xs:text-[32px] sm:text-[46px] md:text-[56px] font-light text-[#1a1208] uppercase leading-tight sm:leading-none tracking-[1.5px] sm:tracking-[0.08em] mb-4 sm:mb-6 max-w-4xl px-2 break-words">
           About Zafex Collectibles
         </h1>
-        <p className="font-serif text-[18px] sm:text-[22px] font-light text-[#5a4a30] italic max-w-xl">
+        <p className="font-serif text-[15px] sm:text-[20px] md:text-[22px] font-light text-[#5a4a30] italic max-w-xl px-2">
           Crafting History. Inspiring Adventure.
         </p>
       </section>
@@ -217,36 +217,36 @@ const About = () => {
       {/* ── Quality Promise ───────────────────────────────────────── */}
       <section className="bg-[#1a1208] py-20">
         <div className="max-w-[1100px] mx-auto px-6">
-          <div className="text-center mb-14">
-            <span className="font-sans text-[10px] uppercase tracking-[3px] text-[#8b6914] block mb-3">Our Commitment</span>
-            <h2 className="font-serif text-[36px] sm:text-[44px] font-light text-white uppercase leading-none tracking-[0.08em]">
+          <div className="text-center mb-10 sm:mb-14">
+            <span className="font-sans text-[10px] uppercase tracking-[3px] text-[#8b6914] block mb-2 sm:mb-3">Our Commitment</span>
+            <h2 className="font-serif text-[26px] sm:text-[36px] md:text-[44px] font-light text-white uppercase leading-tight tracking-[1px] sm:tracking-[0.08em]">
               Our Quality Promise
             </h2>
-            <p className="font-serif text-[16px] italic text-[#c8b89a] mt-4">Quality is never accidental.</p>
+            <p className="font-serif text-[14px] sm:text-[16px] italic text-[#c8b89a] mt-3 sm:mt-4">Quality is never accidental.</p>
           </div>
-          <p className="font-sans text-[14px] text-[#c8bdb0] leading-[1.9] text-center max-w-xl mx-auto mb-12">
+          <p className="font-sans text-[14px] text-[#c8bdb0] leading-[1.9] text-center max-w-xl mx-auto mb-10 sm:mb-12">
             Every product is individually inspected before shipment across all key criteria:
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             {[
               'Material Quality', 'Structural Strength', 'Accurate Measurements',
               'Stitching', 'Riveting', 'Surface Finish', 'Hardware', 'Final Appearance',
             ].map((item) => (
-              <div key={item} className="bg-[#2a1a08] border border-[#3a2a18] p-5 text-center">
-                <CheckCircle2 size={18} className="text-[#8b6914] mx-auto mb-3" strokeWidth={1.5} />
-                <span className="font-sans text-[11px] uppercase tracking-[1.5px] text-[#c8b89a]">{item}</span>
+              <div key={item} className="bg-[#2a1a08] border border-[#3a2a18] p-3 sm:p-5 text-center">
+                <CheckCircle2 size={18} className="text-[#8b6914] mx-auto mb-2 sm:mb-3" strokeWidth={1.5} />
+                <span className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[1px] sm:tracking-[1.5px] text-[#c8b89a]">{item}</span>
               </div>
             ))}
           </div>
-          <p className="font-sans text-[13px] text-[#8b7a60] text-center mt-10 italic">
+          <p className="font-sans text-[13px] text-[#8b7a60] text-center mt-8 sm:mt-10 italic">
             Only products that meet our quality standards are approved for delivery.
           </p>
         </div>
       </section>
 
       {/* ── Custom Manufacturing + Wholesale ─────────────────────── */}
-      <section className="max-w-[1100px] mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      <section className="max-w-[1100px] mx-auto px-6 py-14 sm:py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
           <div>
             <SectionHeading label="Bespoke" title="Custom Manufacturing" />
             <p className="font-sans text-[14px] text-[#4a4a4a] leading-[1.9] mb-2 font-medium text-[#2a2016]">
@@ -305,10 +305,10 @@ const About = () => {
       </section>
 
       {/* ── Built for Every Adventure ─────────────────────────────── */}
-      <section className="bg-[#e8e0d4] py-20">
+      <section className="bg-[#e8e0d4] py-14 sm:py-20">
         <div className="max-w-[1100px] mx-auto px-6 text-center">
           <SectionHeading label="Use Cases" title="Built for Every Adventure" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mt-4">
             {[
               { icon: '⚔', label: 'Historical Reenactments' },
               { icon: '🛡', label: 'Renaissance Faires' },
@@ -323,9 +323,9 @@ const About = () => {
               { icon: '🎁', label: 'Collectors' },
               { icon: '✨', label: 'And More' },
             ].map(({ icon, label }) => (
-              <div key={label} className="bg-[#f5f0e8] border border-[#d4cdc4] p-5 flex flex-col items-center gap-3">
-                <span className="text-[26px]">{icon}</span>
-                <span className="font-sans text-[11px] uppercase tracking-[1.5px] text-[#2a2016] text-center">{label}</span>
+              <div key={label} className="bg-[#f5f0e8] border border-[#d4cdc4] p-3.5 sm:p-5 flex flex-col items-center gap-2 sm:gap-3">
+                <span className="text-[22px] sm:text-[26px]">{icon}</span>
+                <span className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[1px] sm:tracking-[1.5px] text-[#2a2016] text-center">{label}</span>
               </div>
             ))}
           </div>
@@ -333,7 +333,7 @@ const About = () => {
       </section>
 
       {/* ── Why Choose Us ─────────────────────────────────────────── */}
-      <section className="max-w-[860px] mx-auto px-6 py-20">
+      <section className="max-w-[860px] mx-auto px-6 py-14 sm:py-20">
         <div className="text-center">
           <SectionHeading label="" title="Why Choose Zafex Collectibles" />
         </div>
@@ -356,21 +356,21 @@ const About = () => {
       </section>
 
       {/* ── Vision + CTA ──────────────────────────────────────────── */}
-      <section className="bg-[#1a1208] py-24 text-center px-6">
-        <span className="font-sans text-[10px] uppercase tracking-[3px] text-[#8b6914] block mb-5">Looking Ahead</span>
-        <h2 className="font-serif text-[38px] sm:text-[50px] font-light text-white uppercase tracking-[0.08em] leading-none mb-8">
+      <section className="bg-[#1a1208] py-16 sm:py-24 text-center px-4 sm:px-6">
+        <span className="font-sans text-[10px] uppercase tracking-[3px] text-[#8b6914] block mb-3 sm:mb-5">Looking Ahead</span>
+        <h2 className="font-serif text-[28px] sm:text-[38px] md:text-[50px] font-light text-white uppercase tracking-[1px] sm:tracking-[0.08em] leading-tight mb-6 sm:mb-8">
           Our Vision
         </h2>
-        <div className="w-[50px] h-[1px] bg-[#8b6914] mx-auto mb-8" />
+        <div className="w-[50px] h-[1px] bg-[#8b6914] mx-auto mb-6 sm:mb-8" />
         <p className="font-sans text-[14px] sm:text-[15px] text-[#c8bdb0] leading-[1.9] max-w-2xl mx-auto mb-6">
           We aspire to become one of the world's most respected names in handcrafted medieval armor and historical equipment. By continuously improving our craftsmanship, investing in skilled artisans, and embracing modern manufacturing practices, we remain dedicated to preserving medieval heritage for future generations.
         </p>
-        <p className="font-serif text-[18px] sm:text-[22px] italic text-[#d4af37] mb-14">
+        <p className="font-serif text-[16px] sm:text-[20px] md:text-[22px] italic text-[#d4af37] mb-10 sm:mb-14">
           Our goal is not simply to manufacture products. Our goal is to craft pieces of history.
         </p>
 
-        <div className="border-t border-[#2a1a08] pt-14 max-w-xl mx-auto">
-          <h3 className="font-serif text-[24px] font-light text-white uppercase tracking-[0.08em] mb-5">
+        <div className="border-t border-[#2a1a08] pt-10 sm:pt-14 max-w-xl mx-auto">
+          <h3 className="font-serif text-[20px] sm:text-[24px] font-light text-white uppercase tracking-[1px] sm:tracking-[0.08em] mb-4 sm:mb-5">
             Join the Zafex Collectibles Family
           </h3>
           <p className="font-sans text-[14px] text-[#c8bdb0] leading-[1.9] mb-10">

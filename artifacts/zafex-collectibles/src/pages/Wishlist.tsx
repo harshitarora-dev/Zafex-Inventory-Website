@@ -39,8 +39,8 @@ export default function WishlistPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f0e8]">
-      <section className="w-full bg-[#cec3b5] flex flex-col items-center justify-center text-center px-4 py-14">
-        <h1 className="font-serif text-[48px] font-light text-[#1a1208] uppercase tracking-[0.1em]">Wishlist</h1>
+      <section className="w-full bg-[#cec3b5] flex flex-col items-center justify-center text-center px-4 py-12 sm:py-14">
+        <h1 className="font-serif text-[28px] xs:text-[34px] sm:text-[48px] font-light text-[#1a1208] uppercase tracking-[2px] sm:tracking-[0.1em]">Wishlist</h1>
         <p className="font-sans text-[14px] text-[#5a4a30]/70 mt-2">{items.length} saved items</p>
       </section>
 

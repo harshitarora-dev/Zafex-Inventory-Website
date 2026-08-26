@@ -8,8 +8,10 @@ import { PRODUCTS } from "./data/products";
 // Native .env parser without external dependencies
 try {
   const envPaths = [
+    path.resolve(process.cwd(), "artifacts", "api-server", ".env"),
     path.resolve(process.cwd(), ".env"),
     path.resolve(__dirname, ".env"),
+    path.resolve(__dirname, "..", "..", "artifacts", "api-server", ".env"),
     "/home/u933632718/domains/zafexcollectibles.com/backend/.env",
   ];
   for (const p of envPaths) {

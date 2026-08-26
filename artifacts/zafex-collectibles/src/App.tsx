@@ -14,6 +14,8 @@ import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { CompareProvider } from '@/contexts/CompareContext';
 import { CompareModal } from '@/components/CompareModal';
 import { CompareDock } from '@/components/CompareDock';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import NotFound from '@/pages/not-found';
 
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -22,7 +24,7 @@ import AdminCustomers from '@/pages/admin/AdminCustomers';
 import AdminContacts from '@/pages/admin/AdminContacts';
 import AdminProducts from '@/pages/admin/AdminProducts';
 import AdminProductForm from '@/pages/admin/AdminProductForm';
-import AdminHomepageImages from '@/pages/admin/AdminHomepageImages';
+import AdminHomepage from '@/pages/admin/AdminHomepage';
 
 import Home from '@/pages/Home';
 import Shop from '@/pages/Shop';
@@ -616,17 +618,14 @@ const LeatherGuide = () => {
   );
 };
 
-const NotFound = () => (
-  <div className="min-h-screen bg-[#f5f0e8] flex flex-col items-center justify-center text-center px-4">
-    <h1 className="font-serif text-6xl font-bold text-[#1a1a18] mb-4">404</h1>
-    <p className="font-sans text-[#6b6b6b] mb-8">This path has been lost to history.</p>
-    <a href="/" className="bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] px-8 py-4 hover:bg-[#d4af37] transition-colors">
-      RETURN TO THE KEEP
-    </a>
-  </div>
-);
-
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -637,14 +636,11 @@ function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
     });
 
     lenis.on('scroll', () => ScrollTrigger.update());
-
-    const tickerFn = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(tickerFn);
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
 
     return () => {
       lenis.destroy();
-      gsap.ticker.remove(tickerFn);
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
   }, []);
@@ -661,8 +657,9 @@ function Router() {
     document.body.scrollTop = 0;
   }, [location]);
 
-  // Admin portal — rendered without the storefront Header/Footer
-  if (location.startsWith('/admin')) {
+  const isAdmin = location.startsWith('/admin');
+
+  if (isAdmin) {
     return (
       <Switch>
         <Route path="/admin/login" component={AdminLogin} />
@@ -676,21 +673,25 @@ function Router() {
         <Route path="/admin/products/:id/edit">
           {(params) => <AdminProductForm mode="edit" id={params.id} />}
         </Route>
+        <Route path="/admin/products/:id">
+          {(params) => <AdminProductForm mode="edit" id={params.id} />}
+        </Route>
         <Route path="/admin/products" component={AdminProducts} />
-        <Route path="/admin/homepage-images" component={AdminHomepageImages} />
+        <Route path="/admin/homepage-images" component={AdminHomepage} />
+        <Route path="/admin/homepage" component={AdminHomepage} />
         <Route path="/admin">
           <Redirect to="/admin/dashboard" />
         </Route>
+        <Route component={NotFound} />
       </Switch>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col bg-[#f5f0e8] text-[#1a1208]">
       <Header />
       <main className="flex-1">
         <Switch>
-          {/* ── Core pages ── */}
           <Route path="/" component={Home} />
           <Route path="/shop" component={Shop} />
           <Route path="/shop/:id" component={ProductDetail} />
@@ -705,14 +706,13 @@ function Router() {
           <Route path="/contact" component={Contact} />
           <Route path="/resources" component={Resources} />
 
-          {/* ── Named /cat/* overrides — MUST come before the generic :category catch-all ── */}
+          {/* ── Named /cat/* overrides — MUST come before generic :category catch-all ── */}
           <Route path="/cat/about-us" component={About} />
-          <Route path="/cat/about-us/:sub" component={About} />
           <Route path="/cat/custom-orders" component={CustomForging} />
-          <Route path="/cat/custom-orders/:sub" component={CustomForging} />
+          <Route path="/cat/wholesale" component={Contact} />
           <Route path="/cat/resources/medieval-blog" component={Blog} />
 
-          {/* ── Dynamic category + subcategory routes ── */}
+          {/* ── Category / Subcategory routes ── */}
           <Route path="/cat/:category">
             {(params) => <CategoryPage categorySlug={params.category} />}
           </Route>
@@ -749,23 +749,25 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CurrencyProvider>
-          <CompareProvider>
-            <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
-              <SmoothScrollProvider>
-                <ScrollProgress />
-                <Router />
-                <CompareModal />
-                <CompareDock />
-              </SmoothScrollProvider>
-            </WouterRouter>
-            <Toaster />
-          </CompareProvider>
-        </CurrencyProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <CurrencyProvider>
+            <CompareProvider>
+              <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
+                <SmoothScrollProvider>
+                  <ScrollProgress />
+                  <Router />
+                  <CompareModal />
+                  <CompareDock />
+                </SmoothScrollProvider>
+              </WouterRouter>
+              <Toaster />
+            </CompareProvider>
+          </CurrencyProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Award, Camera, CheckCircle2, ChevronLeft, ChevronRight, Globe, Lock, PlayCircle, RefreshCcw, ShieldCheck, Sparkles, Star, Truck, Video, Check, Loader2 } from 'lucide-react';
+import { Award, Camera, CheckCircle2, Globe, Lock, PlayCircle, RefreshCcw, ShieldCheck, Sparkles, Star, Truck, Video, Check, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import { useAddToCart } from '@/hooks/useCart';
@@ -93,224 +93,182 @@ function ParallaxBg({ src, className = '' }: { src: string; className?: string }
 
 /* ─── Home ────────────────────────────────────────────────────────────── */
 
+const DEFAULT_COLLECTIONS = [
+  {
+    name: 'Roman Collection',
+    href: '/shop?collection=roman',
+    description: 'Handcrafted Roman-inspired armor, helmets, shields, and accessories inspired by the legendary Roman era.',
+    image: '/images/round-shields.png',
+  },
+  {
+    name: 'Viking Collection',
+    href: '/shop?collection=viking',
+    description: 'Viking-inspired armor, helmets, chainmail, and accessories crafted for collectors, reenactors, and enthusiasts.',
+    image: '/images/viking-helmet.png',
+  },
+  {
+    name: 'Templar Collection',
+    href: '/shop?collection=templar',
+    description: 'Medieval Templar-inspired armor, helmets, chainmail, and accessories inspired by the legendary Knights Templar.',
+    image: '/images/tamplar-crusader-shields.png',
+  },
+  {
+    name: 'Fantasy Collection',
+    href: '/shop?collection=fantasy',
+    description: 'Enter a world of legendary warriors with handcrafted fantasy armor, costumes, helmets, and accessories.',
+    image: '/images/arm-armor.png',
+  },
+  {
+    name: "Women's Armor Collection",
+    href: '/shop?collection=womens-armor',
+    description: 'Handcrafted armor, chainmail, and medieval accessories designed for women, cosplay, LARP, and historical-inspired looks.',
+    image: '/images/leather-breastplates.png',
+  },
+  {
+    name: 'LARP & Cosplay Collection',
+    href: '/shop?collection=larp',
+    description: 'Handcrafted armor, costumes, helmets, and accessories for LARP, cosplay, festivals, and fantasy events.',
+    image: '/images/axes.png',
+  },
+  {
+    name: 'Cinematic & Character-Inspired Collection',
+    href: '/shop?collection=movie-replicas',
+    description: 'Explore cinematic and character-inspired armor, helmets, and costume pieces crafted for collectors and enthusiasts.',
+    image: '/images/full-body-armor.png',
+  },
+];
+
+const DEFAULT_MATERIALS = [
+  { name: 'Iron & Steel', image: '/images/arm-armor.png', description: 'Strong and durable metals used to create authentic armor, weapons, and historical-inspired pieces.' },
+  { name: 'Stainless Steel', image: '/images/full-body-armor.png', description: 'Corrosion-resistant and durable stainless steel, ideal for long-lasting armor and collectible pieces.' },
+  { name: 'Lightweight Aluminium', image: '/images/viking-helmet.png', description: 'Lightweight aluminium designed for comfortable wear while maintaining the look and character of traditional armor.' },
+  { name: 'Genuine Leather', image: '/images/leather-breastplates.png', description: 'Premium genuine leather used for armor straps, belts, accessories, and handcrafted details.' },
+  { name: 'Natural Cotton', image: '/images/gambeson.png', description: 'Natural cotton fabrics used for comfortable garments, costume elements, padding, and historical-inspired designs.' },
+  { name: 'Antique Brass', image: '/images/round-shields.png', description: 'Antique brass accents and fittings that add an authentic vintage and historical character to each creation.' },
+];
+
+const DEFAULT_REALMS = [
+  { name: 'HISTORICAL', description: 'Authentic-inspired pieces from legendary eras and civilizations.', href: '/shop?realm=historical', badge: 'Legacy', stripe: 'bg-[#b98d46]', image: '/images/hp-hero-1.png' },
+  { name: 'ROMAN', description: 'Armor, helmets, shields, and accessories inspired by ancient Rome.', href: '/shop?realm=roman', badge: 'Imperium', stripe: 'bg-[#7b6d59]', image: '/images/full-body-armor.png' },
+  { name: 'VIKING', description: 'Norse-inspired armor, chainmail, helmets, and accessories.', href: '/shop?realm=viking', badge: 'Valhalla', stripe: 'bg-[#5f6c75]', image: '/images/viking-helmet.png' },
+  { name: 'TEMPLAR', description: 'Medieval knightly armor and accessories inspired by the Knights Templar.', href: '/shop?realm=templar', badge: 'Crusade', stripe: 'bg-[#9e765b]', image: '/images/arm-armor.png' },
+  { name: 'FANTASY', description: 'Legendary armor and creations inspired by mythical worlds and warriors.', href: '/shop?realm=fantasy', badge: 'Mythic', stripe: 'bg-[#7c678a]', image: '/images/hp-stl-1.png' },
+  { name: "WOMEN'S ARMOR", description: 'Handcrafted armor and medieval pieces designed for women.', href: '/shop?realm=womens-armor', badge: 'Crafted', stripe: 'bg-[#9d7278]', image: '/images/hp-stl-2.png' },
+  { name: 'LARP & COSPLAY', description: 'Armor, costumes, helmets, and accessories for immersive characters and events.', href: '/shop?realm=larp-cosplay', badge: 'Stage', stripe: 'bg-[#5f7b7d]', image: '/images/hp-stl-3.png' },
+  { name: 'CINEMATIC & CHARACTER', description: 'Character-inspired pieces created for collectors, performers, and enthusiasts.', href: '/shop?realm=cinematic-character', badge: 'Screen', stripe: 'bg-[#a55d3f]', image: '/images/hp-stl-4.png' },
+];
+
+const DEFAULT_REVIEWS = [
+  { name: 'Riya Kapoor', text: 'Beautiful armour, excellent fit, and the team answered every question before shipping.', image: '/images/hp-gram-1.jpg', flag: 'India', verified: true },
+  { name: 'Marcus Lee', text: 'Arrived quickly and looks amazing on stage. The chainmail is solid and comfortable.', image: '/images/hp-gram-2.jpg', flag: 'USA', verified: true },
+  { name: 'Elena Schmidt', text: 'A gorgeous replica for my medieval wedding photos. Gorgeous finish and excellent quality.', image: '/images/hp-gram-3.jpg', flag: 'Germany', verified: true },
+];
+
+const DEFAULT_PILLARS = [
+  { icon: Award, label: '10+ Years' },
+  { icon: Star, label: '1000+ Products' },
+  { icon: Globe, label: '25+ Countries' },
+  { icon: Sparkles, label: 'Handmade' },
+  { icon: ShieldCheck, label: 'Premium Steel' },
+  { icon: Lock, label: 'Secure Checkout' },
+];
+
 const Home = () => {
-  const newArrivals = PRODUCTS.filter((p) => p.badge === 'new');
-  const bestSellers = PRODUCTS.slice(0, 6);
-  const featuredCollections = [
+  const [cms, setCms] = useState<any>(null);
+  const [allProducts, setAllProducts] = useState(PRODUCTS);
+
+  useEffect(() => {
+    fetch('/api/homepage')
+      .then((r) => r.json())
+      .then((data) => setCms(data))
+      .catch(() => {});
+
+    fetch('/api/products')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setAllProducts(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // 1. Dynamic Hero Slides
+  const heroSlides = cms?.hero?.slides || [
     {
-      name: 'Roman Collection',
-      href: '/shop?collection=roman',
-      description:
-        'Handcrafted Roman-inspired armor, helmets, shields, and accessories inspired by the legendary Roman era.',
-      image: '/images/round-shields.png',
+      image: heroImage,
+      headline: 'Crafted for history.',
+      subtitle: 'Discover museum-worthy armor, chainmail, leather goods, and historical costumes made by master artisans.',
+      ctaText: 'Explore the collection →',
+      ctaLink: '/shop',
     },
     {
-      name: 'Viking Collection',
-      href: '/shop?collection=viking',
-      description:
-        'Viking-inspired armor, helmets, chainmail, and accessories crafted for collectors, reenactors, and enthusiasts.',
-      image: '/images/viking-helmet.png',
-    },
-    {
-      name: 'Templar Collection',
-      href: '/shop?collection=templar',
-      description:
-        'Medieval Templar-inspired armor, helmets, chainmail, and accessories inspired by the legendary Knights Templar.',
-      image: '/images/tamplar-crusader-shields.png',
-    },
-    {
-      name: 'Fantasy Collection',
-      href: '/shop?collection=fantasy',
-      description:
-        'Enter a world of legendary warriors with handcrafted fantasy armor, costumes, helmets, and accessories.',
-      image: '/images/arm-armor.png',
-    },
-    {
-      name: "Women's Armor Collection",
-      href: '/shop?collection=womens-armor',
-      description:
-        'Handcrafted armor, chainmail, and medieval accessories designed for women, cosplay, LARP, and historical-inspired looks.',
-      image: '/images/leather-breastplates.png',
-    },
-    {
-      name: 'LARP & Cosplay Collection',
-      href: '/shop?collection=larp',
-      description:
-        'Handcrafted armor, costumes, helmets, and accessories for LARP, cosplay, festivals, and fantasy events.',
-      image: '/images/axes.png',
-    },
-    {
-      name: 'Cinematic & Character-Inspired Collection',
-      href: '/shop?collection=movie-replicas',
-      description:
-        'Explore cinematic and character-inspired armor, helmets, and costume pieces crafted for collectors and enthusiasts.',
-      image: '/images/full-body-armor.png',
+      image: heroImageTwo,
+      headline: 'Authentic Medieval Craft.',
+      subtitle: 'Handcrafted functional armor, helmets, shields, and historical equipment for reenactors and collectors worldwide.',
+      ctaText: 'Shop New Arrivals →',
+      ctaLink: '/shop?badge=new',
     },
   ];
-  const materialCards = [
-    {
-      name: 'Iron & Steel',
-      image: '/images/arm-armor.png',
-      description:
-        'Strong and durable metals used to create authentic armor, weapons, and historical-inspired pieces.',
-    },
-    {
-      name: 'Stainless Steel',
-      image: '/images/full-body-armor.png',
-      description:
-        'Corrosion-resistant and durable stainless steel, ideal for long-lasting armor and collectible pieces.',
-    },
-    {
-      name: 'Lightweight Aluminium',
-      image: '/images/viking-helmet.png',
-      description:
-        'Lightweight aluminium designed for comfortable wear while maintaining the look and character of traditional armor.',
-    },
-    {
-      name: 'Genuine Leather',
-      image: '/images/leather-breastplates.png',
-      description:
-        'Premium genuine leather used for armor straps, belts, accessories, and handcrafted details.',
-    },
-    {
-      name: 'Natural Cotton',
-      image: '/images/gambeson.png',
-      description:
-        'Natural cotton fabrics used for comfortable garments, costume elements, padding, and historical-inspired designs.',
-    },
-    {
-      name: 'Antique Brass',
-      image: '/images/round-shields.png',
-      description:
-        'Antique brass accents and fittings that add an authentic vintage and historical character to each creation.',
-    },
+
+  // 2. Dynamic New Arrivals
+  const newArrivals =
+    cms?.newArrivals?.mode === 'manual' && cms?.newArrivals?.productIds?.length > 0
+      ? allProducts.filter((p) => cms.newArrivals.productIds.includes(p.id))
+      : allProducts.filter((p) => (p.badge || '').toLowerCase() === 'new');
+  const displayArrivals = newArrivals.length > 0 ? newArrivals : allProducts.slice(0, 8);
+  const scrollingArrivals = [...displayArrivals, ...displayArrivals];
+
+  // 3. Dynamic Top Selling
+  const bestSellers =
+    cms?.topSelling?.mode === 'manual' && cms?.topSelling?.productIds?.length > 0
+      ? allProducts.filter((p) => cms.topSelling.productIds.includes(p.id))
+      : allProducts.slice(0, 6);
+
+  // 4. Featured Collections & Categories
+  const featuredCollections = cms?.featuredCollections?.collections || DEFAULT_COLLECTIONS;
+  const materialCards = cms?.shopByMaterial?.materials || DEFAULT_MATERIALS;
+  const realmCards = cms?.shopByRealm?.realms || DEFAULT_REALMS;
+  const whyChoose = DEFAULT_PILLARS;
+  const customerReviews = cms?.customerReviews?.reviews || DEFAULT_REVIEWS;
+  const zafexCollection = cms?.zafexCollection?.items || [
+    { name: 'MEDIEVAL CLOTHING', img: '/images/hp-stl-main.png', href: '/shop?category=medieval-clothing' },
+    { name: 'GAMBESONS', img: '/images/gambeson.png', href: '/shop?category=gambesons' },
+    { name: 'MEDIEVAL HELMETS', img: '/images/viking-helmet.png', href: '/shop?category=medieval-helmets' },
+    { name: 'PLATE ARMOR', img: '/images/full-body-armor.png', href: '/shop?category=plate-armor' },
+    { name: 'LEATHER ARMOR', img: '/images/leather-breastplates.png', href: '/shop?category=leather-armor' },
+    { name: 'SHIELDS', img: '/images/round-shields.png', href: '/shop?category=shields' },
+    { name: 'WEAPONS', img: '/images/axes.png', href: '/shop?category=weapons' },
+    { name: 'ACCESSORIES', img: '/images/hp-stl-4.png', href: '/shop?category=accessories' },
   ];
-  const realmCards = [
-    {
-      name: 'HISTORICAL',
-      description: 'Authentic-inspired pieces from legendary eras and civilizations.',
-      href: '/shop?realm=historical',
-      badge: 'Legacy',
-      stripe: 'bg-[#b98d46]',
-      panel: 'bg-[#f3e8d7]',
-      image: '/images/hp-hero-1.png',
-    },
-    {
-      name: 'ROMAN',
-      description: 'Armor, helmets, shields, and accessories inspired by ancient Rome.',
-      href: '/shop?realm=roman',
-      badge: 'Imperium',
-      stripe: 'bg-[#7b6d59]',
-      panel: 'bg-[#efe6dc]',
-      image: '/images/full-body-armor.png',
-    },
-    {
-      name: 'VIKING',
-      description: 'Norse-inspired armor, chainmail, helmets, and accessories.',
-      href: '/shop?realm=viking',
-      badge: 'Valhalla',
-      stripe: 'bg-[#5f6c75]',
-      panel: 'bg-[#edf0ec]',
-      image: '/images/viking-helmet.png',
-    },
-    {
-      name: 'TEMPLAR',
-      description: 'Medieval knightly armor and accessories inspired by the Knights Templar.',
-      href: '/shop?realm=templar',
-      badge: 'Crusade',
-      stripe: 'bg-[#9e765b]',
-      panel: 'bg-[#f1eadb]',
-      image: '/images/arm-armor.png',
-    },
-    {
-      name: 'FANTASY',
-      description: 'Legendary armor and creations inspired by mythical worlds and warriors.',
-      href: '/shop?realm=fantasy',
-      badge: 'Mythic',
-      stripe: 'bg-[#7c678a]',
-      panel: 'bg-[#f2ebf7]',
-      image: '/images/hp-stl-1.png',
-    },
-    {
-      name: "WOMEN'S ARMOR",
-      description: 'Handcrafted armor and medieval pieces designed for women.',
-      href: '/shop?realm=womens-armor',
-      badge: 'Crafted',
-      stripe: 'bg-[#9d7278]',
-      panel: 'bg-[#f7ecec]',
-      image: '/images/hp-stl-2.png',
-    },
-    {
-      name: 'LARP & COSPLAY',
-      description: 'Armor, costumes, helmets, and accessories for immersive characters and events.',
-      href: '/shop?realm=larp-cosplay',
-      badge: 'Stage',
-      stripe: 'bg-[#5f7b7d]',
-      panel: 'bg-[#edf4f2]',
-      image: '/images/hp-stl-3.png',
-    },
-    {
-      name: 'CINEMATIC & CHARACTER',
-      description: 'Character-inspired pieces created for collectors, performers, and enthusiasts.',
-      href: '/shop?realm=cinematic-character',
-      badge: 'Screen',
-      stripe: 'bg-[#a55d3f]',
-      panel: 'bg-[#f6eee7]',
-      image: '/images/hp-stl-4.png',
-    },
-  ];
-  const whyChoose = [
-    { icon: Award, label: '10+ Years' },
-    { icon: Star, label: '1000+ Products' },
-    { icon: Globe, label: '25+ Countries' },
-    { icon: Sparkles, label: 'Handmade' },
-    { icon: ShieldCheck, label: 'Premium Steel' },
-    { icon: Lock, label: 'Secure Checkout' },
-  ];
-  const customerReviews = [
-    {
-      name: 'Riya Kapoor',
-      text: 'Beautiful armour, excellent fit, and the team answered every question before shipping.',
-      image: '/images/hp-gram-1.jpg',
-      flag: 'India',
-      verified: true,
-      video: false,
-    },
-    {
-      name: 'Marcus Lee',
-      text: 'Arrived quickly and looks amazing on stage. The chainmail is solid and comfortable.',
-      image: '/images/hp-gram-2.jpg',
-      flag: 'USA',
-      verified: true,
-      video: true,
-    },
-    {
-      name: 'Elena Schmidt',
-      text: 'A gorgeous replica for my medieval wedding photos. Gorgeous finish and excellent quality.',
-      image: '/images/hp-gram-3.jpg',
-      flag: 'Germany',
-      verified: true,
-      video: false,
-    },
-  ];
-  const [instaImages, setInstaImages] = useState([
-    '/images/hp-gram-1.jpg',
-    '/images/hp-gram-2.jpg',
-    '/images/hp-gram-3.jpg',
-    '/images/hp-gram-4.jpg',
-    '/images/hp-gram-5.jpg',
-    '/images/hp-gram-6.jpg',
-    '/images/hp-gram-7.jpg',
-  ]);
-  const scrollingArrivals = [...newArrivals, ...newArrivals];
+
+  // 5. Lookbook Items
+  const lookbookProductIds: string[] = cms?.shopTheLook?.productIds || ['pa-1', 'hm-6', 'hm-3', 'ac-1'];
+  const lookbookProducts = lookbookProductIds.map((id) => {
+    const found = allProducts.find((p) => p.id === id);
+    if (found) {
+      return { id: found.id, name: found.name, price: found.price, img: found.image, link: `/shop/${found.id}` };
+    }
+    return { id, name: 'Artisan Armor Item', price: 12000, img: '/images/breastplates.png', link: `/shop/${id}` };
+  });
+
   const [heroIndex, setHeroIndex] = useState(0);
-  const heroImages = [heroImage, heroImageTwo];
+  const [instaImages, setInstaImages] = useState(
+    cms?.instagramGrid?.images || [
+      '/images/hp-gram-1.jpg',
+      '/images/hp-gram-2.jpg',
+      '/images/hp-gram-3.jpg',
+      '/images/hp-gram-4.jpg',
+      '/images/hp-gram-5.jpg',
+      '/images/hp-gram-6.jpg',
+      '/images/hp-gram-7.jpg',
+    ]
+  );
 
   const { isLoggedIn } = useAuth();
   const [, setLocation] = useLocation();
   const addToCartMut = useAddToCart();
   const { toast } = useToast();
-  const { formatPrice } = useCurrency();
   const [addingId, setAddingId] = useState<string | null>(null);
 
   const handleAddLookbookItem = async (item: { id: string; name: string }) => {
@@ -342,17 +300,12 @@ const Home = () => {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setHeroIndex((current) => (current + 1) % heroImages.length);
+      setHeroIndex((current) => (current + 1) % heroSlides.length);
     }, 6500);
     return () => window.clearInterval(interval);
-  }, [heroImages.length]);
+  }, [heroSlides.length]);
 
-  useEffect(() => {
-    const feedTimer = window.setInterval(() => {
-      setInstaImages((current) => [...current].sort(() => Math.random() - 0.5));
-    }, 14000);
-    return () => window.clearInterval(feedTimer);
-  }, []);
+  const activeSlide = heroSlides[heroIndex] || heroSlides[0];
 
   return (
     <div className="flex flex-col w-full min-h-[100dvh] bg-[#f5f0e8]">
@@ -360,10 +313,10 @@ const Home = () => {
 
       {/* ── HERO IMAGE ── */}
       <section className="relative flex min-h-[430px] w-full items-center overflow-hidden bg-[#111] sm:min-h-[540px] lg:min-h-[620px]">
-        {heroImages.map((image, index) => (
+        {heroSlides.map((slide: any, index: number) => (
           <img
-            key={image}
-            src={image}
+            key={index}
+            src={slide.image}
             alt="Zafex medieval collectibles museum"
             className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-[1400ms] ${
               heroIndex === index ? 'opacity-100' : 'opacity-0'
@@ -373,22 +326,22 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#080b0d]/90 via-[#080b0d]/45 to-transparent" />
         <div className="relative z-10 max-w-[560px] px-8 py-20 sm:px-16 lg:px-24">
           <h1 className="mt-5 font-serif text-[clamp(38px,5vw,72px)] font-semibold uppercase leading-[0.95] tracking-[2px] text-[#f5f0e8]">
-            Crafted for history.
+            {activeSlide.headline}
           </h1>
           <p className="mt-6 max-w-[390px] font-sans text-[15px] leading-relaxed text-[#f5f0e8]/80">
-            Discover museum-worthy armor, chainmail, leather goods, and historical costumes made by master artisans.
+            {activeSlide.subtitle}
           </p>
           <Link
-            href="/shop"
+            href={activeSlide.ctaLink || '/shop'}
             className="mt-8 inline-block bg-[#c6a767] px-8 py-4 font-serif text-[11px] font-bold uppercase tracking-[2px] text-[#171713] transition-colors hover:bg-[#f2d49a]"
           >
-            Explore the collection →
+            {activeSlide.ctaText || 'Explore the collection →'}
           </Link>
         </div>
         <div className="absolute bottom-7 right-8 z-10 flex items-center gap-2 sm:right-16 lg:right-24">
-          {heroImages.map((image, index) => (
+          {heroSlides.map((_: any, index: number) => (
             <button
-              key={image}
+              key={index}
               type="button"
               aria-label={`Show hero image ${index + 1}`}
               onClick={() => setHeroIndex(index)}
@@ -402,14 +355,16 @@ const Home = () => {
       <section className="py-[80px] bg-[#f5f0e8]">
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-12">
-            <h2 className="font-serif text-[48px] font-bold text-[#1a1a18] uppercase leading-none">NEW ARRIVALS</h2>
+            <h2 className="font-serif text-[48px] font-bold text-[#1a1a18] uppercase leading-none">
+              {cms?.newArrivals?.title || 'NEW ARRIVALS'}
+            </h2>
           </Reveal>
 
           <div className="group/new-arrivals relative -mx-5 overflow-hidden">
             <div className="new-arrivals-track flex w-max gap-[18px] px-5 group-hover/new-arrivals:[animation-play-state:paused]">
               {scrollingArrivals.map((product, i) => (
                 <div key={`${product.id}-${i}`} className="w-[220px] shrink-0 sm:w-[270px] lg:w-[300px]">
-                  <ProductCard product={product} index={i % newArrivals.length} />
+                  <ProductCard product={product} index={i % displayArrivals.length} />
                 </div>
               ))}
             </div>
@@ -417,13 +372,16 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ── TOP SELLING ── */}
       <section className="py-[80px] bg-white">
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <div className="mb-10">
-            <h2 className="font-serif text-[48px] font-bold text-[#1a1a18] uppercase leading-none">Top Selling</h2>
+            <h2 className="font-serif text-[48px] font-bold text-[#1a1a18] uppercase leading-none">
+              {cms?.topSelling?.title || 'Top Selling'}
+            </h2>
           </div>
           <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
-            {bestSellers.map((product, i) => (
+            {bestSellers.map((product) => (
               <div key={product.id} className="rounded-none border border-[#ddd] bg-[#f8f1e6] p-5 transition-shadow hover:shadow-none">
                 <Link href={`/shop/${product.id}`} className="block overflow-hidden rounded-none bg-[#1a1a18] mb-5">
                   <img src={product.image} alt={product.name} className="h-[260px] w-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy" />
@@ -452,11 +410,12 @@ const Home = () => {
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-16 text-center">
             <h2 className="font-serif text-[44px] font-semibold uppercase tracking-[0.28em] text-[#171717] leading-tight">
-              EXPLORE <span className="text-[#ff7a00]">Zaf</span><span className="text-[#000000]">Ex</span> COLLECTIONS
+              {cms?.featuredCollections?.title || 'EXPLORE ZAFEX COLLECTIONS'}
             </h2>
             <div className="mx-auto mt-5 h-[1px] w-[72px] bg-[#b79d6b] opacity-80"></div>
             <p className="mx-auto mt-8 max-w-[760px] font-sans text-[16px] leading-[1.85] text-[#3f3f3f]">
-              Discover handcrafted armor, medieval gear, historical pieces, and fantasy creations inspired by legendary eras and worlds.
+              {cms?.featuredCollections?.subtitle ||
+                'Discover handcrafted armor, medieval gear, historical pieces, and fantasy creations inspired by legendary eras and worlds.'}
             </p>
           </Reveal>
 
@@ -496,16 +455,21 @@ const Home = () => {
       {/* ── SHOP BY MATERIAL ── */}
       <section className="py-[80px] bg-white">
         <div className="w-full max-w-[1680px] mx-auto px-5">
-      <Reveal className="mb-12 text-center">
-            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">MATERIAL SELECTION</span>
-            <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">THE ART OF MATERIALS</h2>
+          <Reveal className="mb-12 text-center">
+            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">
+              {cms?.shopByMaterial?.badge || 'MATERIAL SELECTION'}
+            </span>
+            <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">
+              {cms?.shopByMaterial?.title || 'THE ART OF MATERIALS'}
+            </h2>
             <p className="mx-auto mt-5 max-w-[760px] font-sans text-[15px] leading-[1.8] text-[#3f3f3f]">
-              Every <span className="text-[#ff7a00]">Zaf</span><span className="text-[#000000]">Ex</span> creation begins with carefully selected materials, shaped by skilled hands and inspired by history.
+              {cms?.shopByMaterial?.subtitle ||
+                'Every ZafEx creation begins with carefully selected materials, shaped by skilled hands and inspired by history.'}
             </p>
           </Reveal>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {materialCards.map((material) => (
+            {materialCards.map((material: any) => (
               <Link
                 key={material.name}
                 href={`/shop?material=${material.name.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and')}`}
@@ -537,21 +501,26 @@ const Home = () => {
       <section className="py-[80px] bg-[#f5f0e8]">
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-12 text-center">
-            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">REALMS OF ZAFEX</span>
-            <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">SHOP BY REALM</h2>
+            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">
+              {cms?.shopByRealm?.badge || 'REALMS OF ZAFEX'}
+            </span>
+            <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">
+              {cms?.shopByRealm?.title || 'SHOP BY REALM'}
+            </h2>
             <p className="mx-auto mt-4 max-w-[760px] font-sans text-[14px] leading-[1.8] text-[#6b6b6b]">
-              Explore handcrafted creations inspired by history, legendary warriors, fantasy worlds, and unforgettable characters.
+              {cms?.shopByRealm?.subtitle ||
+                'Explore handcrafted creations inspired by history, legendary warriors, fantasy worlds, and unforgettable characters.'}
             </p>
           </Reveal>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {realmCards.map((realm) => (
+            {realmCards.map((realm: any) => (
               <Link
                 key={realm.name}
                 href={realm.href}
                 className="group overflow-hidden rounded-none border border-[#b58b62] bg-[#f5ecdf] text-left transition-all duration-300 hover:-translate-y-0 hover:shadow-none"
               >
-                <div className={`h-[4px] w-full ${realm.stripe}`} />
+                <div className={`h-[4px] w-full ${realm.stripe || 'bg-[#b98d46]'}`} />
                 <div className="flex flex-col">
                   <div className="relative h-[250px] overflow-hidden bg-[#efe5d3]">
                     <img
@@ -592,20 +561,28 @@ const Home = () => {
       <section className="py-[100px] bg-[#1a1a18] text-white">
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-12 text-center">
-            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">WHY ZAFEX</span>
-            <h2 className="font-serif text-[42px] font-bold mt-2 uppercase leading-none">Why Choose ZAFEX</h2>
+            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">
+              {cms?.whyChoose?.badge || 'WHY ZAFEX'}
+            </span>
+            <h2 className="font-serif text-[42px] font-bold mt-2 uppercase leading-none">
+              {cms?.whyChoose?.title || 'Why Choose ZAFEX'}
+            </h2>
             <p className="font-sans text-[14px] text-[#d4af37]/80 max-w-[760px] mx-auto mt-4">
-              Trusted by reenactors, performers, and collectors for premium materials, authentic detail, and reliable delivery.
+              {cms?.whyChoose?.subtitle ||
+                'Trusted by reenactors, performers, and collectors for premium materials, authentic detail, and reliable delivery.'}
             </p>
           </Reveal>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {whyChoose.map((item) => (
-              <Reveal key={item.label} className="rounded-[24px] border border-white/10 bg-[#0f0f0f]/80 px-6 py-8 text-center" delay={0.02}>
-                <item.icon size={32} className="mx-auto text-[#d4af37] mb-4" />
-                <div className="font-serif text-[22px] font-semibold text-white">{item.label}</div>
-              </Reveal>
-            ))}
+            {(cms?.whyChoose?.pillars || whyChoose).map((item: any, idx: number) => {
+              const Icon = whyChoose[idx % whyChoose.length]?.icon || Award;
+              return (
+                <Reveal key={idx} className="rounded-[24px] border border-white/10 bg-[#0f0f0f]/80 px-6 py-8 text-center" delay={0.02}>
+                  <Icon size={32} className="mx-auto text-[#d4af37] mb-4" />
+                  <div className="font-serif text-[20px] font-semibold text-white">{item.label}</div>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -615,16 +592,13 @@ const Home = () => {
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-12 text-center">
             <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">
-              <span className="text-[#1a1a18]">The</span>{' '}
-              <span className="text-[#ff7a00]">Zaf</span>
-              <span className="text-[#000000]">Ex</span>
-              <span className="text-[#1a1a18]"> Experience</span>
+              {cms?.customerReviews?.title || 'The ZafEx Experience'}
             </h2>
           </Reveal>
 
           <div className="grid gap-6 lg:grid-cols-3">
-            {customerReviews.map((review, i) => (
-              <Reveal key={review.name} delay={i * 0.05} className="rounded-[28px] border border-[#d4cfc7] bg-white p-6 shadow-sm">
+            {customerReviews.map((review: any, i: number) => (
+              <Reveal key={i} delay={i * 0.05} className="rounded-[28px] border border-[#d4cfc7] bg-white p-6 shadow-sm">
                 <div className="relative overflow-hidden rounded-[24px] mb-5 h-[240px] bg-[#111]">
                   <img src={review.image} alt={review.name} className="h-full w-full object-cover" loading="lazy" />
                   {review.video && (
@@ -651,32 +625,21 @@ const Home = () => {
         </div>
       </section>
 
-
-      {/* ── THE ZAFEX COLLECTION (NEW) ── */}
+      {/* ── THE ZAFEX COLLECTION ── */}
       <section className="py-[60px] bg-[#f5f0e8]">
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-6 text-center">
             <h2 className="font-serif text-[38px] font-bold uppercase leading-none">
-              THE <span className="text-[#ff7a00]">Zaf</span><span className="text-[#000000]">Ex</span> COLLECTION
+              {cms?.zafexCollection?.title || 'THE ZAFEX COLLECTION'}
             </h2>
           </Reveal>
-
         </div>
       </section>
 
       <div className="w-full overflow-x-auto -mx-5">
         <div className="flex w-max gap-[18px] px-5">
-          {[
-            { name: 'MEDIEVAL CLOTHING', img: '/images/hp-stl-main.png', href: '/shop?category=medieval-clothing' },
-            { name: 'GAMBESONS', img: '/images/gambeson.png', href: '/shop?category=gambesons' },
-            { name: 'MEDIEVAL HELMETS', img: '/images/viking-helmet.png', href: '/shop?category=medieval-helmets' },
-            { name: 'PLATE ARMOR', img: '/images/full-body-armor.png', href: '/shop?category=plate-armor' },
-            { name: 'LEATHER ARMOR', img: '/images/leather-breastplates.png', href: '/shop?category=leather-armor' },
-            { name: 'SHIELDS', img: '/images/round-shields.png', href: '/shop?category=shields' },
-            { name: 'WEAPONS', img: '/images/axes.png', href: '/shop?category=weapons' },
-            { name: 'ACCESSORIES', img: '/images/hp-stl-4.png', href: '/shop?category=accessories' },
-          ].map((c, i) => (
-            <Link key={c.name} href={c.href} className="group block min-w-[300px] sm:min-w-[360px] lg:min-w-[420px] h-[240px] sm:h-[300px] lg:h-[360px] overflow-hidden">
+          {zafexCollection.map((c: any, i: number) => (
+            <Link key={i} href={c.href} className="group block min-w-[300px] sm:min-w-[360px] lg:min-w-[420px] h-[240px] sm:h-[300px] lg:h-[360px] overflow-hidden">
               <div className="relative h-full w-full">
                 <img src={c.img} alt={c.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" loading="lazy" />
                 <div className="absolute inset-0 bg-black/30" />
@@ -693,11 +656,16 @@ const Home = () => {
       <section className="py-[80px] bg-[#f5f0e8]">
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <Reveal className="mb-12 text-center">
-            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">COMPLETE THE SET</span>
-            <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">SHOP THE LOOK</h2>
+            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">
+              {cms?.shopTheLook?.badge || 'COMPLETE THE SET'}
+            </span>
+            <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">
+              {cms?.shopTheLook?.title || 'SHOP THE LOOK'}
+            </h2>
             <div className="w-[40px] h-[3px] bg-[#9c1c1c] mx-auto mt-4 mb-3" />
             <p className="font-sans text-[14px] text-[#6b6b6b]">
-              Get the complete warrior's kit assembled by our LARP and reenactment specialists
+              {cms?.shopTheLook?.subtitle ||
+                "Get the complete warrior's kit assembled by our LARP and reenactment specialists"}
             </p>
           </Reveal>
 
@@ -706,8 +674,8 @@ const Home = () => {
               {/* Left Image */}
               <div className="lg:w-[55%] relative bg-[#222] overflow-hidden">
                 <img
-                  src="/images/hp-stl-main.png"
-                  alt="Gothic Knight Look"
+                  src={cms?.shopTheLook?.mainImage || '/images/hp-stl-main.png'}
+                  alt="Lookbook"
                   className="w-full h-[600px] lg:h-full object-cover object-center"
                   loading="lazy"
                 />
@@ -726,21 +694,19 @@ const Home = () => {
 
               {/* Right Panel */}
               <div className="lg:w-[45%] bg-[#f5f0e8] p-8 flex flex-col justify-center border-l-0 lg:border-l border-[#d4cfc7]">
-                <span className="font-serif text-[11px] text-[#d4af37] tracking-[2px] uppercase block mb-2">FEATURED ATTIRE</span>
+                <span className="font-serif text-[11px] text-[#d4af37] tracking-[2px] uppercase block mb-2">
+                  {cms?.shopTheLook?.featuredAttireBadge || 'FEATURED ATTIRE'}
+                </span>
                 <h3 className="font-serif text-[28px] font-bold text-[#1a1a18] uppercase leading-tight mb-4">
-                  The Gothic Knight Commander
+                  {cms?.shopTheLook?.featuredAttireTitle || 'The Gothic Knight Commander'}
                 </h3>
                 <p className="font-sans text-[14px] text-[#4a4a4a] mb-8 leading-relaxed">
-                  A formidable compilation of hand-crafted steel, chainmail, and supple leather, built to project authority and withstand the demands of reenactment and display.
+                  {cms?.shopTheLook?.featuredAttireDesc ||
+                    'A formidable compilation of hand-crafted steel, chainmail, and supple leather, built to project authority and withstand the demands of reenactment and display.'}
                 </p>
 
                 <div className="flex flex-col gap-3">
-                  {[
-                    { id: 'pa-1', name: 'Gothic Fluted Steel Breastplate',    price: 20000, img: '/images/breastplates.png', link: '/shop/pa-1' },
-                    { id: 'hm-6', name: "Great Helmet – Heavy Metal Helm",   price: 13800, img: '/images/norman-helmet.png', link: '/shop/hm-6' },
-                    { id: 'hm-3', name: 'Viking Spectacle Helmet – Steel',    price: 11200, img: '/images/viking-helmet.png', link: '/shop/hm-3' },
-                    { id: 'ac-1', name: 'Leather Sword Belt – Classic',       price: 2200,  img: '/images/leather-belt.png', link: '/shop/ac-1' },
-                  ].map((item, i) => {
+                  {lookbookProducts.map((item, i) => {
                     const isAdding = addingId === item.id;
                     return (
                       <div key={i} className="flex items-center gap-4 bg-white p-2 group hover:shadow-md transition-shadow">
@@ -781,58 +747,36 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── FEATURED COLLECTION (4-col) ── */}
-      <section className="py-[80px] bg-white">
-        <div className="w-full max-w-[1680px] mx-auto px-5">
-          <Reveal className="mb-12">
-            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">OUR ARSENAL</span>
-            <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">Featured Collection</h2>
-            <div className="w-[40px] h-[3px] bg-[#9c1c1c] mt-4" />
-          </Reveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-[18px]">
-            {PRODUCTS.slice(0, 8).map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-          <Reveal className="mt-12 text-center" delay={0.1}>
-            <Link
-              href="/shop"
-              className="inline-block bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[3px] py-4 px-12 hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors duration-300"
-            >
-              VIEW ALL PRODUCTS
-            </Link>
-          </Reveal>
-        </div>
-      </section>
-
       {/* ── ABOUT ZAFEX ── */}
       <section className="bg-[#f5f0e8] px-5 py-[90px] sm:px-10 lg:py-[120px]">
         <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
           <Reveal>
             <span className="font-serif text-[11px] font-semibold uppercase tracking-[3px] text-[#b58a16]">
-              THE ZAFEX LEGACY
+              {cms?.aboutZafex?.badge || 'THE ZAFEX LEGACY'}
             </span>
             <h2 className="mt-5 max-w-[620px] font-serif text-[40px] font-medium leading-[1.05] text-[#1a1208] sm:text-[52px]">
-              About Zafex Collectibles
+              {cms?.aboutZafex?.title || 'About Zafex Collectibles'}
             </h2>
             <p className="mt-8 max-w-[620px] font-sans text-[15px] leading-[1.75] text-[#5b554d]">
-              We are dedicated artisans specializing in the creation of authentic, heirloom-quality medieval armor, functional historical equipment, and unique collectibles. Every piece that leaves our workshop is meticulously handcrafted with respect for historical accuracy and an uncompromising commitment to quality.
+              {cms?.aboutZafex?.paragraph1 ||
+                'We are dedicated artisans specializing in the creation of authentic, heirloom-quality medieval armor, functional historical equipment, and unique collectibles. Every piece that leaves our workshop is meticulously handcrafted with respect for historical accuracy and an uncompromising commitment to quality.'}
             </p>
             <p className="mt-6 max-w-[620px] font-sans text-[15px] leading-[1.75] text-[#5b554d]">
-              From the resonant ring of our chainmail to the sturdy protection of our leather armor, we equip reenactors, theater productions, and history enthusiasts worldwide.
+              {cms?.aboutZafex?.paragraph2 ||
+                'From the resonant ring of our chainmail to the sturdy protection of our leather armor, we equip reenactors, theater productions, and history enthusiasts worldwide.'}
             </p>
             <Link
-              href="/about"
+              href={cms?.aboutZafex?.buttonLink || '/about'}
               className="mt-8 inline-flex items-center border-b-2 border-[#1a1a18] pb-2 font-serif text-[12px] font-bold uppercase tracking-[2px] text-[#1a1a18] transition-colors hover:border-[#b58a16] hover:text-[#b58a16]"
             >
-              Learn More <span className="ml-2 text-[16px] leading-none">→</span>
+              {cms?.aboutZafex?.buttonText || 'Learn More'} <span className="ml-2 text-[16px] leading-none">→</span>
             </Link>
           </Reveal>
 
           <Reveal delay={0.12} className="relative overflow-hidden rounded-[32px] bg-[#1a1a18] shadow-xl">
             <img
-            src="/images/hp-stl-main.png"
-              alt="Zafex Collectibles artisan armor"
+              src={cms?.aboutZafex?.image || '/images/hp-stl-main.png'}
+              alt="Zafex artisan armor"
               className="w-full h-full object-cover min-h-[360px]"
               loading="lazy"
             />
@@ -844,18 +788,22 @@ const Home = () => {
       <section className="py-[48px] bg-white border-y border-[#d4cfc7]">
         <div className="w-full max-w-[1680px] mx-auto px-5">
           <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#d4cfc7]">
-            {[
-              { icon: RefreshCcw,   title: 'NO ORDER BACKLOG',  desc: 'We dispatch active stock immediately. No long waiting queues.'                        },
-              { icon: Globe,        title: 'WORLDWIDE SHIPPING', desc: 'Expedited courier services right to your doorstep, globally.'                        },
-              { icon: CheckCircle2, title: '100% SATISFIED',     desc: "Easy size returns and refunds if your order doesn't fit or impress."                 },
-              { icon: ShieldCheck,  title: 'SECURE PAYMENTS',    desc: 'Pay via Payoneer, PayPal or direct bank transfer – safe and encrypted.'              },
-            ].map((trust, i) => (
-              <Reveal key={i} delay={i * 0.08} className="flex flex-col items-center text-center px-6 py-6 md:py-0">
-                <trust.icon size={28} className="text-[#d4af37] mb-4" strokeWidth={1.5} />
-                <h4 className="font-serif text-[13px] font-bold text-[#1a1a18] uppercase tracking-[2px] mb-2">{trust.title}</h4>
-                <p className="font-sans text-[13px] text-[#6b6b6b] leading-relaxed">{trust.desc}</p>
-              </Reveal>
-            ))}
+            {(cms?.trustStrip?.items || [
+              { title: 'NO ORDER BACKLOG', desc: 'We dispatch active stock immediately. No long waiting queues.' },
+              { title: 'WORLDWIDE SHIPPING', desc: 'Expedited courier services right to your doorstep, globally.' },
+              { title: '100% SATISFIED', desc: "Easy size returns and refunds if your order doesn't fit or impress." },
+              { title: 'SECURE PAYMENTS', desc: 'Pay via Razorpay, Cards, NetBanking or UPI – safe and encrypted.' },
+            ]).map((trust: any, i: number) => {
+              const icons = [RefreshCcw, Globe, CheckCircle2, ShieldCheck];
+              const Icon = icons[i % icons.length];
+              return (
+                <Reveal key={i} delay={i * 0.08} className="flex flex-col items-center text-center px-6 py-6 md:py-0">
+                  <Icon size={28} className="text-[#d4af37] mb-4" strokeWidth={1.5} />
+                  <h4 className="font-serif text-[13px] font-bold text-[#1a1a18] uppercase tracking-[2px] mb-2">{trust.title}</h4>
+                  <p className="font-sans text-[13px] text-[#6b6b6b] leading-relaxed">{trust.desc}</p>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -863,34 +811,33 @@ const Home = () => {
       {/* ── INSTAGRAM ── */}
       <section className="py-[80px] bg-[#f5f0e8] overflow-hidden">
         <div className="w-full max-w-[1680px] mx-auto px-5 mb-8">
-          <Reveal className="flex items-end justify-between flex-wrap gap-4">
-            <div>
-              <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">SOCIAL</span>
-              <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none">FOLLOW US ON INSTAGRAM</h2>
+          <Reveal>
+            <a
+              href="https://www.instagram.com/zafex_collectibles?igsh=ZjA2aXQzanY1d205&utm_source=qr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block group"
+            >
+              <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">
+                {cms?.instagramGrid?.badge || 'SOCIAL'}
+              </span>
+              <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none group-hover:text-[#d4af37] transition-colors">
+                {cms?.instagramGrid?.title || 'FOLLOW US ON INSTAGRAM'}
+              </h2>
               <div className="w-[40px] h-[3px] bg-[#9c1c1c] mt-4" />
-            </div>
-            <div className="flex gap-2">
-              <button className="w-10 h-10 rounded-full bg-[#1a1a18] text-white flex items-center justify-center hover:bg-[#d4af37] transition-colors">
-                <ChevronLeft size={20} />
-              </button>
-              <button className="w-10 h-10 rounded-full bg-[#1a1a18] text-white flex items-center justify-center hover:bg-[#d4af37] transition-colors">
-                <ChevronRight size={20} />
-              </button>
-            </div>
+            </a>
           </Reveal>
         </div>
 
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 w-full">
-          {[
-            '/images/hp-gram-1.jpg',
-            '/images/hp-gram-2.jpg',
-            '/images/hp-gram-3.jpg',
-            '/images/hp-gram-4.jpg',
-            '/images/hp-gram-5.jpg',
-            '/images/hp-gram-6.jpg',
-            '/images/hp-gram-7.jpg',
-          ].map((img, i) => (
-            <a href="#" key={i} className="block relative group aspect-square bg-[#ddd] overflow-hidden">
+          {(cms?.instagramGrid?.images || instaImages).map((img: string, i: number) => (
+            <a
+              href="https://www.instagram.com/zafex_collectibles?igsh=ZjA2aXQzanY1d205&utm_source=qr"
+              target="_blank"
+              rel="noopener noreferrer"
+              key={i}
+              className="block relative group aspect-square bg-[#ddd] overflow-hidden cursor-pointer"
+            >
               <img
                 src={img}
                 alt="Instagram Post"
@@ -909,12 +856,15 @@ const Home = () => {
       <section className="py-[80px] bg-[#f5f0e8] border-t border-[#d4cfc7]">
         <div className="w-full max-w-[600px] mx-auto px-4 text-center">
           <Reveal>
-            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">STAY UPDATED</span>
+            <span className="font-serif text-[11px] text-[#d4af37] tracking-[3px] uppercase block">
+              {cms?.newsletter?.badge || 'STAY UPDATED'}
+            </span>
             <h2 className="font-serif text-[42px] font-bold text-[#1a1a18] mt-2 uppercase leading-none mb-6">
-              JOIN THE ZAFEX CIRCLE
+              {cms?.newsletter?.title || 'JOIN THE ZAFEX CIRCLE'}
             </h2>
             <p className="font-sans text-[14px] text-[#6b6b6b] mb-8">
-              Subscribe for early access to new arrivals, exclusive collector's discounts, and stories from the world of historical armour and LARP.
+              {cms?.newsletter?.subtitle ||
+                "Subscribe for early access to new arrivals, exclusive collector's discounts, and stories from the world of historical armour and LARP."}
             </p>
             <form className="flex w-full shadow-sm" onSubmit={(e) => e.preventDefault()}>
               <input
@@ -927,7 +877,7 @@ const Home = () => {
                 type="submit"
                 className="h-[48px] bg-[#1a1a18] text-white font-serif text-[12px] uppercase font-bold tracking-[2px] px-8 hover:bg-[#d4af37] hover:text-[#1a1a18] transition-colors whitespace-nowrap"
               >
-                SUBSCRIBE
+                {cms?.newsletter?.buttonText || 'SUBSCRIBE'}
               </button>
             </form>
           </Reveal>

@@ -63,24 +63,20 @@ export default function AdminLogin() {
             </div>
 
             {error && (
-              <p className="text-red-400 text-[12px]">{error}</p>
+              <div className="bg-[#3a1a1a] border border-[#6b2a2a] text-red-300 text-[12px] px-3.5 py-2.5 rounded text-center font-medium">
+                {error.toLowerCase().includes('default is') ? 'Wrong password' : error}
+              </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#d4af37] hover:bg-[#c09a2c] disabled:opacity-60 text-[#1a1a18] font-serif font-bold text-[11px] uppercase tracking-[2px] py-3 rounded transition-colors"
+              className="w-full bg-[#d4af37] hover:bg-[#c09a2c] disabled:opacity-60 text-[#1a1a18] font-serif font-bold text-[11px] uppercase tracking-[2px] py-3 rounded transition-colors cursor-pointer"
             >
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
         </div>
-
-        <p className="text-center text-[#4a4a46] text-[11px] mt-6">
-          Default password: <span className="text-[#6a6a66]">admin</span>
-          {' · '}
-          Set <code className="text-[#6a6a66]">ADMIN_PASSWORD</code> env var to change
-        </p>
       </div>
     </div>
   );

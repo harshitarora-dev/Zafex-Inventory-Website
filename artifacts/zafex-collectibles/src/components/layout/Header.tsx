@@ -23,7 +23,7 @@ export default function Header() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <Anvil className="text-primary w-8 h-8" />
+          <img src="/logo.png" alt="Zafex" className="w-8 h-8 object-contain" />
           <div className="flex flex-col">
             <span className="font-serif font-bold text-xl md:text-2xl tracking-[2px] uppercase leading-none text-foreground">
               Zafex

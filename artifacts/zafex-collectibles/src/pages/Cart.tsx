@@ -55,8 +55,8 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f0e8]">
-      <section className="w-full bg-[#cec3b5] flex flex-col items-center justify-center text-center px-4 py-14">
-        <h1 className="font-serif text-[48px] font-light text-[#1a1208] uppercase tracking-[0.1em]">Your Cart</h1>
+      <section className="w-full bg-[#cec3b5] flex flex-col items-center justify-center text-center px-4 py-12 sm:py-14">
+        <h1 className="font-serif text-[28px] xs:text-[34px] sm:text-[48px] font-light text-[#1a1208] uppercase tracking-[2px] sm:tracking-[0.1em]">Your Cart</h1>
       </section>
 
       <div className="max-w-[1200px] mx-auto px-5 py-12 flex flex-col lg:flex-row gap-10">

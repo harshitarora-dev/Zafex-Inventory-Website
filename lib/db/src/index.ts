@@ -6,8 +6,10 @@ import path from "node:path";
 
 function loadEnv() {
   const envPaths = [
+    path.resolve(process.cwd(), "artifacts", "api-server", ".env"),
     path.resolve(process.cwd(), ".env"),
     path.resolve(__dirname, ".env"),
+    path.resolve(__dirname, "..", "..", "artifacts", "api-server", ".env"),
     "/home/u933632718/domains/zafexcollectibles.com/backend/.env",
   ];
   for (const p of envPaths) {
@@ -73,6 +75,19 @@ export const db = drizzle(pool, { schema, mode: "default" });
  * This ensures smooth deployment on Hostinger or local environments without manual setup.
  */
 export async function initDatabase() {
+  loadEnv();
+  const host = process.env["DB_HOST"] || "127.0.0.1";
+  const user = process.env["DB_USER"] || "root";
+  const password = process.env["DB_PASSWORD"] || "";
+  const database = process.env["DB_NAME"] || "zafex_db";
+  const port = Number(process.env["DB_PORT"] || "3306");
+
+  try {
+    const rawConn = await mysql.createConnection({ host, user, password, port });
+    await rawConn.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
+    await rawConn.end();
+  } catch {}
+
   const connection = await pool.getConnection();
   try {
     // 1. Users table
@@ -112,16 +127,41 @@ export async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
 
-    // Ensure mrp, discount, and gallery columns exist on existing databases
-    try {
-      await connection.query(`ALTER TABLE products ADD COLUMN mrp INT NULL;`);
-    } catch {}
-    try {
-      await connection.query(`ALTER TABLE products ADD COLUMN discount INT DEFAULT 0;`);
-    } catch {}
-    try {
-      await connection.query(`ALTER TABLE products ADD COLUMN gallery JSON NULL;`);
-    } catch {}
+    // Ensure all extra columns exist on existing databases
+    const extraColumns = [
+      "sku VARCHAR(100) NULL",
+      "brand VARCHAR(100) DEFAULT 'ZAFS'",
+      "collection VARCHAR(100) NULL",
+      "mrp INT NULL",
+      "discount INT DEFAULT 0",
+      "price_range JSON NULL",
+      "gallery JSON NULL",
+      "video VARCHAR(500) NULL",
+      "customer_photos JSON NULL",
+      "lifestyle_images JSON NULL",
+      "size_chart_image VARCHAR(500) NULL",
+      "material VARCHAR(200) NULL",
+      "ring_size VARCHAR(100) NULL",
+      "ring_type VARCHAR(100) NULL",
+      "gauge VARCHAR(100) NULL",
+      "finish VARCHAR(200) NULL",
+      "weight VARCHAR(100) NULL",
+      "manufacturing_time VARCHAR(100) NULL",
+      "country VARCHAR(100) DEFAULT 'India'",
+      "hs_code VARCHAR(100) NULL",
+      "availability VARCHAR(100) DEFAULT 'In Stock'",
+      "estimated_delivery VARCHAR(100) NULL",
+      "colors JSON NULL",
+      "sizes JSON NULL",
+      "highlights JSON NULL",
+      "materials JSON NULL",
+      "ebay_url VARCHAR(500) NULL",
+    ];
+    for (const col of extraColumns) {
+      try {
+        await connection.query(`ALTER TABLE products ADD COLUMN ${col};`);
+      } catch {}
+    }
 
     // 3. Orders table
     await connection.query(`
@@ -230,6 +270,15 @@ export async function initDatabase() {
         message TEXT NOT NULL,
         is_read BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    // 10. Homepage Config table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS homepage_config (
+        id VARCHAR(50) PRIMARY KEY DEFAULT 'default',
+        data JSON NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
   } finally {

@@ -79,7 +79,12 @@ router.post("/auth/register", authLimiter, async (req, res) => {
     });
   } catch (err: unknown) {
     logger.error({ err }, "Registration error");
-    res.status(500).json({ error: "Registration failed. " + (err instanceof Error ? err.message : "") });
+    const errMsg = err instanceof Error ? err.message : "";
+    if (errMsg.includes("Failed query") || errMsg.includes("ACCESS_DENIED") || errMsg.includes("ECONNREFUSED")) {
+      res.status(500).json({ error: "Database connection failed. Please check your MySQL credentials (DB_PASSWORD) in .env file." });
+      return;
+    }
+    res.status(500).json({ error: "Registration failed. " + errMsg });
   }
 });
 
@@ -117,7 +122,12 @@ router.post("/auth/login", authLimiter, async (req, res) => {
     });
   } catch (err: unknown) {
     logger.error({ err }, "Login error");
-    res.status(500).json({ error: "Login failed. " + (err instanceof Error ? err.message : "") });
+    const errMsg = err instanceof Error ? err.message : "";
+    if (errMsg.includes("Failed query") || errMsg.includes("ACCESS_DENIED") || errMsg.includes("ECONNREFUSED")) {
+      res.status(500).json({ error: "Database connection failed. Please check your MySQL credentials (DB_PASSWORD) in .env file." });
+      return;
+    }
+    res.status(500).json({ error: "Login failed. " + errMsg });
   }
 });
 

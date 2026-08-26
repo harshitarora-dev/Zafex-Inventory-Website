@@ -1,27 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOrder, cancelOrder } from '@/lib/api';
+import { getOrder, cancelOrder, createPaymentOrder, verifyPayment } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, Package, CheckCircle2, Truck, XCircle, Clock } from 'lucide-react';
+import { ChevronLeft, Package, CheckCircle2, Truck, XCircle, Clock, CreditCard } from 'lucide-react';
+
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && (window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(true));
+      existing.addEventListener('error', () => resolve(false));
+      setTimeout(() => resolve(typeof window !== 'undefined' && !!(window as any).Razorpay), 1000);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 const STATUS_COLORS: Record<string, string> = {
-  pending:   'bg-yellow-100 text-yellow-800 border-yellow-200',
+  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
-  packed:    'bg-indigo-100 text-indigo-800 border-indigo-200',
-  shipped:   'bg-purple-100 text-purple-800 border-purple-200',
+  packed: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  shipped: 'bg-purple-100 text-purple-800 border-purple-200',
   delivered: 'bg-green-100 text-green-800 border-green-200',
   cancelled: 'bg-red-100 text-red-800 border-red-200',
 };
 
 const STATUS_ICONS: Record<string, React.ElementType> = {
-  pending:   Clock,
+  pending: Clock,
   confirmed: CheckCircle2,
-  packed:    Package,
-  shipped:   Truck,
+  packed: Package,
+  shipped: Truck,
   delivered: CheckCircle2,
   cancelled: XCircle,
 };
@@ -40,6 +62,66 @@ export default function OrderDetail() {
     queryFn: () => getOrder(orderId),
     enabled: isLoggedIn && !!orderId,
   });
+
+  const [paying, setPaying] = useState(false);
+
+  const handlePayNow = async () => {
+    if (!data?.order) return;
+    setPaying(true);
+    try {
+      const isLoaded = await loadRazorpayScript();
+      const paymentOrder = await createPaymentOrder({ orderId });
+      if (paymentOrder.razorpayOrderId && isLoaded && typeof (window as any).Razorpay !== 'undefined') {
+        await new Promise<void>((resolve, reject) => {
+          const rzp = new (window as any).Razorpay({
+            key: paymentOrder.key,
+            amount: paymentOrder.amount,
+            currency: paymentOrder.currency,
+            name: 'Zafex Collectibles',
+            description: `Order #${orderId}`,
+            order_id: paymentOrder.razorpayOrderId,
+            prefill: {
+              name: data.order.customerName,
+              email: data.order.customerEmail,
+              contact: data.order.customerPhone ?? '',
+            },
+            theme: { color: '#d4af37' },
+            handler: async (response: Record<string, string>) => {
+              try {
+                await verifyPayment({
+                  razorpayOrderId: response['razorpay_order_id'] as string,
+                  razorpayPaymentId: response['razorpay_payment_id'] as string,
+                  razorpaySignature: response['razorpay_signature'] as string,
+                  orderId,
+                });
+                toast({
+                  title: 'Payment successful!',
+                  description: `Order #${orderId} has been confirmed.`,
+                });
+                qc.invalidateQueries({ queryKey: ['order', orderId] });
+                qc.invalidateQueries({ queryKey: ['orders'] });
+                resolve();
+              } catch {
+                reject(new Error('Payment verification failed'));
+              }
+            },
+            modal: { ondismiss: () => reject(new Error('dismissed')) },
+          });
+          rzp.open();
+        });
+      }
+    } catch (payErr: any) {
+      if (payErr?.message !== 'dismissed') {
+        toast({
+          title: 'Payment Error',
+          description: payErr?.message || 'Could not initialize payment.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const cancelMutation = useMutation({
     mutationFn: () => cancelOrder(orderId),
@@ -224,17 +306,26 @@ export default function OrderDetail() {
                 <div className="flex justify-between">
                   <span className="text-[#4a4a4a]">Payment</span>
                   <span
-                    className={`font-medium capitalize ${
-                      order.paymentStatus === 'paid'
+                    className={`font-medium capitalize ${order.paymentStatus === 'paid'
                         ? 'text-green-700'
                         : order.paymentStatus === 'failed'
-                        ? 'text-red-600'
-                        : 'text-yellow-600'
-                    }`}
+                          ? 'text-red-600'
+                          : 'text-yellow-600'
+                      }`}
                   >
                     {order.paymentStatus}
                   </span>
                 </div>
+                {order.paymentStatus !== 'paid' && order.paymentMethod === 'razorpay' && order.status !== 'cancelled' && (
+                  <button
+                    onClick={handlePayNow}
+                    disabled={paying}
+                    className="mt-4 w-full bg-[#d4af37] hover:bg-[#c49f27] text-[#1a1208] font-serif font-bold text-[12px] uppercase tracking-[1.5px] py-3 px-4 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer shadow"
+                  >
+                    <CreditCard size={16} />
+                    {paying ? 'Processing...' : 'Pay Now with Razorpay'}
+                  </button>
+                )}
               </div>
             </div>
 

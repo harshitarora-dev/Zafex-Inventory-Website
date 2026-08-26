@@ -60,10 +60,16 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Serve static images directory from all possible locations
 const staticImageDirs = [
+  path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images"),
+  path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public"),
+  path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "dist", "public", "images"),
+  path.resolve(process.cwd(), "hostinger-frontend", "images"),
+  path.resolve(process.cwd(), "public", "images"),
+  path.resolve(process.cwd(), "public"),
+  path.resolve(process.cwd(), "public_html", "images"),
   path.resolve(process.cwd(), "..", "public_html", "images"),
   "/home/u933632718/domains/zafexcollectibles.com/public_html/images",
-  path.resolve(process.cwd(), "public", "images"),
-  path.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images"),
+  "/home/u933632718/public_html/images",
 ];
 for (const dir of staticImageDirs) {
   try { fs.mkdirSync(dir, { recursive: true }); } catch {}

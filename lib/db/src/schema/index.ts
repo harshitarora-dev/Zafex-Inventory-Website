@@ -3,25 +3,59 @@ import { mysqlTable, varchar, text, int, serial, boolean, timestamp, json } from
 // ── Products ──────────────────────────────────────────────────────────────
 export const productsTable = mysqlTable("products", {
   id: varchar("id", { length: 100 }).primaryKey(),
+  sku: varchar("sku", { length: 100 }),
   name: varchar("name", { length: 255 }).notNull(),
+  brand: varchar("brand", { length: 100 }).default("ZAFS"),
   cat: varchar("cat", { length: 100 }).notNull(),
   sub: varchar("sub", { length: 100 }).notNull(),
+  collection: varchar("collection", { length: 100 }),
   price: int("price").notNull(),
   mrp: int("mrp"),
   discount: int("discount").default(0),
+  priceRange: json("price_range").$type<[number, number]>(),
   badge: varchar("badge", { length: 100 }),
   image: varchar("image", { length: 500 }).notNull(),
   gallery: json("gallery").$type<string[]>(),
+  video: varchar("video", { length: 500 }),
+  customerPhotos: json("customer_photos").$type<string[]>(),
+  lifestyleImages: json("lifestyle_images").$type<string[]>(),
+  sizeChartImage: varchar("size_chart_image", { length: 500 }),
+  material: varchar("material", { length: 200 }),
+  ringSize: varchar("ring_size", { length: 100 }),
+  ringType: varchar("ring_type", { length: 100 }),
+  gauge: varchar("gauge", { length: 100 }),
+  finish: varchar("finish", { length: 200 }),
+  weight: varchar("weight", { length: 100 }),
+  manufacturingTime: varchar("manufacturing_time", { length: 100 }),
+  country: varchar("country", { length: 100 }).default("India"),
+  hsCode: varchar("hs_code", { length: 100 }),
+  availability: varchar("availability", { length: 100 }).default("In Stock"),
+  estimatedDelivery: varchar("estimated_delivery", { length: 100 }),
+  colors: json("colors").$type<string[]>(),
+  sizes: json("sizes").$type<string[]>(),
+  highlights: json("highlights").$type<string[]>(),
+  materials: json("materials").$type<string[]>(),
   desc: text("desc"),
   tags: json("tags").$type<string[]>(),
   inStock: boolean("in_stock").notNull().default(true),
   stockCount: int("stock_count").default(100),
+  ebayUrl: varchar("ebay_url", { length: 500 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export type InsertProduct = typeof productsTable.$inferInsert;
 export type Product = typeof productsTable.$inferSelect;
+
+// ── Homepage Config ───────────────────────────────────────────────────────
+export const homepageConfigTable = mysqlTable("homepage_config", {
+  id: varchar("id", { length: 50 }).primaryKey().default("default"),
+  data: json("data").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type InsertHomepageConfig = typeof homepageConfigTable.$inferInsert;
+export type HomepageConfig = typeof homepageConfigTable.$inferSelect;
 
 // ── Users ─────────────────────────────────────────────────────────────────
 export const usersTable = mysqlTable("users", {

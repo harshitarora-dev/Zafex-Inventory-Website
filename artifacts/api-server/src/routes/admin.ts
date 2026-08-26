@@ -15,17 +15,13 @@ router.post("/admin/login", (req, res) => {
     }
     const password = body?.password ?? (typeof body === "string" ? body : undefined);
     const p = String(password ?? "").trim();
-    const configuredPassword = String(process.env["ADMIN_PASSWORD"] || "admin123").trim();
+    const configuredPassword = String(process.env["ADMIN_PASSWORD"] || "Admin@123").trim();
 
-    // Allow configured password, admin123, or admin
-    const valid =
-      p.length > 0 &&
-      (p === configuredPassword ||
-        p === "admin123" ||
-        p === "admin");
+    // STRICT CHECK: Only accept the exact Admin@123 password
+    const valid = p.length > 0 && (p === configuredPassword || p === "Admin@123");
 
     if (!valid) {
-      res.status(401).json({ error: "Invalid password. Default is admin123 or admin." });
+      res.status(401).json({ error: "Wrong password" });
       return;
     }
 
