@@ -154,6 +154,15 @@ CREATE TABLE IF NOT EXISTS `contacts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
+-- 10. Table structure for table `homepage_config`
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `homepage_config` (
+  `id` VARCHAR(50) PRIMARY KEY DEFAULT 'default',
+  `data` JSON NOT NULL,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
 -- Seed Data: Default Products Catalogue
 -- ----------------------------------------------------------------------------
 INSERT INTO `products` (`id`, `name`, `cat`, `sub`, `price`, `badge`, `image`, `desc`, `tags`, `in_stock`, `stock_count`) VALUES
