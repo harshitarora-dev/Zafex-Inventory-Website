@@ -15,7 +15,8 @@ import { useCartItemCount } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useCurrency, CURRENCIES, type CurrencyCode } from '@/contexts/CurrencyContext';
 import { useCompare } from '@/contexts/CompareContext';
-
+import { useQuery } from '@tanstack/react-query';
+import { getProducts } from '@/lib/api';
 import { PRODUCTS } from '@/data/products';
 
 const shopGroups = [
@@ -331,19 +332,38 @@ const Header = () => {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
+  // Live DB products for instant search
+  const { data: dbData } = useQuery({
+    queryKey: ['products-header-search'],
+    queryFn: () => getProducts({ limit: 150 }),
+    staleTime: 30 * 1000,
+  });
+
+  const allProducts = React.useMemo(() => {
+    const list = dbData?.products ?? [];
+    if (list.length > 0) {
+      const dbIds = new Set(list.map((p) => p.id));
+      const missingStatic = PRODUCTS.filter((p) => !dbIds.has(p.id));
+      return [...list, ...missingStatic];
+    }
+    return PRODUCTS;
+  }, [dbData]);
+
   // Compute live product suggestions
   const matchingProducts = React.useMemo(() => {
     if (!debouncedQuery || debouncedQuery.length < 2) return [];
     const q = debouncedQuery.toLowerCase();
-    return PRODUCTS.filter((p) => {
-      return (
-        p.name.toLowerCase().includes(q) ||
-        p.cat.toLowerCase().includes(q) ||
-        p.sub.toLowerCase().includes(q) ||
-        (p.tags ?? []).some((t) => t.toLowerCase().includes(q))
-      );
-    }).slice(0, 5);
-  }, [debouncedQuery]);
+    return allProducts
+      .filter((p) => {
+        return (
+          (p.name && p.name.toLowerCase().includes(q)) ||
+          (p.cat && p.cat.toLowerCase().includes(q)) ||
+          (p.sub && p.sub.toLowerCase().includes(q)) ||
+          (p.tags ?? []).some((t) => t.toLowerCase().includes(q))
+        );
+      })
+      .slice(0, 6);
+  }, [debouncedQuery, allProducts]);
 
   // Compute live category suggestions
   const matchingCategories = React.useMemo(() => {

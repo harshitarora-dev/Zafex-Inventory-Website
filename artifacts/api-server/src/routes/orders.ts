@@ -5,8 +5,8 @@ import { requireUser } from "../middlewares/userAuth";
 
 const router = Router();
 
-const SHIPPING_THRESHOLD = 5000; // free shipping above ₹5000
-const SHIPPING_COST = 499;
+const SHIPPING_THRESHOLD = 100; // free shipping above $100
+const SHIPPING_COST = 15; // standard shipping $15
 
 /** POST /api/orders/checkout */
 router.post("/orders/checkout", requireUser, async (req, res) => {

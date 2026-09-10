@@ -25,28 +25,28 @@ export interface CurrencyConfig {
   name: string;
   flag: string;
   country: string;
-  rate: number; // multiplier from base INR
-  format: (amountInInr: number) => string;
+  rate: number; // multiplier from base USD (1.0 = USD)
+  format: (amountInUsd: number) => string;
 }
 
 export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
-  INR: {
-    code: 'INR',
-    symbol: '₹',
-    name: 'Indian Rupee',
-    flag: '🇮🇳',
-    country: 'India',
-    rate: 1.0,
-    format: (inr) => `₹${Math.round(inr).toLocaleString('en-IN')}`,
-  },
   USD: {
     code: 'USD',
     symbol: '$',
     name: 'US Dollar',
     flag: '🇺🇸',
     country: 'United States',
-    rate: 0.012, // 1 USD ≈ 83.3 INR
-    format: (inr) => `$${(inr * 0.012).toFixed(2)}`,
+    rate: 1.0,
+    format: (usd) => `$${Number(usd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+  },
+  INR: {
+    code: 'INR',
+    symbol: '₹',
+    name: 'Indian Rupee',
+    flag: '🇮🇳',
+    country: 'India',
+    rate: 84.0, // 1 USD ≈ 84 INR
+    format: (usd) => `₹${Math.round(usd * 84).toLocaleString('en-IN')}`,
   },
   EUR: {
     code: 'EUR',
@@ -54,8 +54,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Euro',
     flag: '🇪🇺',
     country: 'European Union',
-    rate: 0.011, // 1 EUR ≈ 90.9 INR
-    format: (inr) => `€${(inr * 0.011).toFixed(2)}`,
+    rate: 0.92, // 1 USD ≈ 0.92 EUR
+    format: (usd) => `€${(usd * 0.92).toFixed(2)}`,
   },
   GBP: {
     code: 'GBP',
@@ -63,8 +63,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'British Pound',
     flag: '🇬🇧',
     country: 'United Kingdom',
-    rate: 0.0094, // 1 GBP ≈ 106.3 INR
-    format: (inr) => `£${(inr * 0.0094).toFixed(2)}`,
+    rate: 0.78, // 1 USD ≈ 0.78 GBP
+    format: (usd) => `£${(usd * 0.78).toFixed(2)}`,
   },
   AED: {
     code: 'AED',
@@ -72,8 +72,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'UAE Dirham (Dubai)',
     flag: '🇦🇪',
     country: 'United Arab Emirates',
-    rate: 0.044, // 1 AED ≈ 22.7 INR
-    format: (inr) => `AED ${(inr * 0.044).toFixed(2)}`,
+    rate: 3.67, // 1 USD ≈ 3.67 AED
+    format: (usd) => `AED ${(usd * 3.67).toFixed(2)}`,
   },
   SAR: {
     code: 'SAR',
@@ -81,8 +81,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Saudi Riyal',
     flag: '🇸🇦',
     country: 'Saudi Arabia',
-    rate: 0.045, // 1 SAR ≈ 22.2 INR
-    format: (inr) => `SAR ${(inr * 0.045).toFixed(2)}`,
+    rate: 3.75, // 1 USD ≈ 3.75 SAR
+    format: (usd) => `SAR ${(usd * 3.75).toFixed(2)}`,
   },
   TRY: {
     code: 'TRY',
@@ -90,8 +90,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Turkish Lira',
     flag: '🇹🇷',
     country: 'Turkey',
-    rate: 0.46, // 1 TRY ≈ 2.17 INR
-    format: (inr) => `₺${(inr * 0.46).toFixed(2)}`,
+    rate: 34.0, // 1 USD ≈ 34 TRY
+    format: (usd) => `₺${(usd * 34).toFixed(2)}`,
   },
   CAD: {
     code: 'CAD',
@@ -99,8 +99,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Canadian Dollar',
     flag: '🇨🇦',
     country: 'Canada',
-    rate: 0.016, // 1 CAD ≈ 62.5 INR
-    format: (inr) => `CA$${(inr * 0.016).toFixed(2)}`,
+    rate: 1.36, // 1 USD ≈ 1.36 CAD
+    format: (usd) => `CA$${(usd * 1.36).toFixed(2)}`,
   },
   AUD: {
     code: 'AUD',
@@ -108,8 +108,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Australian Dollar',
     flag: '🇦🇺',
     country: 'Australia',
-    rate: 0.018, // 1 AUD ≈ 55.5 INR
-    format: (inr) => `AU$${(inr * 0.018).toFixed(2)}`,
+    rate: 1.52, // 1 USD ≈ 1.52 AUD
+    format: (usd) => `AU$${(usd * 1.52).toFixed(2)}`,
   },
   KWD: {
     code: 'KWD',
@@ -117,8 +117,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Kuwaiti Dinar',
     flag: '🇰🇼',
     country: 'Kuwait',
-    rate: 0.0037, // 1 KWD ≈ 270 INR
-    format: (inr) => `KWD ${(inr * 0.0037).toFixed(2)}`,
+    rate: 0.31, // 1 USD ≈ 0.31 KWD
+    format: (usd) => `KWD ${(usd * 0.31).toFixed(3)}`,
   },
   QAR: {
     code: 'QAR',
@@ -126,8 +126,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Qatari Riyal',
     flag: '🇶🇦',
     country: 'Qatar',
-    rate: 0.044, // 1 QAR ≈ 22.8 INR
-    format: (inr) => `QAR ${(inr * 0.044).toFixed(2)}`,
+    rate: 3.64, // 1 USD ≈ 3.64 QAR
+    format: (usd) => `QAR ${(usd * 3.64).toFixed(2)}`,
   },
   OMR: {
     code: 'OMR',
@@ -135,8 +135,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Omani Rial',
     flag: '🇴🇲',
     country: 'Oman',
-    rate: 0.0046, // 1 OMR ≈ 216 INR
-    format: (inr) => `OMR ${(inr * 0.0046).toFixed(2)}`,
+    rate: 0.38, // 1 USD ≈ 0.38 OMR
+    format: (usd) => `OMR ${(usd * 0.38).toFixed(3)}`,
   },
   BHD: {
     code: 'BHD',
@@ -144,8 +144,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Bahraini Dinar',
     flag: '🇧🇭',
     country: 'Bahrain',
-    rate: 0.0045, // 1 BHD ≈ 221 INR
-    format: (inr) => `BHD ${(inr * 0.0045).toFixed(2)}`,
+    rate: 0.38, // 1 USD ≈ 0.38 BHD
+    format: (usd) => `BHD ${(usd * 0.38).toFixed(3)}`,
   },
   SGD: {
     code: 'SGD',
@@ -153,8 +153,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Singapore Dollar',
     flag: '🇸🇬',
     country: 'Singapore',
-    rate: 0.016, // 1 SGD ≈ 62.5 INR
-    format: (inr) => `S$${(inr * 0.016).toFixed(2)}`,
+    rate: 1.34, // 1 USD ≈ 1.34 SGD
+    format: (usd) => `S$${(usd * 1.34).toFixed(2)}`,
   },
   JPY: {
     code: 'JPY',
@@ -162,8 +162,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Japanese Yen',
     flag: '🇯🇵',
     country: 'Japan',
-    rate: 1.85, // 1 JPY ≈ 0.54 INR
-    format: (inr) => `¥${Math.round(inr * 1.85).toLocaleString('en-US')}`,
+    rate: 154.0, // 1 USD ≈ 154 JPY
+    format: (usd) => `¥${Math.round(usd * 154).toLocaleString('en-US')}`,
   },
   CHF: {
     code: 'CHF',
@@ -171,8 +171,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'Swiss Franc',
     flag: '🇨🇭',
     country: 'Switzerland',
-    rate: 0.011, // 1 CHF ≈ 95 INR
-    format: (inr) => `CHF ${(inr * 0.011).toFixed(2)}`,
+    rate: 0.88, // 1 USD ≈ 0.88 CHF
+    format: (usd) => `CHF ${(usd * 0.88).toFixed(2)}`,
   },
   NZD: {
     code: 'NZD',
@@ -180,8 +180,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     name: 'New Zealand Dollar',
     flag: '🇳🇿',
     country: 'New Zealand',
-    rate: 0.020, // 1 NZD ≈ 50 INR
-    format: (inr) => `NZ$${(inr * 0.020).toFixed(2)}`,
+    rate: 1.64, // 1 USD ≈ 1.64 NZD
+    format: (usd) => `NZ$${(usd * 1.64).toFixed(2)}`,
   },
 };
 
@@ -331,16 +331,16 @@ interface CurrencyContextType {
   currentCurrency: CurrencyConfig;
   currencyCode: CurrencyCode;
   setCurrency: (code: CurrencyCode) => void;
-  formatPrice: (inrAmount: number) => string;
-  convertPrice: (inrAmount: number) => number;
+  formatPrice: (usdAmount: number) => string;
+  convertPrice: (usdAmount: number) => number;
 }
 
 const CurrencyContext = createContext<CurrencyContextType>({
-  currentCurrency: CURRENCIES.INR,
-  currencyCode: 'INR',
+  currentCurrency: CURRENCIES.USD,
+  currencyCode: 'USD',
   setCurrency: () => {},
-  formatPrice: (inr) => `₹${Math.round(inr).toLocaleString('en-IN')}`,
-  convertPrice: (inr) => inr,
+  formatPrice: (usd) => `$${Number(usd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+  convertPrice: (usd) => usd,
 });
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

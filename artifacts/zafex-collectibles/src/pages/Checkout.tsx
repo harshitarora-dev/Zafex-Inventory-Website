@@ -65,7 +65,7 @@ export default function Checkout() {
     setForm((f) => ({ ...f, [field]: value }));
 
   const subtotal = cartData?.subtotal ?? 0;
-  const shippingCost = subtotal >= 5000 ? 0 : 499;
+  const shippingCost = subtotal >= 100 ? 0 : 15;
   const total = subtotal + shippingCost;
 
   if (!isLoggedIn) {

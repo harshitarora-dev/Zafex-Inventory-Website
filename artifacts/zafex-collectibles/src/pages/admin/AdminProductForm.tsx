@@ -30,12 +30,15 @@ import {
   Settings2,
   Sliders,
   Check,
+  Play,
+  Video,
 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import {
   createAdminProduct,
   updateAdminProduct,
   getAdminProduct,
+  uploadAdminMedia,
   type AdminProduct,
 } from '@/lib/adminApi';
 
@@ -301,12 +304,14 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
 
   const [loadingProduct, setLoadingProduct] = useState(mode === 'edit');
   const [saving, setSaving] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [error, setError] = useState('');
   const [successToast, setSuccessToast] = useState('');
   const [showLivePreview, setShowLivePreview] = useState(true);
   const [showAdvancedSpecs, setShowAdvancedSpecs] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const custPhoto1Ref = useRef<HTMLInputElement>(null);
   const custPhoto2Ref = useRef<HTMLInputElement>(null);
@@ -399,6 +404,10 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
         const dataUrl = e.target?.result as string;
         if (!dataUrl) {
           resolve('');
+          return;
+        }
+        if (file.type.startsWith('video/')) {
+          resolve(dataUrl);
           return;
         }
         const img = new Image();
@@ -564,7 +573,7 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
         country: form.country.trim() || 'India',
         hsCode: form.hsCode.trim() || undefined,
         ebayUrl: form.ebayUrl.trim() || undefined,
-        video: form.video.trim() || undefined,
+        video: form.video && form.video.trim() ? form.video.trim() : null,
         colors: form.colors.length > 0 ? form.colors : undefined,
         sizes: form.sizes.length > 0 ? form.sizes : undefined,
         highlights: form.highlights.length > 0 ? form.highlights : undefined,
@@ -751,12 +760,12 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block font-serif text-[11px] uppercase tracking-[1px] text-[#c0b8ac] font-semibold mb-2">
-                    MRP / Original Price (₹)
+                    MRP / Original Price ($)
                   </label>
                   <input
                     type="number"
                     min="0"
-                    placeholder="e.g. 8800"
+                    placeholder="e.g. 120"
                     value={form.mrp}
                     onChange={(e) => setForm({ ...form, mrp: e.target.value })}
                     className="w-full bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg px-4 py-3 text-sm focus:border-[#d4af37] outline-none"
@@ -765,13 +774,13 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
 
                 <div>
                   <label className="block font-serif text-[11px] uppercase tracking-[1.5px] text-[#d4af37] font-bold mb-2">
-                    Selling Price (₹) *
+                    Selling Price ($) *
                   </label>
                   <input
                     type="number"
                     min="0"
                     required
-                    placeholder="e.g. 7200"
+                    placeholder="e.g. 99"
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
                     className="w-full bg-[#1a1a18] border-2 border-[#d4af37] text-[#f5f0e8] rounded-lg px-4 py-3 text-sm font-bold focus:border-[#e5c14d] outline-none"
@@ -789,7 +798,7 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                     </span>
                   </div>
                   <span className="bg-emerald-900/60 px-3 py-1 rounded-full border border-emerald-700/50 text-[11px] font-bold">
-                    Saves ₹{savings.toLocaleString('en-IN')}
+                    Saves ${savings.toLocaleString('en-US')}
                   </span>
                 </div>
               )}
@@ -982,16 +991,16 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                 </div>
               </div>
 
-              {/* ── PRODUCT PHOTOS (Main Hero + Inline Additional Angles) ── */}
+              {/* ── PRODUCT MEDIA (Main Hero, Video Demonstration & Additional Angles) ── */}
               <div className="space-y-4 pt-2 border-t border-[#333330]">
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <div>
                       <label className="block font-serif text-[11px] uppercase tracking-[1.5px] text-[#d4af37] font-bold">
-                        Product Photos (Main Hero & Additional Angles) *
+                        Product Media (Hero Photo, Video Clip & Angles) *
                       </label>
                       <span className="text-[11px] text-[#8a8278]">
-                        Upload product images. The main hero photo appears on store listings; angles appear in gallery carousel.
+                        Upload photos and product video clip. Photos appear in listing/gallery and video plays directly in the main showcase.
                       </span>
                     </div>
                     <button
@@ -1003,8 +1012,8 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-4 bg-[#1a1a18] p-4 rounded-xl border border-[#333330]">
-                    {/* Main Hero Photo Slot */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[160px_160px_1fr] gap-4 bg-[#1a1a18] p-4 rounded-xl border border-[#333330]">
+                    {/* 1. Main Hero Photo Slot */}
                     <div className="space-y-1.5">
                       <span className="text-[10px] font-serif uppercase tracking-[1px] text-[#d4af37] font-bold block">
                         ★ Main Hero Photo
@@ -1015,7 +1024,7 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                           <button
                             type="button"
                             onClick={() => setImagePreview('')}
-                            className="absolute top-1.5 right-1.5 bg-black/80 hover:bg-red-600 text-white p-1 rounded-full transition shadow"
+                            className="absolute top-1.5 right-1.5 bg-black/80 hover:bg-red-600 text-white p-1 rounded-full transition shadow z-10"
                             title="Remove Hero Image"
                           >
                             <X size={12} />
@@ -1050,13 +1059,99 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                       />
                     </div>
 
-                    {/* Additional Angles Gallery (Inline beside Hero) */}
+                    {/* 2. Product Video Clip Slot */}
                     <div className="space-y-1.5">
+                      <span className="text-[10px] font-serif uppercase tracking-[1px] text-[#38bdf8] font-bold flex items-center gap-1">
+                        <Film size={11} /> Video Clip
+                      </span>
+                      {uploadingVideo ? (
+                        <div className="w-full aspect-square rounded-xl border-2 border-[#38bdf8] bg-[#1a2228] flex flex-col items-center justify-center text-center p-3 shadow-md">
+                          <Loader2 className="animate-spin text-[#38bdf8] mb-2" size={26} />
+                          <span className="text-[11px] text-[#38bdf8] font-serif uppercase tracking-[1px] font-bold">
+                            Uploading Video...
+                          </span>
+                          <span className="text-[9px] text-[#94a3b8] mt-1">Direct Fast Stream</span>
+                        </div>
+                      ) : form.video ? (
+                        <div className="relative w-full aspect-square rounded-xl overflow-hidden border-2 border-[#38bdf8] bg-black shadow-md group">
+                          <video
+                            src={form.video}
+                            className="w-full h-full object-cover"
+                            muted
+                            playsInline
+                            onMouseOver={(e) => (e.currentTarget as HTMLVideoElement).play().catch(() => {})}
+                            onMouseOut={(e) => (e.currentTarget as HTMLVideoElement).pause()}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, video: '' })}
+                            className="absolute top-1.5 right-1.5 bg-black/80 hover:bg-red-600 text-white p-1 rounded-full transition shadow z-10"
+                            title="Remove Video"
+                          >
+                            <X size={12} />
+                          </button>
+                          <span className="absolute bottom-1 left-1 bg-[#0f172a]/90 text-[#38bdf8] text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                            <Play size={8} /> VIDEO
+                          </span>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => videoFileRef.current?.click()}
+                          className="w-full aspect-square rounded-xl border-2 border-dashed border-[#38bdf8]/50 hover:border-[#38bdf8] bg-[#1a2228] flex flex-col items-center justify-center text-center p-2 cursor-pointer transition hover:bg-[#202c34]"
+                        >
+                          <Film className="text-[#38bdf8] mb-1" size={22} />
+                          <span className="text-[10px] text-[#f5f0e8] font-serif uppercase tracking-[1px] font-bold">
+                            Upload Video
+                          </span>
+                          <span className="text-[8px] text-[#94a3b8] mt-0.5">MP4, WebM, MOV (Fast)</span>
+                        </div>
+                      )}
+                      <input
+                        ref={videoFileRef}
+                        type="file"
+                        accept="video/mp4,video/webm,video/quicktime,video/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              setUploadingVideo(true);
+                              setError('');
+                              // 1. Try fast stream upload
+                              try {
+                                const res = await uploadAdminMedia(file);
+                                if (res?.url) {
+                                  setForm((f) => ({ ...f, video: res.url }));
+                                  setUploadingVideo(false);
+                                  return;
+                                }
+                              } catch (streamErr) {
+                                console.warn('Fast upload failed, trying base64 fallback:', streamErr);
+                              }
+
+                              // 2. Reliable Base64 fallback
+                              const b64 = await fileToBase64(file);
+                              if (b64) {
+                                setForm((f) => ({ ...f, video: b64 }));
+                              }
+                            } catch (err: any) {
+                              setError(err?.message || 'Video upload failed. Please check video format.');
+                            } finally {
+                              setUploadingVideo(false);
+                              if (videoFileRef.current) videoFileRef.current.value = '';
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* 3. Additional Angles Gallery */}
+                    <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-serif uppercase tracking-[1px] text-[#c0b8ac] font-bold block">
                           Additional Angle Photos ({galleryPreviews.length})
                         </span>
-                        <span className="text-[10px] text-[#8a8278]">Hover thumbnail to Set as Hero or Delete</span>
+                        <span className="text-[10px] text-[#8a8278]">Hover to Set as Hero or Delete</span>
                       </div>
 
                       <div className="flex flex-wrap gap-2.5 min-h-[140px] p-2.5 bg-[#20201c] rounded-xl border border-[#333330] items-center">
@@ -1466,21 +1561,8 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                     </div>
                   </div>
 
-                  {/* Video & eBay Link */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#333330]">
-                    <div>
-                      <label className="block font-serif text-[11px] uppercase tracking-[1px] text-[#c0b8ac] font-semibold mb-2">
-                        Video Demonstration URL (MP4 / YouTube)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="https://example.com/demo.mp4"
-                        value={form.video}
-                        onChange={(e) => setForm({ ...form, video: e.target.value })}
-                        className="w-full bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg px-4 py-2.5 text-sm focus:border-[#d4af37] outline-none"
-                      />
-                    </div>
-
+                  {/* eBay Link */}
+                  <div className="pt-4 border-t border-[#333330]">
                     <div>
                       <label className="block font-serif text-[11px] uppercase tracking-[1px] text-[#c0b8ac] font-semibold mb-2">
                         eBay Store Link
@@ -1610,11 +1692,11 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
 
                     <div className="flex items-baseline gap-2 pt-1">
                       <span className="font-sans text-[18px] font-bold text-[#1a1a18]">
-                        ₹{Number(form.price || form.mrp || 0).toLocaleString('en-IN')}
+                        ${Number(form.price || form.mrp || 0).toLocaleString('en-US')}
                       </span>
                       {mrpNum > 0 && priceNum > 0 && mrpNum > priceNum && (
                         <span className="font-sans text-xs text-[#8a8278] line-through">
-                          ₹{mrpNum.toLocaleString('en-IN')}
+                          ${mrpNum.toLocaleString('en-US')}
                         </span>
                       )}
                     </div>

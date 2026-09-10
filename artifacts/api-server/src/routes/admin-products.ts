@@ -10,33 +10,43 @@ const router = Router();
 
 /* ── Image upload setup ────────────────────────────────────────────────── */
 function getTargetImageDirs(): string[] {
-  return [
-    path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images"),
-    path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "dist", "public", "images"),
-    path.resolve(process.cwd(), "hostinger-frontend", "images"),
-    path.resolve(process.cwd(), "public", "images"),
-    path.resolve(process.cwd(), "public_html", "images"),
-    path.resolve(process.cwd(), "..", "public_html", "images"),
-    "/home/u933632718/domains/zafexcollectibles.com/public_html/images",
-    "/home/u933632718/public_html/images",
-    path.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images"),
-  ];
+  const dirs = new Set<string>();
+
+  // 1. Hostinger production directories
+  const absHostinger = "/home/u933632718/domains/zafexcollectibles.com/public_html/images";
+  if (fs.existsSync("/home/u933632718/domains/zafexcollectibles.com/public_html")) {
+    dirs.add(absHostinger);
+  }
+  const relHostinger = path.resolve(process.cwd(), "..", "public_html", "images");
+  if (fs.existsSync(path.resolve(process.cwd(), "..", "public_html"))) {
+    dirs.add(relHostinger);
+  }
+
+  // 2. Local dev directories
+  const localArtifacts = path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
+  dirs.add(localArtifacts);
+
+  const localHostinger = path.resolve(process.cwd(), "hostinger-frontend", "images");
+  if (fs.existsSync(path.resolve(process.cwd(), "hostinger-frontend"))) {
+    dirs.add(localHostinger);
+  }
+
+  return Array.from(dirs);
 }
 
 function getPrimaryImagesDir(): string {
-  const localArtifactsDir = path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
-  try { fs.mkdirSync(localArtifactsDir, { recursive: true }); } catch {}
-
-  const hostingerDir = path.resolve(process.cwd(), "..", "public_html", "images");
-  if (fs.existsSync(path.resolve(process.cwd(), "..", "public_html"))) {
-    try { fs.mkdirSync(hostingerDir, { recursive: true }); } catch {}
-    return hostingerDir;
-  }
   const absHostinger = "/home/u933632718/domains/zafexcollectibles.com/public_html/images";
   if (fs.existsSync("/home/u933632718/domains/zafexcollectibles.com/public_html")) {
-    try { fs.mkdirSync(absHostinger, { recursive: true }); } catch {}
+    try { fs.mkdirSync(absHostinger, { recursive: true }); } catch { }
     return absHostinger;
   }
+  const relHostinger = path.resolve(process.cwd(), "..", "public_html", "images");
+  if (fs.existsSync(path.resolve(process.cwd(), "..", "public_html"))) {
+    try { fs.mkdirSync(relHostinger, { recursive: true }); } catch { }
+    return relHostinger;
+  }
+  const localArtifactsDir = path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
+  try { fs.mkdirSync(localArtifactsDir, { recursive: true }); } catch { }
   return localArtifactsDir;
 }
 
@@ -44,8 +54,8 @@ function writeImageToAllDirs(filename: string, buffer: Buffer): void {
   for (const d of getTargetImageDirs()) {
     try {
       fs.mkdirSync(d, { recursive: true });
-      fs.writeFileSync(path.join(d, filename), buffer);
-    } catch {}
+      fs.writeFile(path.join(d, filename), buffer, () => { });
+    } catch { }
   }
 }
 
@@ -57,17 +67,20 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
+const uploadMedia = multer({
   storage,
-  limits: { fileSize: 30 * 1024 * 1024 }, // 30 MB
+  limits: { fileSize: 250 * 1024 * 1024 }, // 250 MB
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files are allowed"));
+    if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image and video files are allowed"));
+    }
   },
 });
 
 const safeUpload = (req: any, res: any, next: any) => {
-  upload.single("image")(req, res, (err: any) => {
+  uploadMedia.single("image")(req, res, (err: any) => {
     if (err) {
       return next();
     }
@@ -75,17 +88,39 @@ const safeUpload = (req: any, res: any, next: any) => {
   });
 };
 
-function saveBase64Image(dataUri: string): string | null {
+/* ── POST /api/admin/upload-media (Direct Fast Stream Upload) ────────────*/
+router.post("/admin/upload-media", requireAdmin, uploadMedia.single("file"), (req, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: "No file received" });
+      return;
+    }
+    const filename = req.file.filename;
+    try {
+      const fileBuf = fs.readFileSync(req.file.path);
+      writeImageToAllDirs(filename, fileBuf);
+    } catch { }
+    res.json({ url: `/images/${filename}` });
+  } catch (err: any) {
+    res.status(500).json({ error: "Upload failed: " + (err?.message || "") });
+  }
+});
+
+function saveBase64Media(dataUri: string): string | null {
   try {
     if (!dataUri || typeof dataUri !== "string") return null;
     const commaIdx = dataUri.indexOf(",");
-    if (commaIdx === -1 || !dataUri.startsWith("data:image/")) return null;
+    if (commaIdx === -1) return null;
 
     const header = dataUri.slice(0, commaIdx);
     const base64Data = dataUri.slice(commaIdx + 1);
 
     let ext = "jpg";
-    if (header.includes("image/png")) ext = "png";
+    if (header.includes("video/mp4")) ext = "mp4";
+    else if (header.includes("video/webm")) ext = "webm";
+    else if (header.includes("video/quicktime") || header.includes("video/mov")) ext = "mov";
+    else if (header.includes("video/ogg")) ext = "ogv";
+    else if (header.includes("image/png")) ext = "png";
     else if (header.includes("image/webp")) ext = "webp";
     else if (header.includes("image/gif")) ext = "gif";
     else if (header.includes("image/svg")) ext = "svg";
@@ -101,7 +136,24 @@ function saveBase64Image(dataUri: string): string | null {
   }
 }
 
+function saveBase64Image(dataUri: string): string | null {
+  return saveBase64Media(dataUri);
+}
+
 /* ── Helpers ────────────────────────────────────────────────────────────── */
+function parseStringArray(raw: any): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map((s) => String(s).trim()).filter(Boolean);
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
+    } catch { }
+    return raw.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 function slugify(text: string) {
   return text
     .toLowerCase()
@@ -210,7 +262,7 @@ router.post(
         let list: string[] = [];
         let parsed: any = raw;
         if (typeof raw === "string") {
-          try { parsed = JSON.parse(raw); } catch {}
+          try { parsed = JSON.parse(raw); } catch { }
         }
         if (Array.isArray(parsed)) {
           for (const item of parsed) {
@@ -244,19 +296,6 @@ router.post(
         }
       }
 
-      const parseStringArray = (raw: any): string[] => {
-        if (!raw) return [];
-        if (Array.isArray(raw)) return raw.map((s) => String(s).trim()).filter(Boolean);
-        if (typeof raw === "string") {
-          try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
-          } catch {}
-          return raw.split(",").map((s) => s.trim()).filter(Boolean);
-        }
-        return [];
-      };
-
       const sizesList = parseStringArray(req.body.sizes);
       const highlightsList = parseStringArray(req.body.highlights);
       const materialsList = parseStringArray(req.body.materials);
@@ -283,8 +322,8 @@ router.post(
 
       const parsedTags = tags
         ? (typeof tags === "string" ? tags.split(",") : tags)
-            .map((t: string) => String(t).trim())
-            .filter(Boolean)
+          .map((t: string) => String(t).trim())
+          .filter(Boolean)
         : [];
 
       let mrpNum = mrp ? Number(mrp) : null;
@@ -293,6 +332,15 @@ router.post(
         mrpNum && mrpNum > finalPrice && mrpNum > 0
           ? Math.round(((mrpNum - finalPrice) / mrpNum) * 100)
           : (discount ? Number(discount) : 0);
+
+      let videoPath: string | null = null;
+      if (video && typeof video === "string") {
+        if (video.startsWith("data:video/") || video.startsWith("data:image/")) {
+          videoPath = saveBase64Media(video);
+        } else if (video.trim()) {
+          videoPath = video.trim();
+        }
+      }
 
       await db
         .insert(productsTable)
@@ -311,7 +359,7 @@ router.post(
           badge: badge || null,
           image: imagePath,
           gallery: galleryImages.length ? galleryImages : [imagePath],
-          video: video || null,
+          video: videoPath,
           customerPhotos: customerPhotos.length ? customerPhotos : null,
           lifestyleImages: lifestyleImages.length ? lifestyleImages : null,
           sizeChartImage: sizeChartImagePath,
@@ -399,19 +447,65 @@ router.put(
         .select()
         .from(productsTable)
         .where(eq(productsTable.id, id));
-      if (!existing.length) {
-        res.status(404).json({ error: "Product not found" });
-        return;
+
+      let existingRecord = existing[0];
+      if (!existingRecord) {
+        // Upsert fallback for initial catalog products
+        existingRecord = {
+          id,
+          name: name || "Product",
+          sku: sku || id,
+          brand: brand || "ZAFS",
+          cat: cat || "accessories",
+          sub: sub || "general",
+          collection: collection || null,
+          price: Number(price) || 100,
+          mrp: mrp ? Number(mrp) : null,
+          discount: Number(discount) || 0,
+          priceRange: null,
+          badge: badge || null,
+          image: "/images/full-body-armor.png",
+          gallery: [],
+          video: null,
+          customerPhotos: null,
+          lifestyleImages: null,
+          sizeChartImage: null,
+          material: material || null,
+          ringSize: null,
+          ringType: null,
+          gauge: null,
+          finish: null,
+          weight: null,
+          manufacturingTime: null,
+          country: "India",
+          hsCode: null,
+          availability: "In Stock",
+          estimatedDelivery: null,
+          colors: null,
+          sizes: null,
+          highlights: null,
+          materials: null,
+          desc: null,
+          tags: [],
+          inStock: true,
+          stockCount: 100,
+          ebayUrl: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        try {
+          await db.insert(productsTable).values(existingRecord);
+        } catch { }
       }
 
-      let imagePath = existing[0].image ?? "/images/full-body-armor.png";
+      let imagePath = existingRecord.image ?? "/images/full-body-armor.png";
 
       if (req.file) {
         imagePath = `/images/${req.file.filename}`;
         try {
           const fileBuf = fs.readFileSync(req.file.path);
           writeImageToAllDirs(req.file.filename, fileBuf);
-        } catch {}
+        } catch { }
       } else if (imageBase64 && typeof imageBase64 === "string" && imageBase64.startsWith("data:image/")) {
         const saved = saveBase64Image(imageBase64);
         if (saved) imagePath = saved;
@@ -423,7 +517,7 @@ router.put(
         let list: string[] = [];
         let parsed: any = raw;
         if (typeof raw === "string") {
-          try { parsed = JSON.parse(raw); } catch {}
+          try { parsed = JSON.parse(raw); } catch { }
         }
         if (Array.isArray(parsed)) {
           for (const item of parsed) {
@@ -440,7 +534,7 @@ router.put(
         return list;
       };
 
-      let galleryImages = rawGallery !== undefined ? processImageArray(rawGallery) : (existing[0].gallery ?? [imagePath]);
+      let galleryImages = rawGallery !== undefined ? processImageArray(rawGallery) : (existingRecord.gallery ?? [imagePath]);
       if (galleryImages.length > 0) {
         if (!galleryImages.includes(imagePath)) {
           imagePath = galleryImages[0];
@@ -449,10 +543,10 @@ router.put(
         galleryImages = [imagePath];
       }
 
-      const customerPhotos = rawCustomerPhotos !== undefined ? processImageArray(rawCustomerPhotos).slice(0, 2) : existing[0].customerPhotos;
-      const lifestyleImages = rawLifestyleImages !== undefined ? processImageArray(rawLifestyleImages) : existing[0].lifestyleImages;
+      const customerPhotos = rawCustomerPhotos !== undefined ? processImageArray(rawCustomerPhotos).slice(0, 2) : existingRecord.customerPhotos;
+      const lifestyleImages = rawLifestyleImages !== undefined ? processImageArray(rawLifestyleImages) : existingRecord.lifestyleImages;
 
-      let sizeChartImagePath = existing[0].sizeChartImage;
+      let sizeChartImagePath = existingRecord.sizeChartImage;
       if (rawSizeChartImage !== undefined) {
         if (typeof rawSizeChartImage === "string" && rawSizeChartImage.startsWith("data:image/")) {
           sizeChartImagePath = saveBase64Image(rawSizeChartImage);
@@ -461,7 +555,7 @@ router.put(
         }
       }
 
-      let colorsList = existing[0].colors;
+      let colorsList = existingRecord.colors;
       if (rawColors !== undefined) {
         let parsedColors: any = rawColors;
         if (typeof rawColors === "string") {
@@ -476,10 +570,10 @@ router.put(
         }
       }
 
-      let priceRange = existing[0].priceRange;
+      let priceRange = existingRecord.priceRange;
       if (priceRangeMin !== undefined || priceRangeMax !== undefined) {
         if (priceRangeMin || priceRangeMax) {
-          priceRange = [Number(priceRangeMin) || existing[0].price, Number(priceRangeMax) || existing[0].price];
+          priceRange = [Number(priceRangeMin) || existingRecord.price, Number(priceRangeMax) || existingRecord.price];
         } else {
           priceRange = null;
         }
@@ -488,18 +582,29 @@ router.put(
       const parsedTags =
         tags !== undefined
           ? (typeof tags === "string" ? tags.split(",") : tags)
-              .map((t: string) => String(t).trim())
-              .filter(Boolean)
-          : existing[0].tags ?? [];
+            .map((t: string) => String(t).trim())
+            .filter(Boolean)
+          : existingRecord.tags ?? [];
 
-      let mrpNum = mrp !== undefined ? (mrp ? Number(mrp) : null) : existing[0].mrp;
-      let finalPrice = price !== undefined && price !== "" ? Number(price) : existing[0].price;
+      let mrpNum = mrp !== undefined ? (mrp ? Number(mrp) : null) : existingRecord.mrp;
+      let finalPrice = price !== undefined && price !== "" ? Number(price) : existingRecord.price;
       let discountNum =
         mrpNum && mrpNum > finalPrice && mrpNum > 0
           ? Math.round(((mrpNum - finalPrice) / mrpNum) * 100)
           : (discount !== undefined ? Number(discount) : (mrpNum && mrpNum > finalPrice ? Math.round(((mrpNum - finalPrice) / mrpNum) * 100) : 0));
 
-      const updates: Partial<typeof existing[0]> = {
+      let videoPath: string | null | undefined = undefined;
+      if (video !== undefined) {
+        if (typeof video === "string" && (video.startsWith("data:video/") || video.startsWith("data:image/"))) {
+          videoPath = saveBase64Media(video);
+        } else if (typeof video === "string" && video.trim()) {
+          videoPath = video.trim();
+        } else {
+          videoPath = null;
+        }
+      }
+
+      const updates: Partial<typeof existingRecord> = {
         ...(name && { name }),
         ...(sku !== undefined && { sku: sku || null }),
         ...(brand !== undefined && { brand: brand || "ZAFS" }),
@@ -510,10 +615,10 @@ router.put(
         mrp: mrpNum,
         discount: discountNum,
         priceRange: priceRange,
-        badge: badge !== undefined ? (badge || null) : existing[0].badge,
+        badge: badge !== undefined ? (badge || null) : existingRecord.badge,
         image: imagePath,
         gallery: galleryImages,
-        ...(video !== undefined && { video: video || null }),
+        ...(video !== undefined && { video: videoPath }),
         customerPhotos: customerPhotos?.length ? customerPhotos : null,
         lifestyleImages: lifestyleImages?.length ? lifestyleImages : null,
         sizeChartImage: sizeChartImagePath,
@@ -534,7 +639,7 @@ router.put(
         ...(req.body.materials !== undefined && { materials: parseStringArray(req.body.materials).length ? parseStringArray(req.body.materials) : null }),
         ...(description !== undefined && { desc: description || null }),
         tags: parsedTags.length ? parsedTags : null,
-        inStock: inStock !== undefined ? (inStock !== false && inStock !== "false") : existing[0].inStock,
+        inStock: inStock !== undefined ? (inStock !== false && inStock !== "false") : existingRecord.inStock,
         ...(stockCount !== undefined && { stockCount: Number(stockCount) || 100 }),
         ...(ebayUrl !== undefined && { ebayUrl: ebayUrl || null }),
         updatedAt: new Date(),
@@ -577,8 +682,12 @@ router.delete("/admin/products/:id", requireAdmin, async (req, res) => {
 
     // Delete image file if it was uploaded
     if (existing.image?.startsWith("/images/")) {
-      const file = path.join(IMAGES_DIR, path.basename(existing.image));
-      fs.unlink(file, () => {});
+      const filename = path.basename(existing.image);
+      for (const d of getTargetImageDirs()) {
+        try {
+          fs.unlink(path.join(d, filename), () => {});
+        } catch {}
+      }
     }
     res.json({ ok: true });
   } catch {

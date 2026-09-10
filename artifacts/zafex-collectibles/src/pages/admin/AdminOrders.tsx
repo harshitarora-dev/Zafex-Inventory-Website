@@ -86,10 +86,10 @@ export default function AdminOrders() {
 
                       <div className="flex items-center justify-between text-[12px] pt-1">
                         <div className="text-[11px] text-[#8a8278]">
-                          {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </div>
                         <div className="font-serif font-bold text-[#d4af37] text-[15px]">
-                          ₹{order.totalAmount.toLocaleString('en-IN')}
+                          ${order.totalAmount.toLocaleString('en-US')}
                         </div>
                       </div>
 
@@ -128,7 +128,7 @@ export default function AdminOrders() {
                           <div className="font-sans text-[11px] text-[#6b6b6b]">{order.customerEmail}</div>
                         </td>
                         <td className="px-5 py-3.5 font-sans text-[12px] text-[#6b6b6b]">
-                          {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}
+                          {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: '2-digit' })}
                         </td>
                         <td className="px-5 py-3.5">
                           <span className={`px-2.5 py-1 rounded-full font-sans text-[11px] font-medium capitalize ${STATUS_COLORS[order.status] ?? 'bg-gray-100 text-gray-700'}`}>
@@ -141,7 +141,7 @@ export default function AdminOrders() {
                           </span>
                         </td>
                         <td className="px-5 py-3.5 font-serif text-[14px] font-bold text-[#d4af37]">
-                          ₹{order.totalAmount.toLocaleString('en-IN')}
+                          ${order.totalAmount.toLocaleString('en-US')}
                         </td>
                         <td className="px-5 py-3.5">
                           <button
@@ -241,14 +241,14 @@ export default function AdminOrders() {
                           <div className="font-sans text-[12px] text-[#6b6b6b]">Qty: {item.quantity}</div>
                         </div>
                         <span className="font-serif text-[14px] font-bold text-[#d4af37]">
-                          ₹{(item.unitPrice * item.quantity).toLocaleString('en-IN')}
+                          ${(item.unitPrice * item.quantity).toLocaleString('en-US')}
                         </span>
                       </div>
                     ))}
                     <div className="flex justify-between px-4 py-3 bg-[#f5f4f0]">
                       <span className="font-serif text-[14px] font-bold">Total</span>
                       <span className="font-serif text-[14px] font-bold text-[#d4af37]">
-                        ₹{orderDetail.order.totalAmount.toLocaleString('en-IN')}
+                        ${orderDetail.order.totalAmount.toLocaleString('en-US')}
                       </span>
                     </div>
                   </div>

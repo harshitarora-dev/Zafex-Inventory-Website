@@ -42,7 +42,13 @@ if (fs.existsSync(FRONTEND_DIST)) {
     const srcFile = path.join(FRONTEND_DIST, file);
     const destFile = path.join(HOSTINGER_FRONTEND, file);
     if (fs.existsSync(srcFile)) {
-      fs.copyFileSync(srcFile, destFile);
+      if (file === 'index.html') {
+        let html = fs.readFileSync(srcFile, 'utf8');
+        html = html.replace(/<link rel="stylesheet" crossorigin href="([^"]+)">/g, '<link rel="stylesheet" href="$1">');
+        fs.writeFileSync(destFile, html, 'utf8');
+      } else {
+        fs.copyFileSync(srcFile, destFile);
+      }
     }
   });
 

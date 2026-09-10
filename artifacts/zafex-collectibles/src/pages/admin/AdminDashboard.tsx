@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getAdminDashboard } from '@/lib/api';
 import AdminLayout from './AdminLayout';
-import { Package, ShoppingCart, Users, IndianRupee, AlertTriangle } from 'lucide-react';
+import { Package, ShoppingCart, Users, DollarSign, AlertTriangle } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
   pending:   'bg-yellow-100 text-yellow-800',
@@ -23,8 +23,8 @@ export default function AdminDashboard() {
   const stats = [
     {
       label: 'Total Revenue',
-      value: data ? `₹${data.revenue.toLocaleString('en-IN')}` : '—',
-      icon: IndianRupee,
+      value: data ? `$${data.revenue.toLocaleString('en-US')}` : '—',
+      icon: DollarSign,
       color: 'text-[#d4af37]',
       bg: 'bg-[#d4af37]/10',
     },
@@ -119,10 +119,10 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center justify-between text-[12px]">
                         <span className="text-[#4a4a4a] font-medium">{order.customerName}</span>
-                        <span className="font-serif font-bold text-[#d4af37] text-[14px]">₹{order.totalAmount.toLocaleString('en-IN')}</span>
+                        <span className="font-serif font-bold text-[#d4af37] text-[14px]">${order.totalAmount.toLocaleString('en-US')}</span>
                       </div>
                       <div className="text-[11px] text-[#8a8278]">
-                        {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     </div>
                   ))
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
                             {order.customerName}
                           </td>
                           <td className="px-5 py-3.5 font-sans text-[12px] text-[#6b6b6b]">
-                            {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                            {new Date(order.createdAt).toLocaleDateString('en-US', {
                               day: 'numeric',
                               month: 'short',
                               year: 'numeric',
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-5 py-3.5 font-serif text-[14px] font-bold text-[#d4af37]">
-                            ₹{order.totalAmount.toLocaleString('en-IN')}
+                            ${order.totalAmount.toLocaleString('en-US')}
                           </td>
                         </tr>
                       ))

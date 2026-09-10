@@ -20,6 +20,8 @@ import {
   Film,
   MapPin,
   Loader2,
+  Play,
+  Video,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProduct, getProductReviews, submitProductReview, type Review } from '@/lib/api';
@@ -126,18 +128,34 @@ const ProductDetail = () => {
   const COLOR_OPTIONS = product?.colors && product.colors.length > 0 ? product.colors : ['#000000', '#ffffff'];
   const [selectedColor, setSelectedColor] = useState<string | null>(COLOR_OPTIONS[0]);
 
-  // Gallery: Support dynamic multiple images array
-  const gallery = (product?.gallery && product.gallery.length > 0)
-    ? product.gallery
-    : (product?.image ? [product.image] : ['/images/full-body-armor.png']);
+  // Gallery & Video: Unified Media Items Array
+  const mediaList = React.useMemo(() => {
+    const images = (product?.gallery && product.gallery.length > 0)
+      ? product.gallery
+      : (product?.image ? [product.image] : ['/images/full-body-armor.png']);
+    
+    const items: Array<{ type: 'image' | 'video'; url: string }> = images.map((img) => ({
+      type: 'image',
+      url: img,
+    }));
 
-  // Sync main image when DB product arrives or changes
-  useEffect(() => {
-    if (product?.image) {
-      setMainImg(product.image);
-      setThumbIdx(0);
+    if (product?.video && product.video.trim()) {
+      items.push({ type: 'video', url: product.video.trim() });
     }
-  }, [product?.image, product?.gallery]);
+    return items;
+  }, [product?.image, product?.gallery, product?.video]);
+
+  const [activeMediaIdx, setActiveMediaIdx] = useState(0);
+
+  // Reset active media when product changes
+  useEffect(() => {
+    setActiveMediaIdx(0);
+  }, [product?.id, product?.image, product?.gallery, product?.video]);
+
+  const currentMedia = mediaList[activeMediaIdx] || {
+    type: 'image',
+    url: product?.image || '/images/full-body-armor.png',
+  };
 
   const { addToCompare, isInCompare, setIsCompareOpen } = useCompare();
   const isCompared = product ? isInCompare(product.id) : false;
@@ -451,48 +469,90 @@ const ProductDetail = () => {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] xl:gap-14">
           <div className="space-y-6">
             <div className="space-y-6">
-              {/* Main Hero Photo */}
+              {/* Main Hero Media Display (Image Zoom or Video Player) */}
               <div
-                className="relative overflow-hidden rounded-[32px] bg-[#ede9e3] aspect-square max-h-[640px] cursor-crosshair select-none border border-[#d4cfc7]"
-                onMouseEnter={() => setZoomed(true)}
+                className="relative overflow-hidden rounded-[32px] bg-[#1a1a18] aspect-square max-h-[640px] select-none border border-[#d4cfc7] flex items-center justify-center"
+                onMouseEnter={() => {
+                  if (currentMedia.type === 'image') setZoomed(true);
+                }}
                 onMouseLeave={() => setZoomed(false)}
                 onMouseMove={handleMouseMove}
               >
-                <img
-                  src={mainImg}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500"
-                  style={
-                    zoomed
-                      ? {
-                          transform: 'scale(1.85)',
-                          transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                          transition: 'transform 0.1s linear',
-                        }
-                      : { transform: 'scale(1)', transition: 'transform 0.4s ease' }
-                  }
-                  loading="eager"
-                />
-                {!zoomed && (
-                  <div className="absolute bottom-4 left-4 rounded-full bg-white/90 px-4 py-2 text-[12px] font-medium text-[#1a1a18] flex items-center gap-2 shadow-sm">
-                    <ZoomIn size={14} /> Hover to zoom
+                {currentMedia.type === 'video' ? (
+                  <div className="relative w-full h-full bg-black flex items-center justify-center">
+                    <video
+                      key={currentMedia.url}
+                      controls
+                      autoPlay
+                      playsInline
+                      src={currentMedia.url}
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute top-4 left-4 rounded-full bg-black/75 px-3 py-1.5 text-[11px] font-bold text-[#38bdf8] flex items-center gap-1.5 border border-[#38bdf8]/40 shadow-sm pointer-events-none">
+                      <Play size={12} fill="#38bdf8" /> Video Demonstration
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <img
+                      src={currentMedia.url}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-500 cursor-crosshair"
+                      style={
+                        zoomed
+                          ? {
+                              transform: 'scale(1.85)',
+                              transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                              transition: 'transform 0.1s linear',
+                            }
+                          : { transform: 'scale(1)', transition: 'transform 0.4s ease' }
+                      }
+                      loading="eager"
+                    />
+                    {!zoomed && (
+                      <div className="absolute bottom-4 left-4 rounded-full bg-white/90 px-4 py-2 text-[12px] font-medium text-[#1a1a18] flex items-center gap-2 shadow-sm pointer-events-none">
+                        <ZoomIn size={14} /> Hover to zoom
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
-              {/* Multi-angle Thumbnails Carousel */}
-              {gallery.length > 1 && (
+              {/* Multi-angle & Video Thumbnails Carousel */}
+              {mediaList.length > 1 && (
                 <div className="flex flex-wrap gap-3">
-                  {gallery.map((img, i) => (
+                  {mediaList.map((item, i) => (
                     <button
                       key={i}
-                      onClick={() => handleThumb(img, i)}
-                      className={`overflow-hidden rounded-[20px] border-2 transition w-20 h-20 sm:w-24 sm:h-24 ${
-                        thumbIdx === i ? 'border-[#1a1a18] shadow-md scale-105' : 'border-transparent hover:border-[#d4cfc7]'
+                      onClick={() => {
+                        setActiveMediaIdx(i);
+                        setZoomed(false);
+                      }}
+                      className={`relative overflow-hidden rounded-[20px] border-2 transition w-20 h-20 sm:w-24 sm:h-24 ${
+                        activeMediaIdx === i
+                          ? 'border-[#1a1a18] shadow-md scale-105 ring-2 ring-[#d4af37]'
+                          : 'border-transparent hover:border-[#d4cfc7]'
                       }`}
-                      aria-label={`Gallery thumb ${i + 1}`}
+                      aria-label={`Media thumb ${i + 1}`}
                     >
-                      <img src={img} alt="Gallery thumbnail" className="h-full w-full object-cover" />
+                      {item.type === 'video' ? (
+                        <div className="relative w-full h-full bg-[#1a1a18] flex flex-col items-center justify-center p-1 text-center group">
+                          <video
+                            src={item.url}
+                            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition"
+                            muted
+                            playsInline
+                          />
+                          <div className="relative z-10 w-8 h-8 rounded-full bg-[#d4af37] text-[#1a1208] flex items-center justify-center shadow-lg">
+                            <Play size={14} fill="#1a1208" className="ml-0.5" />
+                          </div>
+                          <span className="relative z-10 text-[9px] font-serif uppercase tracking-[1px] font-bold text-white mt-1 drop-shadow">
+                            Video
+                          </span>
+                        </div>
+                      ) : (
+                        <img src={item.url} alt="Gallery thumbnail" className="h-full w-full object-cover" />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -515,16 +575,6 @@ const ProductDetail = () => {
                         />
                       </div>
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Video Player if available */}
-              {product.video && (
-                <div className="rounded-[32px] border border-[#d4cfc7] bg-white p-6 shadow-sm">
-                  <div className="font-serif text-[11px] uppercase tracking-[3px] text-[#d4af37] mb-3">Product Demonstration</div>
-                  <div className="overflow-hidden rounded-[24px] border border-[#e6e1da] bg-[#f8f5f0]">
-                    <video controls src={product.video} className="w-full max-h-80 object-cover" />
                   </div>
                 </div>
               )}

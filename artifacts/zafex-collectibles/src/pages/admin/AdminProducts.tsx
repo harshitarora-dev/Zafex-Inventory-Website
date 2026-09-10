@@ -150,7 +150,7 @@ export default function AdminProducts() {
                       </div>
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className="font-bold text-[#1a1a18] text-[14px]">
-                          ₹{product.price.toLocaleString('en-IN')}
+                          ${product.price.toLocaleString('en-US')}
                         </span>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -254,12 +254,12 @@ export default function AdminProducts() {
                       {/* Price & Discount */}
                       <td className="px-5 py-4">
                         <div className="font-semibold text-[#1a1a18] text-[14px]">
-                          ₹{product.price.toLocaleString('en-IN')}
+                          ${product.price.toLocaleString('en-US')}
                         </div>
                         {product.mrp && product.mrp > product.price && (
                           <div className="flex items-center gap-1.5 mt-0.5 text-[11px]">
                             <span className="line-through text-[#8a8278]">
-                              ₹{product.mrp.toLocaleString('en-IN')}
+                              ${product.mrp.toLocaleString('en-US')}
                             </span>
                             <span className="text-green-700 font-bold bg-green-50 px-1.5 py-0.2 rounded">
                               {product.discount ?? Math.round(((product.mrp - product.price) / product.mrp) * 100)}% OFF

@@ -531,7 +531,7 @@ export default function AdminHomepage() {
                           )}
                           <img src={p.image} alt={p.name} className="w-14 h-14 object-cover rounded-lg" />
                           <span className="text-[10px] text-[#f5f0e8] line-clamp-1 font-medium">{p.name}</span>
-                          <span className="text-[9px] text-[#d4af37] font-bold">₹{p.price.toLocaleString('en-IN')}</span>
+                          <span className="text-[9px] text-[#d4af37] font-bold">${p.price.toLocaleString('en-US')}</span>
                         </div>
                       );
                     })}
@@ -635,7 +635,7 @@ export default function AdminHomepage() {
                           )}
                           <img src={p.image} alt={p.name} className="w-14 h-14 object-cover rounded-lg" />
                           <span className="text-[10px] text-[#f5f0e8] line-clamp-1 font-medium">{p.name}</span>
-                          <span className="text-[9px] text-[#d4af37] font-bold">₹{p.price.toLocaleString('en-IN')}</span>
+                          <span className="text-[9px] text-[#d4af37] font-bold">${p.price.toLocaleString('en-US')}</span>
                         </div>
                       );
                     })}
@@ -763,7 +763,7 @@ export default function AdminHomepage() {
                               </span>
                               {currentProduct && (
                                 <span className="text-[10px] text-emerald-400 font-bold">
-                                  ₹{currentProduct.price.toLocaleString('en-IN')}
+                                  ${currentProduct.price.toLocaleString('en-US')}
                                 </span>
                               )}
                             </div>
@@ -782,7 +782,7 @@ export default function AdminHomepage() {
                               <option value="">-- Choose Product --</option>
                               {products.map((p) => (
                                 <option key={p.id} value={p.id}>
-                                  {p.name} (₹{p.price})
+                                  {p.name} (${p.price})
                                 </option>
                               ))}
                             </select>

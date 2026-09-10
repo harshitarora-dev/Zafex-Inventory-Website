@@ -175,3 +175,18 @@ export async function uploadHomepageImage(key: string, file: File): Promise<{ ok
   }
   return res.json();
 }
+
+export async function uploadAdminMedia(file: File): Promise<{ url: string }> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch(`${BASE}/admin/upload-media`, {
+    method: 'POST',
+    credentials: 'include',
+    body: fd,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? `Upload failed with status ${res.status}`);
+  }
+  return res.json();
+}

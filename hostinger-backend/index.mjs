@@ -86532,8 +86532,8 @@ var wishlist_default = router4;
 // src/routes/orders.ts
 var import_express5 = __toESM(require_express2(), 1);
 var router5 = (0, import_express5.Router)();
-var SHIPPING_THRESHOLD = 5e3;
-var SHIPPING_COST = 499;
+var SHIPPING_THRESHOLD = 100;
+var SHIPPING_COST = 15;
 router5.post("/orders/checkout", requireUser, async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -87076,32 +87076,24 @@ function requireAdmin(req, res, next) {
 // src/routes/admin-products.ts
 var router11 = (0, import_express11.Router)();
 function getTargetImageDirs() {
-  return [
-    path2.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images"),
-    path2.resolve(process.cwd(), "artifacts", "zafex-collectibles", "dist", "public", "images"),
-    path2.resolve(process.cwd(), "hostinger-frontend", "images"),
-    path2.resolve(process.cwd(), "public", "images"),
-    path2.resolve(process.cwd(), "public_html", "images"),
-    path2.resolve(process.cwd(), "..", "public_html", "images"),
-    "/home/u933632718/domains/zafexcollectibles.com/public_html/images",
-    "/home/u933632718/public_html/images",
-    path2.resolve(process.cwd(), "..", "zafex-collectibles", "public", "images")
-  ];
+  const dirs = /* @__PURE__ */ new Set();
+  const absHostinger = "/home/u933632718/domains/zafexcollectibles.com/public_html/images";
+  if (fs2.existsSync("/home/u933632718/domains/zafexcollectibles.com/public_html")) {
+    dirs.add(absHostinger);
+  }
+  const relHostinger = path2.resolve(process.cwd(), "..", "public_html", "images");
+  if (fs2.existsSync(path2.resolve(process.cwd(), "..", "public_html"))) {
+    dirs.add(relHostinger);
+  }
+  const localArtifacts = path2.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
+  dirs.add(localArtifacts);
+  const localHostinger = path2.resolve(process.cwd(), "hostinger-frontend", "images");
+  if (fs2.existsSync(path2.resolve(process.cwd(), "hostinger-frontend"))) {
+    dirs.add(localHostinger);
+  }
+  return Array.from(dirs);
 }
 function getPrimaryImagesDir() {
-  const localArtifactsDir = path2.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
-  try {
-    fs2.mkdirSync(localArtifactsDir, { recursive: true });
-  } catch {
-  }
-  const hostingerDir = path2.resolve(process.cwd(), "..", "public_html", "images");
-  if (fs2.existsSync(path2.resolve(process.cwd(), "..", "public_html"))) {
-    try {
-      fs2.mkdirSync(hostingerDir, { recursive: true });
-    } catch {
-    }
-    return hostingerDir;
-  }
   const absHostinger = "/home/u933632718/domains/zafexcollectibles.com/public_html/images";
   if (fs2.existsSync("/home/u933632718/domains/zafexcollectibles.com/public_html")) {
     try {
@@ -87110,13 +87102,27 @@ function getPrimaryImagesDir() {
     }
     return absHostinger;
   }
+  const relHostinger = path2.resolve(process.cwd(), "..", "public_html", "images");
+  if (fs2.existsSync(path2.resolve(process.cwd(), "..", "public_html"))) {
+    try {
+      fs2.mkdirSync(relHostinger, { recursive: true });
+    } catch {
+    }
+    return relHostinger;
+  }
+  const localArtifactsDir = path2.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
+  try {
+    fs2.mkdirSync(localArtifactsDir, { recursive: true });
+  } catch {
+  }
   return localArtifactsDir;
 }
 function writeImageToAllDirs(filename, buffer) {
   for (const d of getTargetImageDirs()) {
     try {
       fs2.mkdirSync(d, { recursive: true });
-      fs2.writeFileSync(path2.join(d, filename), buffer);
+      fs2.writeFile(path2.join(d, filename), buffer, () => {
+      });
     } catch {
     }
   }
@@ -87128,32 +87134,56 @@ var storage = import_multer.default.diskStorage({
     cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
   }
 });
-var upload = (0, import_multer.default)({
+var uploadMedia = (0, import_multer.default)({
   storage,
-  limits: { fileSize: 30 * 1024 * 1024 },
-  // 30 MB
+  limits: { fileSize: 250 * 1024 * 1024 },
+  // 250 MB
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files are allowed"));
+    if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image and video files are allowed"));
+    }
   }
 });
 var safeUpload = (req, res, next) => {
-  upload.single("image")(req, res, (err) => {
+  uploadMedia.single("image")(req, res, (err) => {
     if (err) {
       return next();
     }
     next();
   });
 };
-function saveBase64Image(dataUri) {
+router11.post("/admin/upload-media", requireAdmin, uploadMedia.single("file"), (req, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: "No file received" });
+      return;
+    }
+    const filename = req.file.filename;
+    try {
+      const fileBuf = fs2.readFileSync(req.file.path);
+      writeImageToAllDirs(filename, fileBuf);
+    } catch {
+    }
+    res.json({ url: `/images/${filename}` });
+  } catch (err) {
+    res.status(500).json({ error: "Upload failed: " + (err?.message || "") });
+  }
+});
+function saveBase64Media(dataUri) {
   try {
     if (!dataUri || typeof dataUri !== "string") return null;
     const commaIdx = dataUri.indexOf(",");
-    if (commaIdx === -1 || !dataUri.startsWith("data:image/")) return null;
+    if (commaIdx === -1) return null;
     const header = dataUri.slice(0, commaIdx);
     const base64Data = dataUri.slice(commaIdx + 1);
     let ext = "jpg";
-    if (header.includes("image/png")) ext = "png";
+    if (header.includes("video/mp4")) ext = "mp4";
+    else if (header.includes("video/webm")) ext = "webm";
+    else if (header.includes("video/quicktime") || header.includes("video/mov")) ext = "mov";
+    else if (header.includes("video/ogg")) ext = "ogv";
+    else if (header.includes("image/png")) ext = "png";
     else if (header.includes("image/webp")) ext = "webp";
     else if (header.includes("image/gif")) ext = "gif";
     else if (header.includes("image/svg")) ext = "svg";
@@ -87165,6 +87195,22 @@ function saveBase64Image(dataUri) {
   } catch {
     return null;
   }
+}
+function saveBase64Image(dataUri) {
+  return saveBase64Media(dataUri);
+}
+function parseStringArray(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map((s) => String(s).trim()).filter(Boolean);
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
+    } catch {
+    }
+    return raw.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
 }
 function slugify(text2) {
   return text2.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -87286,22 +87332,9 @@ router11.post(
           sizeChartImagePath = rawSizeChartImage.trim();
         }
       }
-      const parseStringArray2 = (raw) => {
-        if (!raw) return [];
-        if (Array.isArray(raw)) return raw.map((s) => String(s).trim()).filter(Boolean);
-        if (typeof raw === "string") {
-          try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
-          } catch {
-          }
-          return raw.split(",").map((s) => s.trim()).filter(Boolean);
-        }
-        return [];
-      };
-      const sizesList = parseStringArray2(req.body.sizes);
-      const highlightsList = parseStringArray2(req.body.highlights);
-      const materialsList = parseStringArray2(req.body.materials);
+      const sizesList = parseStringArray(req.body.sizes);
+      const highlightsList = parseStringArray(req.body.highlights);
+      const materialsList = parseStringArray(req.body.materials);
       let colorsList = [];
       if (rawColors) {
         if (Array.isArray(rawColors)) {
@@ -87323,6 +87356,14 @@ router11.post(
       let mrpNum = mrp ? Number(mrp) : null;
       let finalPrice = price ? Number(price) : mrpNum ?? 0;
       let discountNum = mrpNum && mrpNum > finalPrice && mrpNum > 0 ? Math.round((mrpNum - finalPrice) / mrpNum * 100) : discount ? Number(discount) : 0;
+      let videoPath = null;
+      if (video && typeof video === "string") {
+        if (video.startsWith("data:video/") || video.startsWith("data:image/")) {
+          videoPath = saveBase64Media(video);
+        } else if (video.trim()) {
+          videoPath = video.trim();
+        }
+      }
       await db.insert(productsTable).values({
         id,
         sku: sku || null,
@@ -87338,7 +87379,7 @@ router11.post(
         badge: badge || null,
         image: imagePath,
         gallery: galleryImages.length ? galleryImages : [imagePath],
-        video: video || null,
+        video: videoPath,
         customerPhotos: customerPhotos.length ? customerPhotos : null,
         lifestyleImages: lifestyleImages.length ? lifestyleImages : null,
         sizeChartImage: sizeChartImagePath,
@@ -87415,11 +87456,56 @@ router11.put(
         ebayUrl
       } = req.body;
       const existing = await db.select().from(productsTable).where(eq(productsTable.id, id));
-      if (!existing.length) {
-        res.status(404).json({ error: "Product not found" });
-        return;
+      let existingRecord = existing[0];
+      if (!existingRecord) {
+        existingRecord = {
+          id,
+          name: name || "Product",
+          sku: sku || id,
+          brand: brand || "ZAFS",
+          cat: cat || "accessories",
+          sub: sub || "general",
+          collection: collection || null,
+          price: Number(price) || 100,
+          mrp: mrp ? Number(mrp) : null,
+          discount: Number(discount) || 0,
+          priceRange: null,
+          badge: badge || null,
+          image: "/images/full-body-armor.png",
+          gallery: [],
+          video: null,
+          customerPhotos: null,
+          lifestyleImages: null,
+          sizeChartImage: null,
+          material: material || null,
+          ringSize: null,
+          ringType: null,
+          gauge: null,
+          finish: null,
+          weight: null,
+          manufacturingTime: null,
+          country: "India",
+          hsCode: null,
+          availability: "In Stock",
+          estimatedDelivery: null,
+          colors: null,
+          sizes: null,
+          highlights: null,
+          materials: null,
+          desc: null,
+          tags: [],
+          inStock: true,
+          stockCount: 100,
+          ebayUrl: null,
+          createdAt: /* @__PURE__ */ new Date(),
+          updatedAt: /* @__PURE__ */ new Date()
+        };
+        try {
+          await db.insert(productsTable).values(existingRecord);
+        } catch {
+        }
       }
-      let imagePath = existing[0].image ?? "/images/full-body-armor.png";
+      let imagePath = existingRecord.image ?? "/images/full-body-armor.png";
       if (req.file) {
         imagePath = `/images/${req.file.filename}`;
         try {
@@ -87456,7 +87542,7 @@ router11.put(
         }
         return list;
       };
-      let galleryImages = rawGallery !== void 0 ? processImageArray(rawGallery) : existing[0].gallery ?? [imagePath];
+      let galleryImages = rawGallery !== void 0 ? processImageArray(rawGallery) : existingRecord.gallery ?? [imagePath];
       if (galleryImages.length > 0) {
         if (!galleryImages.includes(imagePath)) {
           imagePath = galleryImages[0];
@@ -87464,9 +87550,9 @@ router11.put(
       } else {
         galleryImages = [imagePath];
       }
-      const customerPhotos = rawCustomerPhotos !== void 0 ? processImageArray(rawCustomerPhotos).slice(0, 2) : existing[0].customerPhotos;
-      const lifestyleImages = rawLifestyleImages !== void 0 ? processImageArray(rawLifestyleImages) : existing[0].lifestyleImages;
-      let sizeChartImagePath = existing[0].sizeChartImage;
+      const customerPhotos = rawCustomerPhotos !== void 0 ? processImageArray(rawCustomerPhotos).slice(0, 2) : existingRecord.customerPhotos;
+      const lifestyleImages = rawLifestyleImages !== void 0 ? processImageArray(rawLifestyleImages) : existingRecord.lifestyleImages;
+      let sizeChartImagePath = existingRecord.sizeChartImage;
       if (rawSizeChartImage !== void 0) {
         if (typeof rawSizeChartImage === "string" && rawSizeChartImage.startsWith("data:image/")) {
           sizeChartImagePath = saveBase64Image(rawSizeChartImage);
@@ -87474,7 +87560,7 @@ router11.put(
           sizeChartImagePath = rawSizeChartImage || null;
         }
       }
-      let colorsList = existing[0].colors;
+      let colorsList = existingRecord.colors;
       if (rawColors !== void 0) {
         let parsedColors = rawColors;
         if (typeof rawColors === "string") {
@@ -87490,18 +87576,28 @@ router11.put(
           colorsList = null;
         }
       }
-      let priceRange = existing[0].priceRange;
+      let priceRange = existingRecord.priceRange;
       if (priceRangeMin !== void 0 || priceRangeMax !== void 0) {
         if (priceRangeMin || priceRangeMax) {
-          priceRange = [Number(priceRangeMin) || existing[0].price, Number(priceRangeMax) || existing[0].price];
+          priceRange = [Number(priceRangeMin) || existingRecord.price, Number(priceRangeMax) || existingRecord.price];
         } else {
           priceRange = null;
         }
       }
-      const parsedTags = tags !== void 0 ? (typeof tags === "string" ? tags.split(",") : tags).map((t) => String(t).trim()).filter(Boolean) : existing[0].tags ?? [];
-      let mrpNum = mrp !== void 0 ? mrp ? Number(mrp) : null : existing[0].mrp;
-      let finalPrice = price !== void 0 && price !== "" ? Number(price) : existing[0].price;
+      const parsedTags = tags !== void 0 ? (typeof tags === "string" ? tags.split(",") : tags).map((t) => String(t).trim()).filter(Boolean) : existingRecord.tags ?? [];
+      let mrpNum = mrp !== void 0 ? mrp ? Number(mrp) : null : existingRecord.mrp;
+      let finalPrice = price !== void 0 && price !== "" ? Number(price) : existingRecord.price;
       let discountNum = mrpNum && mrpNum > finalPrice && mrpNum > 0 ? Math.round((mrpNum - finalPrice) / mrpNum * 100) : discount !== void 0 ? Number(discount) : mrpNum && mrpNum > finalPrice ? Math.round((mrpNum - finalPrice) / mrpNum * 100) : 0;
+      let videoPath = void 0;
+      if (video !== void 0) {
+        if (typeof video === "string" && (video.startsWith("data:video/") || video.startsWith("data:image/"))) {
+          videoPath = saveBase64Media(video);
+        } else if (typeof video === "string" && video.trim()) {
+          videoPath = video.trim();
+        } else {
+          videoPath = null;
+        }
+      }
       const updates = {
         ...name && { name },
         ...sku !== void 0 && { sku: sku || null },
@@ -87513,10 +87609,10 @@ router11.put(
         mrp: mrpNum,
         discount: discountNum,
         priceRange,
-        badge: badge !== void 0 ? badge || null : existing[0].badge,
+        badge: badge !== void 0 ? badge || null : existingRecord.badge,
         image: imagePath,
         gallery: galleryImages,
-        ...video !== void 0 && { video: video || null },
+        ...video !== void 0 && { video: videoPath },
         customerPhotos: customerPhotos?.length ? customerPhotos : null,
         lifestyleImages: lifestyleImages?.length ? lifestyleImages : null,
         sizeChartImage: sizeChartImagePath,
@@ -87537,7 +87633,7 @@ router11.put(
         ...req.body.materials !== void 0 && { materials: parseStringArray(req.body.materials).length ? parseStringArray(req.body.materials) : null },
         ...description !== void 0 && { desc: description || null },
         tags: parsedTags.length ? parsedTags : null,
-        inStock: inStock !== void 0 ? inStock !== false && inStock !== "false" : existing[0].inStock,
+        inStock: inStock !== void 0 ? inStock !== false && inStock !== "false" : existingRecord.inStock,
         ...stockCount !== void 0 && { stockCount: Number(stockCount) || 100 },
         ...ebayUrl !== void 0 && { ebayUrl: ebayUrl || null },
         updatedAt: /* @__PURE__ */ new Date()
@@ -87560,9 +87656,14 @@ router11.delete("/admin/products/:id", requireAdmin, async (req, res) => {
     }
     await db.delete(productsTable).where(eq(productsTable.id, id));
     if (existing.image?.startsWith("/images/")) {
-      const file = path2.join(IMAGES_DIR, path2.basename(existing.image));
-      fs2.unlink(file, () => {
-      });
+      const filename = path2.basename(existing.image);
+      for (const d of getTargetImageDirs()) {
+        try {
+          fs2.unlink(path2.join(d, filename), () => {
+          });
+        } catch {
+        }
+      }
     }
     res.json({ ok: true });
   } catch {
@@ -87683,7 +87784,7 @@ var import_multer2 = __toESM(require_multer(), 1);
 import path3 from "node:path";
 import fs3 from "node:fs";
 var router14 = (0, import_express14.Router)();
-var IMAGES_DIR2 = path3.resolve(
+var IMAGES_DIR = path3.resolve(
   process.cwd(),
   "..",
   "zafex-collectibles",
@@ -87710,7 +87811,7 @@ var HOMEPAGE_IMAGE_MAP = {
   "gram-6": "hp-gram-6.jpg",
   "gram-7": "hp-gram-7.jpg"
 };
-var upload2 = (0, import_multer2.default)({
+var upload = (0, import_multer2.default)({
   storage: import_multer2.default.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
@@ -87723,14 +87824,14 @@ router14.get("/admin/homepage-images", requireAdmin, (_req, res) => {
     key,
     filename,
     path: `/images/${filename}`,
-    exists: fs3.existsSync(path3.join(IMAGES_DIR2, filename))
+    exists: fs3.existsSync(path3.join(IMAGES_DIR, filename))
   }));
   res.json({ slots });
 });
 router14.put(
   "/admin/homepage-images/:key",
   requireAdmin,
-  upload2.single("image"),
+  upload.single("image"),
   (req, res) => {
     const key = req.params["key"];
     const filename = HOMEPAGE_IMAGE_MAP[key];
@@ -87742,7 +87843,7 @@ router14.put(
       res.status(400).json({ error: "No image file provided" });
       return;
     }
-    const dest = path3.join(IMAGES_DIR2, filename);
+    const dest = path3.join(IMAGES_DIR, filename);
     fs3.writeFileSync(dest, req.file.buffer);
     res.json({ ok: true, key, path: `/images/${filename}` });
   }
@@ -88231,9 +88332,8 @@ app.use(
   })
 );
 app.use((0, import_cookie_parser.default)());
-app.use(import_express17.default.json({ limit: "50mb" }));
-app.use(import_express17.default.text({ type: "*/*", limit: "50mb" }));
-app.use(import_express17.default.urlencoded({ extended: true, limit: "50mb" }));
+app.use(import_express17.default.json({ limit: "150mb" }));
+app.use(import_express17.default.urlencoded({ extended: true, limit: "150mb" }));
 var staticImageDirs = [
   path5.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images"),
   path5.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public"),

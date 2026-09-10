@@ -54,9 +54,8 @@ app.use(
 );
 
 app.use(cookieParser());
-app.use(express.json({ limit: "50mb" }));
-app.use(express.text({ type: "*/*", limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.json({ limit: "150mb" }));
+app.use(express.urlencoded({ extended: true, limit: "150mb" }));
 
 // Serve static images directory from all possible locations
 const staticImageDirs = [

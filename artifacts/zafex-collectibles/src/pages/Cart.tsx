@@ -37,7 +37,7 @@ export default function CartPage() {
 
   const items = data?.items ?? [];
   const subtotal = data?.subtotal ?? 0;
-  const shipping = subtotal >= 5000 ? 0 : 499;
+  const shipping = subtotal >= 100 ? 0 : 15;
   const total = subtotal + shipping;
 
   if (items.length === 0) {
@@ -139,9 +139,9 @@ export default function CartPage() {
                   {shipping === 0 ? 'Free' : formatPrice(shipping)}
                 </span>
               </div>
-              {subtotal < 5000 && (
+              {subtotal < 100 && (
                 <p className="font-sans text-[12px] text-[#6b6b6b]">
-                  Add {formatPrice(5000 - subtotal)} more for free shipping
+                  Add {formatPrice(100 - subtotal)} more for free shipping
                 </p>
               )}
               <div className="border-t border-[#d4cfc7] pt-3 flex justify-between">
