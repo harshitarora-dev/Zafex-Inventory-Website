@@ -87845,6 +87845,7 @@ router11.put(
           highlights: null,
           materials: null,
           desc: null,
+          itemDetails: null,
           tags: [],
           inStock: true,
           stockCount: 100,
