@@ -1,3 +1,12 @@
+export interface ProductSizeVariant {
+  size: string;
+  price?: number | null;
+  mrp?: number | null;
+  stock?: number | null;
+  image?: string | null;
+  images?: string[] | null;
+}
+
 export interface AdminProduct {
   id: string;
   sku?: string | null;
@@ -29,10 +38,11 @@ export interface AdminProduct {
   availability?: string | null;
   estimatedDelivery?: string | null;
   colors?: string[] | null;
-  sizes?: string[] | null;
+  sizes?: (string | ProductSizeVariant)[] | null;
   highlights?: string[] | null;
   materials?: string[] | null;
   desc: string | null;
+  itemDetails?: string | null;
   tags: string[] | null;
   inStock: boolean;
   stockCount?: number | null;
@@ -54,11 +64,8 @@ function formatFriendlyError(errMessage: string): string {
   if (errMessage.includes('Failed to fetch') || errMessage.includes('NetworkError') || errMessage.includes('Load failed')) {
     return 'Unable to connect to the server. Please check your internet connection.';
   }
-  if (errMessage.includes('503') || errMessage.includes('502') || errMessage.includes('500') || errMessage.includes('<!DOCTYPE') || errMessage.includes('JSON')) {
-    return 'The backend service is starting up. Please wait 5-10 seconds and click Sign In again.';
-  }
   if (errMessage.includes('401') || errMessage.includes('Unauthorized')) {
-    return 'Incorrect admin password. Default is admin123 (or admin).';
+    return 'Incorrect admin password or session expired. Please sign in again.';
   }
   return errMessage;
 }

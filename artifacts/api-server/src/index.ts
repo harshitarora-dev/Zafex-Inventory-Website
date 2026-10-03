@@ -82,21 +82,56 @@ process.on("uncaughtException", (err) => {
   logger.error({ err }, "Uncaught exception (prevented crash)");
 });
 
-const server = app.listen(port, "0.0.0.0", async () => {
-  logger.info({ port }, `Server listening on http://0.0.0.0:${port}`);
-  try {
-    await initDatabase();
-    logger.info("MySQL Database schema initialized successfully");
-    await syncAllProducts();
-  } catch (err) {
-    logger.warn({ err }, "Database auto-init notice: ensure MySQL is running");
-  }
-});
+const hostingerSocket = "/home/u933632718/domains/zafexcollectibles.com/backend/node.sock";
+const socketPath = process.env["SOCKET_PATH"] || (fs.existsSync("/home/u933632718/domains/zafexcollectibles.com/backend") ? hostingerSocket : null);
 
-server.on("error", (err: any) => {
-  if (err.code === "EADDRINUSE") {
-    logger.error({ port }, `Port ${port} is in use. Please kill existing process before restarting.`);
-  } else {
-    logger.error({ err }, "Server error");
+if (socketPath) {
+  if (fs.existsSync(socketPath)) {
+    try { fs.unlinkSync(socketPath); } catch {}
   }
-});
+  const server = app.listen(socketPath, async () => {
+    try { fs.chmodSync(socketPath, 0o777); } catch {}
+    logger.info({ socketPath }, `Server listening on UNIX domain socket: ${socketPath}`);
+    try {
+      await initDatabase();
+      logger.info("MySQL Database schema initialized successfully");
+      await syncAllProducts();
+    } catch (err) {
+      logger.warn({ err }, "Database auto-init notice: ensure MySQL is running");
+    }
+  });
+
+  const cleanupSocket = () => {
+    try {
+      if (fs.existsSync(socketPath)) fs.unlinkSync(socketPath);
+    } catch {}
+  };
+
+  process.on("exit", cleanupSocket);
+  process.on("SIGINT", () => { cleanupSocket(); process.exit(0); });
+  process.on("SIGTERM", () => { cleanupSocket(); process.exit(0); });
+
+  server.on("error", (err: any) => {
+    logger.error({ err }, "UNIX socket server error");
+  });
+} else {
+  const server = app.listen(port, "0.0.0.0", async () => {
+    logger.info({ port }, `Server listening on http://0.0.0.0:${port}`);
+    try {
+      await initDatabase();
+      logger.info("MySQL Database schema initialized successfully");
+      await syncAllProducts();
+    } catch (err) {
+      logger.warn({ err }, "Database auto-init notice: ensure MySQL is running");
+    }
+  });
+
+  server.on("error", (err: any) => {
+    if (err.code === "EADDRINUSE") {
+      logger.error({ port }, `Port ${port} is in use. Please kill existing process before restarting.`);
+    } else {
+      logger.error({ err }, "Server error");
+    }
+  });
+}
+

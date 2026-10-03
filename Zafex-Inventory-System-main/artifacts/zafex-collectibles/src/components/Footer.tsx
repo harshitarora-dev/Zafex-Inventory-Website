@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Facebook, Instagram, MessageCircle, Twitter } from 'lucide-react';
-import { SiPinterest } from 'react-icons/si';
+import { Facebook, Instagram } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -12,15 +11,17 @@ const Footer = () => {
           {/* Col 1 - Brand */}
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-[40px] h-[40px] bg-[#d4af37] flex items-center justify-center text-[#1a1208] font-serif font-bold text-xl">
-                ZC
-              </div>
+              <img
+                src="/logo.png"
+                alt="Zafex Collectibles"
+                className="w-[42px] h-[42px] object-contain rounded bg-white p-1"
+              />
               <div className="flex flex-col">
-                <span className="font-serif font-semibold text-[14px] leading-tight text-white uppercase">
-                  ZAFEX COLLECTIBLES
+                <span className="font-serif font-semibold text-[14px] leading-tight uppercase text-white">
+                  <span className="text-[#ff7a00]">ZAF</span><span>EX</span> COLLECTIBLES
                 </span>
                 <span className="font-serif text-[10px] text-white/70 tracking-[1px] uppercase">
-                  BRAND: ZAFS
+                  HISTORICAL & MEDIEVAL CRAFT
                 </span>
               </div>
             </div>
@@ -30,17 +31,11 @@ const Footer = () => {
             </p>
 
             <div className="flex items-center gap-2">
-              <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
+              <a href="https://www.facebook.com/share/191LLx8eFb/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
                 <Facebook size={16} />
               </a>
-              <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
+              <a href="https://www.instagram.com/zafex_collectibles?igsh=ZjA2aXQzanY1d205&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
                 <Instagram size={16} />
-              </a>
-              <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
-                <SiPinterest size={16} />
-              </a>
-              <a href="#" className="w-[32px] h-[32px] bg-[#2a1a08] rounded-md flex items-center justify-center text-[#f5f0e8] hover:text-[#d4af37] hover:border hover:border-[#d4af37] transition-all">
-                <MessageCircle size={16} />
               </a>
             </div>
 
@@ -110,14 +105,19 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-[#2a1a08] pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="font-sans text-[12px] text-[#f5f0e8]/50 text-center md:text-left">
-            © 2026 Zafex Enterprises. All Rights Reserved. Designed for LARP, Reenactment & Film under Brand: Zafs
-          </p>
-          <div className="font-sans text-[12px] text-[#f5f0e8]/50 flex flex-wrap justify-center gap-2 items-center text-center">
+        <div className="border-t border-[#2a1a08] pt-6 pb-24 lg:pb-8 flex flex-col lg:flex-row justify-between items-center gap-4 text-center lg:text-left">
+          <div className="font-sans text-[11px] sm:text-[12px] text-[#f5f0e8]/60 leading-relaxed max-w-2xl">
+            <p>
+              © 2026 Zafex Enterprises. All Rights Reserved. Designed for LARP, Reenactment & Film under Brand: Zafs
+            </p>
+            <p className="mt-1 text-[#f5f0e8]/75">
+              Website By <span className="text-[#d4af37] font-medium">Web Bazaar Officials</span> — <a href="tel:9311012447" className="text-[#d4af37] hover:underline font-semibold tracking-wide">9311012447</a>
+            </p>
+          </div>
+          <div className="font-sans text-[11px] sm:text-[12px] text-[#f5f0e8]/50 flex flex-wrap justify-center lg:justify-end gap-x-2.5 gap-y-1 items-center">
             <span>Meerut – 250002, UP, India</span>
-            <span>|</span>
-            <span>+91-8273506540</span>
+            <span className="hidden sm:inline">|</span>
+            <a href="tel:+918273506540" className="hover:text-[#d4af37] transition-colors">+91-8273506540</a>
             <span>|</span>
             <a href="mailto:zafexcollectibles@gmail.com" className="text-[#d4af37] hover:underline">zafexcollectibles@gmail.com</a>
             <span>|</span>

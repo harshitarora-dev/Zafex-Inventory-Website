@@ -108,7 +108,6 @@ export interface Product {
   highlights?: string[] | null;
   materials?: string[] | null;
   desc: string | null;
-  itemDetails?: string | null;
   tags: string[] | null;
   inStock: boolean;
   stockCount?: number | null;

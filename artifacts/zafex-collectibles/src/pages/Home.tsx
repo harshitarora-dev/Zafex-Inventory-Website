@@ -176,21 +176,23 @@ const DEFAULT_PILLARS = [
 const Home = () => {
   const [cms, setCms] = useState<any>(null);
   const [allProducts, setAllProducts] = useState(PRODUCTS);
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     fetch('/api/homepage')
       .then((r) => r.json())
       .then((data) => setCms(data))
-      .catch(() => {});
+      .catch(() => { });
 
     fetch('/api/products')
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setAllProducts(data);
+        const list = Array.isArray(data) ? data : (data?.products || []);
+        if (Array.isArray(list) && list.length > 0) {
+          setAllProducts(list);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // 1. Dynamic Hero Slides
@@ -212,18 +214,30 @@ const Home = () => {
   ];
 
   // 2. Dynamic New Arrivals
-  const newArrivals =
-    cms?.newArrivals?.mode === 'manual' && cms?.newArrivals?.productIds?.length > 0
-      ? allProducts.filter((p) => cms.newArrivals.productIds.includes(p.id))
-      : allProducts.filter((p) => (p.badge || '').toLowerCase() === 'new');
-  const displayArrivals = newArrivals.length > 0 ? newArrivals : allProducts.slice(0, 8);
-  const scrollingArrivals = [...displayArrivals, ...displayArrivals];
+  const newArrivals = (() => {
+    if (cms?.newArrivals?.mode === 'manual' && Array.isArray(cms?.newArrivals?.productIds) && cms.newArrivals.productIds.length > 0) {
+      const selected = cms.newArrivals.productIds
+        .map((id: string) => allProducts.find((p) => String(p.id) === String(id)))
+        .filter(Boolean) as typeof allProducts;
+      if (selected.length > 0) return selected;
+    }
+    const autoNew = allProducts.filter((p) => (p.badge || '').toLowerCase() === 'new');
+    return autoNew.length > 0 ? autoNew : allProducts.slice(0, 8);
+  })();
+  const displayArrivals = newArrivals;
+  const scrollingArrivals = displayArrivals.length > 0 ? [...displayArrivals, ...displayArrivals] : [];
 
   // 3. Dynamic Top Selling
-  const bestSellers =
-    cms?.topSelling?.mode === 'manual' && cms?.topSelling?.productIds?.length > 0
-      ? allProducts.filter((p) => cms.topSelling.productIds.includes(p.id))
-      : allProducts.slice(0, 6);
+  const bestSellers = (() => {
+    if (cms?.topSelling?.mode === 'manual' && Array.isArray(cms?.topSelling?.productIds) && cms.topSelling.productIds.length > 0) {
+      const selected = cms.topSelling.productIds
+        .map((id: string) => allProducts.find((p) => String(p.id) === String(id)))
+        .filter(Boolean) as typeof allProducts;
+      if (selected.length > 0) return selected;
+    }
+    const topItems = allProducts.filter((p) => (p.badge || '').toLowerCase().includes('top') || (p.badge || '').toLowerCase().includes('best'));
+    return topItems.length > 0 ? topItems.slice(0, 6) : allProducts.slice(0, 6);
+  })();
 
   // 4. Featured Collections & Categories
   const featuredCollections = cms?.featuredCollections?.collections || DEFAULT_COLLECTIONS;
@@ -231,6 +245,7 @@ const Home = () => {
   const realmCards = cms?.shopByRealm?.realms || DEFAULT_REALMS;
   const whyChoose = DEFAULT_PILLARS;
   const customerReviews = cms?.customerReviews?.reviews || DEFAULT_REVIEWS;
+
   const zafexCollection = cms?.zafexCollection?.items || [
     { name: 'MEDIEVAL CLOTHING', img: '/images/hp-stl-main.png', href: '/shop?category=medieval-clothing' },
     { name: 'GAMBESONS', img: '/images/gambeson.png', href: '/shop?category=gambesons' },
@@ -318,9 +333,8 @@ const Home = () => {
             key={index}
             src={slide.image}
             alt="Zafex medieval collectibles museum"
-            className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-[1400ms] ${
-              heroIndex === index ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-[1400ms] ${heroIndex === index ? 'opacity-100' : 'opacity-0'
+              }`}
           />
         ))}
         <div className="absolute inset-0 bg-gradient-to-r from-[#080b0d]/90 via-[#080b0d]/45 to-transparent" />
@@ -389,7 +403,7 @@ const Home = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[12px] uppercase tracking-[1.5px] text-[#9c1c1c]">{product.badge ? product.badge.toUpperCase() : 'Popular'}</span>
-                    <span className="text-[13px] font-semibold text-[#1a1a18]">₹{product.price.toLocaleString('en-IN')}</span>
+                    <span className="text-[13px] font-semibold text-[#1a1a18]">{formatPrice(product.price)}</span>
                   </div>
                   <h3 className="font-serif text-[18px] font-semibold text-[#1a1a18] leading-snug line-clamp-2">{product.name}</h3>
                   <p className="text-[13px] leading-relaxed text-[#4f4f4f] line-clamp-3">{product.desc ?? 'Premium armour crafted for collectors and live performance.'}</p>
@@ -420,7 +434,7 @@ const Home = () => {
           </Reveal>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {featuredCollections.map((collection) => (
+            {featuredCollections.map((collection: any) => (
               <Link
                 key={collection.name}
                 href={collection.href}
@@ -723,11 +737,10 @@ const Home = () => {
                           type="button"
                           onClick={() => handleAddLookbookItem(item)}
                           disabled={isAdding}
-                          className={`flex-shrink-0 font-serif text-[10px] uppercase tracking-[1px] px-3.5 py-2 transition-all cursor-pointer flex items-center gap-1 ${
-                            isAdding
+                          className={`flex-shrink-0 font-serif text-[10px] uppercase tracking-[1px] px-3.5 py-2 transition-all cursor-pointer flex items-center gap-1 ${isAdding
                               ? 'bg-emerald-700 text-white'
                               : 'bg-[#1a1a18] text-white hover:bg-[#d4af37] hover:text-[#1a1208]'
-                          }`}
+                            }`}
                         >
                           {isAdding ? (
                             <>

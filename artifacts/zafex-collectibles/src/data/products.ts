@@ -1,47 +1,59 @@
+export interface ProductSizeVariant {
+  size: string;
+  price?: number | null;
+  mrp?: number | null;
+  stock?: number | null;
+  image?: string | null;
+  images?: string[] | null;
+}
+
 export type Product = {
   id: string;
-  sku?: string;
+  sku?: string | null;
   name: string;
-  brand?: string;
+  brand?: string | null;
   cat: string;
   sub: string;
-  collection?: string;
-  category?: string;
+  collection?: string | null;
+  category?: string | null;
   price: number;
-  mrp?: number;
-  discount?: number;
-  priceRange?: [number, number]; // min–max when eBay shows a range
-  badge?: string;
+  mrp?: number | null;
+  discount?: number | null;
+  priceRange?: [number, number] | null; // min–max when eBay shows a range
+  badge?: string | null;
   image: string;
-  gallery?: string[];
-  video?: string;
-  customerPhotos?: string[];
-  lifestyleImages?: string[];
-  sizeChartImage?: string;
-  hoverImage?: string;
-  material?: string;
-  ringSize?: string;
-  ringType?: string;
-  gauge?: string;
-  finish?: string;
-  weight?: string;
-  manufacturingTime?: string;
-  country?: string;
-  hsCode?: string;
-  availability?: string;
-  estimatedDelivery?: string;
-  shipping?: string;
-  rating?: number;
-  reviewCount?: number;
-  colors?: string[];
-  sizes?: string[];
-  highlights?: string[];
-  materials?: string[];
-  desc?: string;
-  tags?: string[];
-  inStock?: boolean;
-  stockCount?: number;
-  ebayUrl?: string;
+  gallery?: string[] | null;
+  video?: string | null;
+  customerPhotos?: string[] | null;
+  lifestyleImages?: string[] | null;
+  sizeChartImage?: string | null;
+  hoverImage?: string | null;
+  material?: string | null;
+  ringSize?: string | null;
+  ringType?: string | null;
+  gauge?: string | null;
+  finish?: string | null;
+  weight?: string | null;
+  manufacturingTime?: string | null;
+  country?: string | null;
+  hsCode?: string | null;
+  availability?: string | null;
+  estimatedDelivery?: string | null;
+  shipping?: string | null;
+  rating?: number | null;
+  reviewCount?: number | null;
+  colors?: string[] | null;
+  sizes?: (string | ProductSizeVariant)[] | null;
+  highlights?: string[] | null;
+  materials?: string[] | null;
+  desc?: string | null;
+  itemDetails?: string | null;
+  tags?: string[] | null;
+  inStock?: boolean | null;
+  stockCount?: number | null;
+  ebayUrl?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export const CATEGORIES = [

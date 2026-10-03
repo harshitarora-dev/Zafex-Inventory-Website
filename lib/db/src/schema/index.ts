@@ -36,6 +36,7 @@ export const productsTable = mysqlTable("products", {
   highlights: json("highlights").$type<string[]>(),
   materials: json("materials").$type<string[]>(),
   desc: text("desc"),
+  itemDetails: text("item_details"),
   tags: json("tags").$type<string[]>(),
   inStock: boolean("in_stock").notNull().default(true),
   stockCount: int("stock_count").default(100),
@@ -175,7 +176,10 @@ export const reviewsTable = mysqlTable("reviews", {
     .notNull()
     .references(() => productsTable.id, { onDelete: "cascade" }),
   rating: int("rating").notNull(),
+  title: varchar("title", { length: 255 }),
   comment: text("comment"),
+  photos: json("photos").$type<string[]>(),
+  verified: boolean("verified").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

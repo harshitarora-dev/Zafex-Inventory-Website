@@ -99,7 +99,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} Zafex Enterprises. All rights reserved.
+            &copy; {new Date().getFullYear()} Zafex Enterprises. All rights reserved. | Website By Web Bazaar Officials - 9311012447
           </p>
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <span className="uppercase font-serif tracking-widest mr-2">We Accept:</span>

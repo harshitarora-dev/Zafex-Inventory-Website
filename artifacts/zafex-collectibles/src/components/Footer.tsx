@@ -105,14 +105,19 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-[#2a1a08] pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="font-sans text-[12px] text-[#f5f0e8]/50 text-center md:text-left">
-            © 2026 Zafex Enterprises. All Rights Reserved. Designed for LARP, Reenactment & Film under Brand: Zafs
-          </p>
-          <div className="font-sans text-[12px] text-[#f5f0e8]/50 flex flex-wrap justify-center gap-2 items-center text-center">
+        <div className="border-t border-[#2a1a08] pt-6 pb-24 lg:pb-8 flex flex-col lg:flex-row justify-between items-center gap-4 text-center lg:text-left">
+          <div className="font-sans text-[11px] sm:text-[12px] text-[#f5f0e8]/60 leading-relaxed max-w-2xl">
+            <p>
+              © 2026 Zafex Enterprises. All Rights Reserved. Designed for LARP, Reenactment & Film under Brand: Zafs
+            </p>
+            <p className="mt-1 text-[#f5f0e8]/75">
+              Website By <span className="text-[#d4af37] font-medium">Web Bazaar Officials</span> — <a href="tel:9311012447" className="text-[#d4af37] hover:underline font-semibold tracking-wide">9311012447</a>
+            </p>
+          </div>
+          <div className="font-sans text-[11px] sm:text-[12px] text-[#f5f0e8]/50 flex flex-wrap justify-center lg:justify-end gap-x-2.5 gap-y-1 items-center">
             <span>Meerut – 250002, UP, India</span>
-            <span>|</span>
-            <span>+91-8273506540</span>
+            <span className="hidden sm:inline">|</span>
+            <a href="tel:+918273506540" className="hover:text-[#d4af37] transition-colors">+91-8273506540</a>
             <span>|</span>
             <a href="mailto:zafexcollectibles@gmail.com" className="text-[#d4af37] hover:underline">zafexcollectibles@gmail.com</a>
             <span>|</span>

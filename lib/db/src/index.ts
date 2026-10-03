@@ -156,6 +156,7 @@ export async function initDatabase() {
       "highlights JSON NULL",
       "materials JSON NULL",
       "ebay_url VARCHAR(500) NULL",
+      "item_details TEXT NULL",
     ];
     for (const col of extraColumns) {
       try {
@@ -251,13 +252,28 @@ export async function initDatabase() {
         user_id INT NOT NULL,
         product_id VARCHAR(100) NOT NULL,
         rating INT NOT NULL,
+        title VARCHAR(255) NULL,
         comment TEXT NULL,
+        photos JSON NULL,
+        verified BOOLEAN NOT NULL DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         CONSTRAINT fk_reviews_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
+
+    // Ensure extra review columns exist on existing databases
+    const reviewCols = [
+      "title VARCHAR(255) NULL",
+      "photos JSON NULL",
+      "verified BOOLEAN DEFAULT TRUE",
+    ];
+    for (const col of reviewCols) {
+      try {
+        await connection.query(`ALTER TABLE reviews ADD COLUMN ${col};`);
+      } catch {}
+    }
 
     // 9. Contacts table
     await connection.query(`

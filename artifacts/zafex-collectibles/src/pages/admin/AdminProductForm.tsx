@@ -226,6 +226,14 @@ interface Props {
   id?: string;
 }
 
+export interface FormSizeVariant {
+  size: string;
+  price: string;
+  mrp: string;
+  stock: string;
+  images: string[];
+}
+
 interface FormState {
   name: string;
   sku: string;
@@ -237,6 +245,7 @@ interface FormState {
   price: string;
   badge: string;
   desc: string;
+  itemDetails: string;
   tags: string;
   inStock: boolean;
   stockCount: string;
@@ -254,9 +263,15 @@ interface FormState {
   ebayUrl: string;
   video: string;
   colors: string[];
-  sizes: string[];
+  sizes: FormSizeVariant[];
   highlights: string[];
 }
+
+const DEFAULT_FORM_SIZES: FormSizeVariant[] = [
+  { size: 'S/M', price: '', mrp: '', stock: '12', images: [] },
+  { size: 'L/XL', price: '', mrp: '', stock: '12', images: [] },
+  { size: '2XL/3XL', price: '', mrp: '', stock: '12', images: [] },
+];
 
 const EMPTY: FormState = {
   name: '',
@@ -269,6 +284,7 @@ const EMPTY: FormState = {
   price: '',
   badge: 'NEW',
   desc: '',
+  itemDetails: '',
   tags: '',
   inStock: true,
   stockCount: '12',
@@ -286,7 +302,7 @@ const EMPTY: FormState = {
   ebayUrl: 'https://www.ebay.com/str/zafexcollectibles',
   video: '',
   colors: ['#000000', '#8B4513'],
-  sizes: ['S/M', 'L/XL', '2XL/3XL'],
+  sizes: DEFAULT_FORM_SIZES,
   highlights: DEFAULT_HIGHLIGHTS,
 };
 
@@ -300,6 +316,10 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
   const [sizeChartPreview, setSizeChartPreview] = useState<string>('');
   const [newColorHex, setNewColorHex] = useState('#d4af37');
   const [customSizeInput, setCustomSizeInput] = useState('');
+  const [customSizePrice, setCustomSizePrice] = useState('');
+  const [customSizeMrp, setCustomSizeMrp] = useState('');
+  const [customSizeStock, setCustomSizeStock] = useState('12');
+  const [customSizeImages, setCustomSizeImages] = useState<string[]>([]);
   const [customHighlightInput, setCustomHighlightInput] = useState('');
 
   const [loadingProduct, setLoadingProduct] = useState(mode === 'edit');
@@ -324,6 +344,57 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
     if (mode !== 'edit' || !id) return;
     getAdminProduct(id)
       .then((p: AdminProduct) => {
+        const loadedSizes: FormSizeVariant[] = Array.isArray(p.sizes) && p.sizes.length > 0
+          ? (p.sizes.map((item: any) => {
+              if (!item) return null;
+              if (typeof item === 'string') {
+                const trimmed = item.trim();
+                if (!trimmed || trimmed === '[object Object]') return null;
+                if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                  try {
+                    const parsed = JSON.parse(trimmed);
+                    const sName = typeof parsed.size === 'string' ? parsed.size.trim() : '';
+                    if (!sName || sName === '[object Object]') return null;
+                    const imgs = Array.isArray(parsed.images)
+                      ? parsed.images.filter(Boolean)
+                      : (parsed.image ? [parsed.image] : []);
+                    return {
+                      size: sName,
+                      price: parsed.price != null && Number(parsed.price) > 0 ? String(parsed.price) : '',
+                      mrp: parsed.mrp != null && Number(parsed.mrp) > 0 ? String(parsed.mrp) : '',
+                      stock: parsed.stock != null ? String(parsed.stock) : (p.stockCount !== undefined && p.stockCount !== null ? String(p.stockCount) : '12'),
+                      images: imgs,
+                    };
+                  } catch {}
+                }
+                return {
+                  size: trimmed,
+                  price: '',
+                  mrp: '',
+                  stock: p.stockCount !== undefined && p.stockCount !== null ? String(p.stockCount) : '12',
+                  images: [],
+                };
+              }
+              if (typeof item === 'object') {
+                const sName = typeof item.size === 'string' ? item.size.trim() : String(item.size || '').trim();
+                if (!sName || sName === '[object Object]') return null;
+                const imgs = Array.isArray(item.images)
+                  ? item.images.filter(Boolean)
+                  : (item.image ? [item.image] : []);
+                return {
+                  size: sName,
+                  price: item.price != null && Number(item.price) > 0 ? String(item.price) : '',
+                  mrp: item.mrp != null && Number(item.mrp) > 0 ? String(item.mrp) : '',
+                  stock: item.stock != null ? String(item.stock) : (p.stockCount !== undefined && p.stockCount !== null ? String(p.stockCount) : '12'),
+                  images: imgs,
+                };
+              }
+              return null;
+            }).filter((s): s is FormSizeVariant => s !== null && s.size.trim().length > 0))
+          : DEFAULT_FORM_SIZES;
+
+        const finalSizes = loadedSizes.length > 0 ? loadedSizes : DEFAULT_FORM_SIZES;
+
         setForm({
           name: p.name ?? '',
           sku: p.sku ?? '',
@@ -335,6 +406,7 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
           price: p.price ? String(p.price) : '',
           badge: p.badge ?? '',
           desc: p.desc ?? '',
+          itemDetails: p.itemDetails ?? '',
           tags: (p.tags ?? []).join(', '),
           inStock: p.inStock ?? true,
           stockCount: p.stockCount !== undefined && p.stockCount !== null ? String(p.stockCount) : '12',
@@ -352,7 +424,7 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
           ebayUrl: p.ebayUrl ?? '',
           video: p.video ?? '',
           colors: Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : ['#000000', '#8B4513'],
-          sizes: Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : ['S/M', 'L/XL', '2XL/3XL'],
+          sizes: finalSizes,
           highlights: Array.isArray(p.highlights) && p.highlights.length > 0 ? p.highlights : DEFAULT_HIGHLIGHTS,
         });
 
@@ -470,14 +542,57 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
     }));
   };
 
-  // Size helper functions
-  const addSize = (size: string) => {
-    const trimmed = size.trim();
-    if (!trimmed) return;
-    if (!form.sizes.includes(trimmed)) {
-      setForm((f) => ({ ...f, sizes: [...f.sizes, trimmed] }));
+  const addSize = (sizeName: string, customPrice = '', customMrp = '', customStock = '', customImgs: string[] = []) => {
+    const trimmed = (typeof sizeName === 'string' ? sizeName : '').trim();
+    if (!trimmed || trimmed === '[object Object]') return;
+    if (!form.sizes.some((s) => s.size.toLowerCase() === trimmed.toLowerCase())) {
+      setForm((f) => ({
+        ...f,
+        sizes: [
+          ...f.sizes,
+          {
+            size: trimmed,
+            price: customPrice,
+            mrp: customMrp,
+            stock: customStock || f.stockCount || '12',
+            images: customImgs.length > 0 ? customImgs : (customSizeImages.length > 0 ? customSizeImages : []),
+          },
+        ],
+      }));
     }
     setCustomSizeInput('');
+    setCustomSizePrice('');
+    setCustomSizeMrp('');
+    setCustomSizeStock('12');
+    setCustomSizeImages([]);
+  };
+
+  const addVariantImage = (idx: number, newImg: string) => {
+    if (!newImg) return;
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.map((s, i) =>
+        i === idx ? { ...s, images: [...(s.images || []), newImg] } : s
+      ),
+    }));
+  };
+
+  const removeVariantImage = (variantIdx: number, imgIdx: number) => {
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.map((s, i) =>
+        i === variantIdx
+          ? { ...s, images: (s.images || []).filter((_, j) => j !== imgIdx) }
+          : s
+      ),
+    }));
+  };
+
+  const updateSizeVariant = (idx: number, field: keyof FormSizeVariant, value: any) => {
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.map((s, i) => (i === idx ? { ...s, [field]: value } : s)),
+    }));
   };
 
   const removeSize = (idx: number) => {
@@ -490,8 +605,33 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
   const setPresetSizes = (presetKey: string) => {
     const preset = PRESET_SIZES_MAP[presetKey];
     if (preset) {
-      setForm((f) => ({ ...f, sizes: preset }));
+      setForm((f) => ({
+        ...f,
+        sizes: preset.map((s) => {
+          const existing = f.sizes.find((curr) => curr.size.toLowerCase() === s.toLowerCase());
+          return {
+            size: s,
+            price: existing?.price || '',
+            mrp: existing?.mrp || '',
+            stock: existing?.stock || f.stockCount || '12',
+            images: existing?.images || [],
+          };
+        }),
+      }));
     }
+  };
+
+  const syncBasePriceToAllSizes = () => {
+    if (!form.price && !form.mrp) return;
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.map((s) => ({
+        ...s,
+        price: form.price || s.price,
+        mrp: form.mrp || s.mrp,
+        stock: form.stockCount || s.stock,
+      })),
+    }));
   };
 
   // Highlights helper functions
@@ -541,46 +681,65 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
       // Max 2 customer photos
       const customerPhotosList = [customerPhoto1, customerPhoto2].filter(Boolean);
 
+      // Serialize sizes with specific price, stock and images
+      const serializedSizes = form.sizes
+        .filter((s) => s.size && s.size.trim() && s.size.trim() !== '[object Object]')
+        .map((s) => {
+          const sPrice = s.price && !isNaN(Number(s.price)) && Number(s.price) > 0 ? Number(s.price) : effectivePrice;
+          const sMrp = s.mrp && !isNaN(Number(s.mrp)) && Number(s.mrp) > 0 ? Number(s.mrp) : effectiveMrp;
+          const sStock = s.stock !== '' && !isNaN(Number(s.stock)) ? Number(s.stock) : (Number(form.stockCount) || 12);
+          const cleanImgs = (s.images || []).filter(Boolean);
+          return {
+            size: s.size.trim(),
+            price: sPrice,
+            mrp: sMrp || undefined,
+            stock: sStock,
+            images: cleanImgs.length > 0 ? cleanImgs : undefined,
+            image: cleanImgs[0] || undefined,
+          };
+        });
+
       const payload: Record<string, any> = {
         name: form.name.trim(),
-        sku: form.sku.trim() || undefined,
+        sku: form.sku.trim() || null,
         brand: form.brand.trim() || 'ZAFS',
         cat: form.cat,
         sub: form.sub,
-        collection: form.collection.trim() || undefined,
+        collection: form.collection.trim() || null,
         price: effectivePrice,
-        mrp: effectiveMrp,
-        discount: effectiveDiscount,
-        badge: form.badge || undefined,
-        desc: form.desc.trim() || undefined,
+        mrp: effectiveMrp ?? null,
+        discount: effectiveDiscount ?? 0,
+        badge: form.badge || null,
+        desc: form.desc.trim() || null,
+        itemDetails: form.itemDetails.trim() || null,
         tags: form.tags
           ? form.tags
               .split(',')
               .map((t) => t.trim())
               .filter(Boolean)
-          : undefined,
+          : [],
         inStock: form.inStock,
         stockCount: Number(form.stockCount) || 12,
         availability: form.availability.trim() || 'In Stock',
-        estimatedDelivery: form.estimatedDelivery.trim() || undefined,
-        manufacturingTime: form.manufacturingTime.trim() || undefined,
-        material: form.material.trim() || undefined,
-        ringSize: form.ringSize.trim() || undefined,
-        ringType: form.ringType.trim() || undefined,
-        gauge: form.gauge.trim() || undefined,
-        finish: form.finish.trim() || undefined,
-        weight: form.weight.trim() || undefined,
+        estimatedDelivery: form.estimatedDelivery.trim() || null,
+        manufacturingTime: form.manufacturingTime.trim() || null,
+        material: form.material.trim() || null,
+        ringSize: form.ringSize.trim() || null,
+        ringType: form.ringType.trim() || null,
+        gauge: form.gauge.trim() || null,
+        finish: form.finish.trim() || null,
+        weight: form.weight.trim() || null,
         country: form.country.trim() || 'India',
-        hsCode: form.hsCode.trim() || undefined,
-        ebayUrl: form.ebayUrl.trim() || undefined,
+        hsCode: form.hsCode.trim() || null,
+        ebayUrl: form.ebayUrl.trim() || null,
         video: form.video && form.video.trim() ? form.video.trim() : null,
-        colors: form.colors.length > 0 ? form.colors : undefined,
-        sizes: form.sizes.length > 0 ? form.sizes : undefined,
-        highlights: form.highlights.length > 0 ? form.highlights : undefined,
+        colors: form.colors.length > 0 ? form.colors : null,
+        sizes: serializedSizes.length > 0 ? serializedSizes : null,
+        highlights: form.highlights.length > 0 ? form.highlights : null,
         image: heroImg,
         gallery: allGallery,
-        customerPhotos: customerPhotosList.length > 0 ? customerPhotosList : undefined,
-        sizeChartImage: sizeChartPreview || undefined,
+        customerPhotos: customerPhotosList.length > 0 ? customerPhotosList : null,
+        sizeChartImage: sizeChartPreview || null,
       };
 
       if (mode === 'create') {
@@ -836,24 +995,32 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                 </div>
               </div>
 
-              {/* ── SIZES MANAGER ── */}
-              <div className="pt-2 border-t border-[#333330] space-y-3">
+              {/* ── SIZES & VARIANTS MANAGER ── */}
+              <div className="pt-2 border-t border-[#333330] space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <label className="block font-serif text-[11px] uppercase tracking-[1.5px] text-[#d4af37] font-bold">
-                      Available Sizes
+                    <label className="block font-serif text-[12px] uppercase tracking-[1.5px] text-[#d4af37] font-bold">
+                      Available Sizes & Variant Pricing / Stock
                     </label>
                     <span className="text-[11px] text-[#8a8278]">
-                      Sizes displayed for customer selection on product page
+                      Set custom selling price, MRP, and stock for each size (or inherit base product price)
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={syncBasePriceToAllSizes}
+                      className="text-[10px] bg-[#2a2618] hover:bg-[#3a3520] text-[#d4af37] px-3 py-1.5 rounded-lg border border-[#d4af37]/40 transition font-serif uppercase tracking-[0.5px] font-bold"
+                      title="Set all size prices & stock to match the main product inputs above"
+                    >
+                      ⚡ Sync Base Price & Stock
+                    </button>
                     {Object.keys(PRESET_SIZES_MAP).map((preset) => (
                       <button
                         key={preset}
                         type="button"
                         onClick={() => setPresetSizes(preset)}
-                        className="text-[10px] bg-[#1a1a18] hover:bg-[#2a2a26] text-[#c0b8ac] hover:text-[#d4af37] px-2.5 py-1 rounded border border-[#333330] transition font-serif uppercase tracking-[0.5px]"
+                        className="text-[10px] bg-[#1a1a18] hover:bg-[#2a2a26] text-[#c0b8ac] hover:text-[#d4af37] px-2.5 py-1.5 rounded-lg border border-[#333330] transition font-serif uppercase tracking-[0.5px]"
                       >
                         + {preset}
                       </button>
@@ -861,51 +1028,232 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                   </div>
                 </div>
 
-                {/* Active Sizes Badges */}
-                <div className="flex flex-wrap items-center gap-2 min-h-[40px] p-2 bg-[#1a1a18] rounded-xl border border-[#333330]">
+                {/* Size Variants Table */}
+                <div className="bg-[#1a1a18] rounded-xl border border-[#333330] overflow-hidden">
                   {form.sizes.length === 0 ? (
-                    <span className="text-xs text-[#8a8278] italic p-1">No sizes specified. Add sizes below or choose a preset.</span>
+                    <div className="text-center py-6 px-4 text-xs text-[#8a8278] italic">
+                      No size variants added yet. Choose a preset above or add custom sizes below.
+                    </div>
                   ) : (
-                    form.sizes.map((s, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 bg-[#282824] text-[#f5f0e8] border border-[#444440] px-3 py-1.5 rounded-lg text-xs font-semibold"
-                      >
-                        {s}
-                        <button
-                          type="button"
-                          onClick={() => removeSize(idx)}
-                          className="text-[#8a8278] hover:text-red-400 transition"
-                        >
-                          <X size={13} />
-                        </button>
-                      </span>
-                    ))
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-[#141412] border-b border-[#333330] text-[#8a8278] font-serif uppercase tracking-[1px] text-[10px]">
+                            <th className="py-2.5 px-3 font-semibold">Image</th>
+                            <th className="py-2.5 px-3 font-semibold">Size</th>
+                            <th className="py-2.5 px-3 font-semibold">Selling Price ($)</th>
+                            <th className="py-2.5 px-3 font-semibold">MRP ($)</th>
+                            <th className="py-2.5 px-3 font-semibold">Stock Qty</th>
+                            <th className="py-2.5 px-3 font-semibold">Discount</th>
+                            <th className="py-2.5 px-3 font-semibold text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#2a2a26]">
+                          {form.sizes.map((v, idx) => {
+                            const vPrice = Number(v.price) || Number(form.price) || 0;
+                            const vMrp = Number(v.mrp) || Number(form.mrp) || 0;
+                            const vDiscount = vMrp > vPrice && vPrice > 0 ? Math.round(((vMrp - vPrice) / vMrp) * 100) : 0;
+                            return (
+                              <tr key={idx} className="hover:bg-[#22221f] transition-colors">
+                                <td className="py-2.5 px-3">
+                                  <div className="flex items-center gap-1.5 flex-wrap max-w-[180px]">
+                                    {(v.images || []).map((imgUrl, imgIdx) => (
+                                      <div key={imgIdx} className="relative w-8 h-8 rounded-lg overflow-hidden border border-[#d4af37]/60 group shrink-0">
+                                        <img src={imgUrl} alt={`${v.size} photo ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                                        <button
+                                          type="button"
+                                          onClick={() => removeVariantImage(idx, imgIdx)}
+                                          className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-400 transition cursor-pointer"
+                                          title="Remove photo"
+                                        >
+                                          <X size={12} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                    <label
+                                      className="w-8 h-8 rounded-lg border border-dashed border-[#444440] hover:border-[#d4af37] flex flex-col items-center justify-center cursor-pointer text-[#8a8278] hover:text-[#d4af37] transition shrink-0"
+                                      title="Upload photo(s) for this size variant"
+                                    >
+                                      <Camera size={11} />
+                                      <span className="text-[7px] font-sans uppercase font-bold">+Photo</span>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                          const files = e.target.files;
+                                          if (files && files.length > 0) {
+                                            for (let fi = 0; fi < files.length; fi++) {
+                                              const b64 = await fileToBase64(files[fi]);
+                                              if (b64) addVariantImage(idx, b64);
+                                            }
+                                          }
+                                        }}
+                                      />
+                                    </label>
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <input
+                                    type="text"
+                                    value={typeof v.size === 'string' && v.size !== '[object Object]' ? v.size : ''}
+                                    onChange={(e) => updateSizeVariant(idx, 'size', e.target.value)}
+                                    placeholder="Size (e.g. M)"
+                                    className="w-24 bg-[#141412] border border-[#3a3a36] text-[#f5f0e8] font-bold rounded px-2.5 py-1 text-xs focus:border-[#d4af37] outline-none"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <div className="relative flex items-center">
+                                    <span className="absolute left-2 text-[#8a8278] text-xs">$</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={v.price}
+                                      onChange={(e) => updateSizeVariant(idx, 'price', e.target.value)}
+                                      placeholder={form.price || '0'}
+                                      className="w-24 pl-5 pr-2 py-1 bg-[#141412] border border-[#3a3a36] text-[#d4af37] font-bold rounded text-xs focus:border-[#d4af37] outline-none"
+                                    />
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <div className="relative flex items-center">
+                                    <span className="absolute left-2 text-[#8a8278] text-xs">$</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={v.mrp}
+                                      onChange={(e) => updateSizeVariant(idx, 'mrp', e.target.value)}
+                                      placeholder={form.mrp || '0'}
+                                      className="w-24 pl-5 pr-2 py-1 bg-[#141412] border border-[#3a3a36] text-[#c0b8ac] rounded text-xs focus:border-[#d4af37] outline-none"
+                                    />
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={v.stock}
+                                    onChange={(e) => updateSizeVariant(idx, 'stock', e.target.value)}
+                                    placeholder={form.stockCount || '12'}
+                                    className="w-20 px-2 py-1 bg-[#141412] border border-[#3a3a36] text-[#f5f0e8] rounded text-xs font-mono focus:border-[#d4af37] outline-none"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  {vDiscount > 0 ? (
+                                    <span className="bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold">
+                                      {vDiscount}% OFF
+                                    </span>
+                                  ) : (
+                                    <span className="text-[#666] text-[11px]">—</span>
+                                  )}
+                                </td>
+                                <td className="py-2.5 px-3 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSize(idx)}
+                                    className="p-1 text-[#8a8278] hover:text-red-400 hover:bg-red-950/30 rounded transition"
+                                    title="Remove this size"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
 
-                {/* Add Custom Size Input */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Type custom size (e.g. 2XL/3XL, 48 EU, Custom Fit)..."
-                    value={customSizeInput}
-                    onChange={(e) => setCustomSizeInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addSize(customSizeInput);
-                      }
-                    }}
-                    className="flex-1 bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg px-3.5 py-2 text-xs focus:border-[#d4af37] outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => addSize(customSizeInput)}
-                    className="px-4 py-2 bg-[#333330] hover:bg-[#444440] text-white text-xs font-serif uppercase tracking-[1px] rounded-lg transition"
-                  >
-                    + Add Size
-                  </button>
+                {/* Add Custom Size Variant Row */}
+                <div className="p-3 bg-[#171715] rounded-xl border border-[#333330] space-y-2">
+                  <span className="text-[10px] font-serif uppercase tracking-[1px] text-[#c0b8ac] font-bold block">
+                    + Add New Size Variant
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Optional Images Picker for new size */}
+                    {customSizeImages.map((cImg, ciIdx) => (
+                      <div key={ciIdx} className="relative w-8 h-8 rounded-lg border border-[#d4af37] overflow-hidden shrink-0 group">
+                        <img src={cImg} alt="Size preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setCustomSizeImages((prev) => prev.filter((_, i) => i !== ciIdx))}
+                          className="absolute inset-0 bg-black/80 text-red-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+
+                    <label className="h-8 px-2.5 rounded-lg border border-dashed border-[#444440] hover:border-[#d4af37] flex items-center gap-1.5 cursor-pointer text-[#8a8278] hover:text-[#d4af37] text-[11px] shrink-0">
+                      <Camera size={13} />
+                      <span>+ Photos</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={async (e) => {
+                          const files = e.target.files;
+                          if (files && files.length > 0) {
+                            const newB64s: string[] = [];
+                            for (let fi = 0; fi < files.length; fi++) {
+                              const b64 = await fileToBase64(files[fi]);
+                              if (b64) newB64s.push(b64);
+                            }
+                            setCustomSizeImages((prev) => [...prev, ...newB64s]);
+                          }
+                        }}
+                      />
+                    </label>
+
+                    <input
+                      type="text"
+                      placeholder="Size Name (e.g. 4XL)"
+                      value={customSizeInput}
+                      onChange={(e) => setCustomSizeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addSize(customSizeInput, customSizePrice, customSizeMrp, customSizeStock, customSizeImages);
+                        }
+                      }}
+                      className="flex-1 min-w-[120px] bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg px-3 py-2 text-xs focus:border-[#d4af37] outline-none"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder={`Price ($) [${form.price || '0'}]`}
+                      value={customSizePrice}
+                      onChange={(e) => setCustomSizePrice(e.target.value)}
+                      className="w-28 bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg px-3 py-2 text-xs focus:border-[#d4af37] outline-none"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder={`MRP ($) [${form.mrp || '0'}]`}
+                      value={customSizeMrp}
+                      onChange={(e) => setCustomSizeMrp(e.target.value)}
+                      className="w-28 bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg px-3 py-2 text-xs focus:border-[#d4af37] outline-none"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder={`Stock [${form.stockCount || '12'}]`}
+                      value={customSizeStock}
+                      onChange={(e) => setCustomSizeStock(e.target.value)}
+                      className="w-24 bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg px-3 py-2 text-xs font-mono focus:border-[#d4af37] outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addSize(customSizeInput, customSizePrice, customSizeMrp, customSizeStock, customSizeImages)}
+                      className="px-4 py-2 bg-[#d4af37] text-[#1a1208] text-xs font-bold font-serif uppercase tracking-[1px] rounded-lg hover:bg-[#b89528] transition"
+                    >
+                      + Add Variant
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1237,18 +1585,42 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                 </div>
               </div>
 
-              {/* Description & Tags */}
+              {/* Description, Item Details & Tags */}
               <div className="space-y-4 pt-2 border-t border-[#333330]">
                 <div>
-                  <label className="block font-serif text-[11px] uppercase tracking-[1.5px] text-[#f5f0e8] font-bold mb-2">
-                    Product Description
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="font-serif text-[11px] uppercase tracking-[1.5px] text-[#f5f0e8] font-bold">
+                      Short Description (Overview)
+                    </label>
+                    <span className={`text-[11px] font-mono ${form.desc.length >= 480 ? 'text-amber-400 font-bold' : 'text-[#8a8278]'}`}>
+                      {form.desc.length}/500 chars
+                    </span>
+                  </div>
                   <textarea
-                    rows={4}
-                    placeholder="Describe historical context, materials, craftsmanship, and fit..."
+                    rows={3}
+                    maxLength={500}
+                    placeholder="Brief 1-2 sentence overview of the piece (e.g. Authentic medieval chainmail coif crafted from 16 gauge blackened steel for battle reenactment and LARP events)..."
                     value={form.desc}
                     onChange={(e) => setForm({ ...form, desc: e.target.value })}
                     className="w-full bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg p-3.5 text-sm leading-relaxed focus:border-[#d4af37] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="font-serif text-[11px] uppercase tracking-[1.5px] text-[#d4af37] font-bold">
+                      Item Details (Full Details & Specifications — No Limit)
+                    </label>
+                    <span className="text-[10px] text-[#8a8278]">
+                      Supports paragraphs, bullet points (•), sizing notes & craft history
+                    </span>
+                  </div>
+                  <textarea
+                    rows={7}
+                    placeholder={`• Handcrafted from premium 16-gauge mild steel rings with authentic oil-blackened finish.\n• Internal leather chin strap and padded collar for maximum comfort during reenactments.\n• Tested for light LARP, display, and film production standard.\n• Care instructions: Light oil application recommended after outdoor use to prevent oxidation.`}
+                    value={form.itemDetails}
+                    onChange={(e) => setForm({ ...form, itemDetails: e.target.value })}
+                    className="w-full bg-[#1a1a18] border border-[#444440] text-[#f5f0e8] rounded-lg p-3.5 text-sm leading-relaxed focus:border-[#d4af37] outline-none font-sans"
                   />
                 </div>
 
@@ -1706,7 +2078,7 @@ export default function AdminProductForm({ mode = 'create', id }: Props = { mode
                         <span className="text-[10px] text-[#8a8278] uppercase font-serif">Sizes:</span>
                         {form.sizes.slice(0, 4).map((s, i) => (
                           <span key={i} className="text-[9px] bg-[#e6e1da] px-1.5 py-0.5 rounded text-[#1a1a18] font-bold">
-                            {s}
+                            {typeof s === 'object' ? s.size : s}
                           </span>
                         ))}
                       </div>

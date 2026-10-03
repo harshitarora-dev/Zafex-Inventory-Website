@@ -40,6 +40,19 @@ const PRODUCT_TYPES = [
   { label: 'Shields & Accessories', value: 'accessories' },
 ];
 
+const SIZE_OPTIONS = ['S', 'M', 'L', 'XL', '2XL', '3XL', 'Custom'];
+
+const COLOR_OPTIONS = [
+  { label: 'Black', code: '#000000' },
+  { label: 'Brown', code: '#8B4513' },
+  { label: 'Natural / Steel', code: '#c0c0c0' },
+  { label: 'Brass / Gold', code: '#d4af37' },
+  { label: 'Polished Silver', code: '#e5e7eb' },
+  { label: 'Red / Crimson', code: '#991b1b' },
+  { label: 'Blue / Navy', code: '#1e3a8a' },
+  { label: 'Green / Olive', code: '#166534' },
+];
+
 // Helper to check if a product belongs to a collection
 function matchCollection(p: any, subSlug: string): boolean {
   const s = subSlug.toLowerCase();

@@ -17,7 +17,7 @@ interface ProductCardProps {
 
 const clampRating = (value: number) => Math.min(5, Math.max(0, value));
 
-const getReviewCount = (product: { id: string; reviewCount?: number }) => {
+const getReviewCount = (product: { id: string; reviewCount?: number | null }) => {
   if (typeof product.reviewCount === 'number') {
     return product.reviewCount;
   }

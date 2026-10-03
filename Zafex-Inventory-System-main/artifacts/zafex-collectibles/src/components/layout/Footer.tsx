@@ -24,12 +24,12 @@ export default function Footer() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <a href="#" className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center hover:bg-primary hover:border-primary transition-colors text-gray-400 hover:text-white">
+                    <a href="https://www.facebook.com/share/191LLx8eFb/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center hover:bg-primary hover:border-primary transition-colors text-gray-400 hover:text-white">
                       <Facebook size={18} />
                     </a>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Coming Soon</p>
+                    <p>Visit Facebook</p>
                   </TooltipContent>
                 </Tooltip>
                 
@@ -99,7 +99,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} Zafex Enterprises. All rights reserved.
+            &copy; {new Date().getFullYear()} Zafex Enterprises. All rights reserved. | Website By Web Bazaar Officials - 9311012447
           </p>
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <span className="uppercase font-serif tracking-widest mr-2">We Accept:</span>

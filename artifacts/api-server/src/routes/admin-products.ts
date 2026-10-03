@@ -14,22 +14,20 @@ function getTargetImageDirs(): string[] {
 
   // 1. Hostinger production directories
   const absHostinger = "/home/u933632718/domains/zafexcollectibles.com/public_html/images";
-  if (fs.existsSync("/home/u933632718/domains/zafexcollectibles.com/public_html")) {
-    dirs.add(absHostinger);
-  }
+  dirs.add(absHostinger);
+
   const relHostinger = path.resolve(process.cwd(), "..", "public_html", "images");
-  if (fs.existsSync(path.resolve(process.cwd(), "..", "public_html"))) {
-    dirs.add(relHostinger);
-  }
+  dirs.add(relHostinger);
+
+  const cwdPublicHtml = path.resolve(process.cwd(), "public_html", "images");
+  dirs.add(cwdPublicHtml);
 
   // 2. Local dev directories
   const localArtifacts = path.resolve(process.cwd(), "artifacts", "zafex-collectibles", "public", "images");
   dirs.add(localArtifacts);
 
   const localHostinger = path.resolve(process.cwd(), "hostinger-frontend", "images");
-  if (fs.existsSync(path.resolve(process.cwd(), "hostinger-frontend"))) {
-    dirs.add(localHostinger);
-  }
+  dirs.add(localHostinger);
 
   return Array.from(dirs);
 }
@@ -54,7 +52,7 @@ function writeImageToAllDirs(filename: string, buffer: Buffer): void {
   for (const d of getTargetImageDirs()) {
     try {
       fs.mkdirSync(d, { recursive: true });
-      fs.writeFile(path.join(d, filename), buffer, () => { });
+      fs.writeFileSync(path.join(d, filename), buffer);
     } catch { }
   }
 }
@@ -154,6 +152,90 @@ function parseStringArray(raw: any): string[] {
   return [];
 }
 
+function parseSizesArray(raw: any): any[] {
+  if (!raw) return [];
+  let parsed: any = raw;
+  if (typeof raw === "string") {
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return raw.split(",").map((s: string) => s.trim()).filter((s: string) => s && s !== "[object Object]");
+    }
+  }
+  if (!Array.isArray(parsed)) return [];
+
+  const list: any[] = [];
+  for (const item of parsed) {
+    if (!item) continue;
+    if (typeof item === "string") {
+      const trimmed = item.trim();
+      if (!trimmed || trimmed === "[object Object]") continue;
+      if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+        try {
+          const obj = JSON.parse(trimmed);
+          const sanitized = sanitizeSizeObj(obj);
+          if (sanitized) list.push(sanitized);
+          continue;
+        } catch { }
+      }
+      list.push(trimmed);
+    } else if (typeof item === "object") {
+      const sanitized = sanitizeSizeObj(item);
+      if (sanitized) list.push(sanitized);
+    }
+  }
+  return list;
+}
+
+function sanitizeSizeObj(obj: any): Record<string, any> | null {
+  if (!obj || typeof obj !== "object") return null;
+  const sizeName = typeof obj.size === "string" ? obj.size.trim() : String(obj.size || "").trim();
+  if (!sizeName || sizeName === "[object Object]") return null;
+
+  const imagesList: string[] = [];
+
+  // Process multiple images if array provided
+  if (Array.isArray(obj.images) && obj.images.length > 0) {
+    for (const rawImg of obj.images) {
+      if (typeof rawImg === "string") {
+        const trimmed = rawImg.trim();
+        if (trimmed.startsWith("data:image/")) {
+          const saved = saveBase64Image(trimmed);
+          if (saved && !imagesList.includes(saved)) imagesList.push(saved);
+        } else if (trimmed && !imagesList.includes(trimmed)) {
+          imagesList.push(trimmed);
+        }
+      }
+    }
+  } else if (obj.image && typeof obj.image === "string") {
+    // Process single image fallback ONLY if images array was empty
+    let singleImg = obj.image.trim();
+    if (singleImg.startsWith("data:image/")) {
+      const saved = saveBase64Image(singleImg);
+      if (saved) singleImg = saved;
+    }
+    if (singleImg && !imagesList.includes(singleImg)) {
+      imagesList.push(singleImg);
+    }
+  }
+
+  const result: Record<string, any> = { size: sizeName };
+  if (obj.price !== undefined && obj.price !== null && !isNaN(Number(obj.price))) {
+    result.price = Math.round(Number(obj.price));
+  }
+  if (obj.mrp !== undefined && obj.mrp !== null && !isNaN(Number(obj.mrp))) {
+    result.mrp = Math.round(Number(obj.mrp));
+  }
+  if (obj.stock !== undefined && obj.stock !== null && !isNaN(Number(obj.stock))) {
+    result.stock = Math.round(Number(obj.stock));
+  }
+  if (imagesList.length > 0) {
+    result.images = imagesList;
+    result.image = imagesList[0];
+  }
+  return result;
+}
+
 function slugify(text: string) {
   return text
     .toLowerCase()
@@ -217,6 +299,7 @@ router.post(
         priceRangeMax,
         badge,
         desc: description,
+        itemDetails,
         tags,
         inStock,
         stockCount,
@@ -296,7 +379,7 @@ router.post(
         }
       }
 
-      const sizesList = parseStringArray(req.body.sizes);
+      const sizesList = parseSizesArray(req.body.sizes);
       const highlightsList = parseStringArray(req.body.highlights);
       const materialsList = parseStringArray(req.body.materials);
 
@@ -379,6 +462,7 @@ router.post(
           highlights: highlightsList.length ? highlightsList : null,
           materials: materialsList.length ? materialsList : null,
           desc: description || null,
+          itemDetails: itemDetails || req.body.item_details || null,
           tags: parsedTags.length ? parsedTags : null,
           inStock: inStock !== false && inStock !== "false",
           stockCount: stockCount ? Number(stockCount) : 100,
@@ -403,8 +487,13 @@ router.put(
   requireAdmin,
   safeUpload,
   async (req, res) => {
+    const productId = String(req.params["id"] || "").trim();
+    if (!productId) {
+      res.status(400).json({ error: "Product ID is required" });
+      return;
+    }
+
     try {
-      const id = req.params["id"] as string;
       const {
         name,
         sku,
@@ -418,7 +507,9 @@ router.put(
         priceRangeMin,
         priceRangeMax,
         badge,
-        desc: description,
+        desc,
+        description: rawDescription,
+        itemDetails,
         tags,
         inStock,
         stockCount,
@@ -446,22 +537,22 @@ router.put(
       const existing = await db
         .select()
         .from(productsTable)
-        .where(eq(productsTable.id, id));
+        .where(eq(productsTable.id, productId));
 
       let existingRecord = existing[0];
       if (!existingRecord) {
         // Upsert fallback for initial catalog products
         existingRecord = {
-          id,
+          id: productId,
           name: name || "Product",
-          sku: sku || id,
+          sku: sku || productId,
           brand: brand || "ZAFS",
           cat: cat || "accessories",
           sub: sub || "general",
           collection: collection || null,
-          price: Number(price) || 100,
-          mrp: mrp ? Number(mrp) : null,
-          discount: Number(discount) || 0,
+          price: Math.round(Number(price)) || 100,
+          mrp: mrp ? Math.round(Number(mrp)) : null,
+          discount: Math.round(Number(discount)) || 0,
           priceRange: null,
           badge: badge || null,
           image: "/images/full-body-armor.png",
@@ -486,6 +577,7 @@ router.put(
           highlights: null,
           materials: null,
           desc: null,
+          itemDetails: null,
           tags: [],
           inStock: true,
           stockCount: 100,
@@ -573,7 +665,7 @@ router.put(
       let priceRange = existingRecord.priceRange;
       if (priceRangeMin !== undefined || priceRangeMax !== undefined) {
         if (priceRangeMin || priceRangeMax) {
-          priceRange = [Number(priceRangeMin) || existingRecord.price, Number(priceRangeMax) || existingRecord.price];
+          priceRange = [Math.round(Number(priceRangeMin)) || existingRecord.price, Math.round(Number(priceRangeMax)) || existingRecord.price];
         } else {
           priceRange = null;
         }
@@ -586,12 +678,12 @@ router.put(
             .filter(Boolean)
           : existingRecord.tags ?? [];
 
-      let mrpNum = mrp !== undefined ? (mrp ? Number(mrp) : null) : existingRecord.mrp;
-      let finalPrice = price !== undefined && price !== "" ? Number(price) : existingRecord.price;
+      let mrpNum = mrp !== undefined ? (mrp ? Math.round(Number(mrp)) : null) : existingRecord.mrp;
+      let finalPrice = price !== undefined && price !== "" ? Math.round(Number(price)) : existingRecord.price;
       let discountNum =
         mrpNum && mrpNum > finalPrice && mrpNum > 0
           ? Math.round(((mrpNum - finalPrice) / mrpNum) * 100)
-          : (discount !== undefined ? Number(discount) : (mrpNum && mrpNum > finalPrice ? Math.round(((mrpNum - finalPrice) / mrpNum) * 100) : 0));
+          : (discount !== undefined ? Math.round(Number(discount)) : (mrpNum && mrpNum > finalPrice ? Math.round(((mrpNum - finalPrice) / mrpNum) * 100) : 0));
 
       let videoPath: string | null | undefined = undefined;
       if (video !== undefined) {
@@ -604,7 +696,7 @@ router.put(
         }
       }
 
-      const updates: Partial<typeof existingRecord> = {
+      const updates: Record<string, any> = {
         ...(name && { name }),
         ...(sku !== undefined && { sku: sku || null }),
         ...(brand !== undefined && { brand: brand || "ZAFS" }),
@@ -612,16 +704,16 @@ router.put(
         ...(sub && { sub }),
         ...(collection !== undefined && { collection: collection || null }),
         price: finalPrice,
-        mrp: mrpNum,
-        discount: discountNum,
-        priceRange: priceRange,
-        badge: badge !== undefined ? (badge || null) : existingRecord.badge,
+        mrp: mrpNum ?? null,
+        discount: discountNum ?? 0,
+        ...(priceRange !== undefined && { priceRange: priceRange || null }),
+        badge: badge !== undefined ? (badge || null) : (existingRecord.badge ?? null),
         image: imagePath,
-        gallery: galleryImages,
-        ...(video !== undefined && { video: videoPath }),
+        gallery: galleryImages.length > 0 ? galleryImages : [imagePath],
+        ...(video !== undefined && { video: videoPath || null }),
         customerPhotos: customerPhotos?.length ? customerPhotos : null,
         lifestyleImages: lifestyleImages?.length ? lifestyleImages : null,
-        sizeChartImage: sizeChartImagePath,
+        sizeChartImage: sizeChartImagePath ?? null,
         ...(material !== undefined && { material: material || null }),
         ...(ringSize !== undefined && { ringSize: ringSize || null }),
         ...(ringType !== undefined && { ringType: ringType || null }),
@@ -634,13 +726,14 @@ router.put(
         ...(availability !== undefined && { availability: availability || "In Stock" }),
         ...(estimatedDelivery !== undefined && { estimatedDelivery: estimatedDelivery || null }),
         colors: colorsList?.length ? colorsList : null,
-        ...(req.body.sizes !== undefined && { sizes: parseStringArray(req.body.sizes).length ? parseStringArray(req.body.sizes) : null }),
+        ...(req.body.sizes !== undefined && { sizes: parseSizesArray(req.body.sizes).length ? parseSizesArray(req.body.sizes) : null }),
         ...(req.body.highlights !== undefined && { highlights: parseStringArray(req.body.highlights).length ? parseStringArray(req.body.highlights) : null }),
         ...(req.body.materials !== undefined && { materials: parseStringArray(req.body.materials).length ? parseStringArray(req.body.materials) : null }),
-        ...(description !== undefined && { desc: description || null }),
+        ...( (desc !== undefined || rawDescription !== undefined) && { desc: (desc ? String(desc).trim() : (rawDescription ? String(rawDescription).trim() : null)) } ),
+        ...( (itemDetails !== undefined || req.body.item_details !== undefined) && { itemDetails: (itemDetails ? String(itemDetails).trim() : (req.body.item_details ? String(req.body.item_details).trim() : null)) } ),
         tags: parsedTags.length ? parsedTags : null,
-        inStock: inStock !== undefined ? (inStock !== false && inStock !== "false") : existingRecord.inStock,
-        ...(stockCount !== undefined && { stockCount: Number(stockCount) || 100 }),
+        inStock: inStock !== undefined ? (inStock !== false && inStock !== "false") : (existingRecord.inStock ?? true),
+        ...(stockCount !== undefined && { stockCount: Math.round(Number(stockCount)) || 100 }),
         ...(ebayUrl !== undefined && { ebayUrl: ebayUrl || null }),
         updatedAt: new Date(),
       };
@@ -648,16 +741,18 @@ router.put(
       await db
         .update(productsTable)
         .set(updates)
-        .where(eq(productsTable.id, id));
+        .where(eq(productsTable.id, productId));
 
       const [updated] = await db
         .select()
         .from(productsTable)
-        .where(eq(productsTable.id, id));
+        .where(eq(productsTable.id, productId));
 
-      res.json(updated);
+      res.json(updated || { ok: true, id: productId });
     } catch (err: unknown) {
-      res.status(500).json({ error: "Failed to update product: " + (err instanceof Error ? err.message : "") });
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[AdminProducts] Error updating product ${productId}:`, err);
+      res.status(500).json({ error: `Failed to update product: ${msg}` });
     }
   },
 );

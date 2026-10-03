@@ -1,5 +1,5 @@
 <?php
-// Production-grade Auto-Starting Reverse Proxy Bridge for Hostinger
+// Production-grade Auto-Starting Reverse Proxy Bridge for Hostinger via UNIX Domain Socket
 // Supports Large JSON payloads, Videos, Form-Data, Multipart Uploads, and Persistent Node.js Backend
 
 @ini_set('memory_limit', '512M');
@@ -7,14 +7,16 @@
 @ini_set('post_max_size', '150M');
 @ini_set('upload_max_filesize', '150M');
 
-$backend_host = 'http://127.0.0.1:8080';
 $node_bin     = '/opt/alt/alt-nodejs20/root/usr/bin/node';
 $backend_dir  = '/home/u933632718/domains/zafexcollectibles.com/backend';
+$socket_path  = $backend_dir . '/node.sock';
 $script_path  = $backend_dir . '/index.mjs';
 $log_path     = $backend_dir . '/server.log';
 
 function is_backend_alive() {
-    $fp = @fsockopen('127.0.0.1', 8080, $errno, $errstr, 0.4);
+    global $socket_path;
+    if (!file_exists($socket_path)) return false;
+    $fp = @fsockopen('unix://' . $socket_path, -1, $errno, $errstr, 0.4);
     if ($fp) { fclose($fp); return true; }
     return false;
 }
@@ -22,9 +24,10 @@ function is_backend_alive() {
 // 1. Auto-Start Node.js Backend if it stopped
 if (!is_backend_alive()) {
     if (file_exists($node_bin) && file_exists($script_path)) {
-        $cmd = "cd " . escapeshellarg($backend_dir) . " && nohup " . escapeshellarg($node_bin) . " index.mjs > " . escapeshellarg($log_path) . " 2>&1 &";
+        if (file_exists($socket_path)) @unlink($socket_path);
+        $cmd = "cd " . escapeshellarg($backend_dir) . " && nohup " . escapeshellarg($node_bin) . " index.mjs </dev/null > " . escapeshellarg($log_path) . " 2>&1 &";
         @shell_exec($cmd);
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 6; $i++) {
             usleep(500000);
             if (is_backend_alive()) break;
         }
@@ -33,7 +36,7 @@ if (!is_backend_alive()) {
 
 // 2. Prepare Request Forwarding
 $request_uri  = $_SERVER['REQUEST_URI'];
-$target_url   = $backend_host . $request_uri;
+$target_url   = 'http://localhost' . $request_uri;
 $method       = $_SERVER['REQUEST_METHOD'];
 
 $headers = function_exists('getallheaders') ? getallheaders() : [];
@@ -69,6 +72,7 @@ if (isset($_SERVER['HTTP_COOKIE'])) {
 }
 
 $ch = curl_init($target_url);
+curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, $socket_path);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
 curl_setopt($ch, CURLOPT_TCP_NODELAY, 1);
 
@@ -134,3 +138,4 @@ foreach (explode("\r\n", $header_text) as $hdr) {
 
 echo $body_text;
 curl_close($ch);
+
